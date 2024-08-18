@@ -35,31 +35,43 @@ void CRG_EnergyHungerSync::Update()
 			prev_energy_f = energy_f;
 			prev_hunger_f = hunger_f;
 			SetEnergyFloat(hunger_f);
+			energy_to_restore = 0.0f;
 			// NOTE: this value needs to update after going into the editor!
-			caplvl_energyregen = CapabilityChecker.GetCapabilityLevel(avatar, 0x073CE5DD);
+			//caplvl_energyregen = CapabilityChecker.GetCapabilityLevel(avatar, 0x073CE5DD);
 			return;
 		}
 
-		// Handle Energy Recharge
-		if (caplvl_energyregen > 0) {
+		// Handle Manual Energy Recharge
+		// This is currently not being used, but it can be reactivated for custom behaviors
+		/*
+		if (caplvl_energyregen > 0 && avatar->mEnergy < avatar->mMaxEnergy && energy_to_restore > 0.0f) {
+			App::ConsolePrintF("restoring...");
 			float energy_per_tick = 0.0;
-			//energy_per_tick = caplvl_energyregen * 0.30f;
-			switch (caplvl_energyregen) {
-				case 1:
-					energy_per_tick = 0.25;
-					break;
-				case 2:
-					energy_per_tick = 0.5;
-					break;
+			energy_per_tick = caplvl_energyregen * 0.15f * GameTimeManager.GetSpeed();
+			// clamp the energy per tick to the max amount to restore.
+			if (energy_per_tick > energy_to_restore) { energy_per_tick = energy_to_restore; }
+			if (energy_per_tick > 0.00001) {
+				energy_to_restore -= energy_per_tick;
+				avatar->mEnergy += energy_per_tick;
+				App::ConsolePrintF("remaining: %f", energy_to_restore);
 			}
-			avatar->mEnergy += energy_per_tick * GameTimeManager.GetSpeed();
-			
 		}
+		*/
 
 		// If there is a mismatch in hunger/energy, correct values based on the differences
-		if ((round(energy_f*100) != (round(hunger_f * 100))) && (energy_f != prev_energy_f || hunger_f != prev_hunger_f)) {
+		if (abs(energy_f - hunger_f) > 0.001f && (energy_f != prev_energy_f || hunger_f != prev_hunger_f)) {
 			//App::ConsolePrintF("update hunger/energy from differences");
 			float diffs = (energy_f - prev_energy_f) + (hunger_f - prev_hunger_f);
+			
+			/*
+			// Manual Energy Recharge
+			// If only the energy has dropped, allow that much to be restored.
+			if (prev_energy_f - energy_f > 0.1) {
+				energy_to_restore += abs(prev_energy_f - energy_f)*avatar->mMaxEnergy;
+				App::ConsolePrintF("Energy to restore ::: %f, %f", energy_to_restore, prev_energy_f - energy_f);
+				//App::ConsolePrintF("Energy values: %f, %f", prev_energy_f, energy_f);
+			}*/
+			
 			SetEnergyFloat(prev_hunger_f + diffs);
 			SetHungerFloat(prev_hunger_f + diffs);
 
