@@ -17,7 +17,7 @@ void Kill::ParseLine(const ArgScript::Line& line)
 	if (avatar) {
 		avatar->mEnergy = -90;
 		avatar->mHunger = -90;
-		avatar->SetHealthPoints(0.0001);
+		avatar->SetHealthPoints(0.0001f);
 	}
 }
 

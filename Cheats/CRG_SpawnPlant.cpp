@@ -11,7 +11,7 @@ CRG_SpawnPlant::~CRG_SpawnPlant()
 {
 }
 
-
+// NOTE: this fundatmentally doesnt work atm, so i am using this to test random funcs.
 void CRG_SpawnPlant::ParseLine(const ArgScript::Line& line)
 {
 	cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();

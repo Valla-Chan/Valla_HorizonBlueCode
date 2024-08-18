@@ -98,115 +98,36 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BuildCRG.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CapabilityChecker.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CRG_BrainBoost.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CRG_BrainDrain.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CRG_EnergyHungerSync.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CRG_PosessTarget.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CRG_Recharge.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CRG_ResurrectTarget.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CRG_SpawnPlant.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CRG_SwapCreature.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="CRG_WaterBehavior.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="Kill.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
+    <ClInclude Include="CapabilityChecker.h" />
+    <ClInclude Include="Cheats\BuildCRG.h" />
+    <ClInclude Include="Cheats\CRG_BrainBoost.h" />
+    <ClInclude Include="Cheats\CRG_BrainDrain.h" />
+    <ClInclude Include="Cheats\CRG_PosessTarget.h" />
+    <ClInclude Include="Cheats\CRG_Recharge.h" />
+    <ClInclude Include="Cheats\CRG_ResurrectTarget.h" />
+    <ClInclude Include="Cheats\CRG_SpawnPlant.h" />
+    <ClInclude Include="Cheats\CRG_SwapCreature.h" />
+    <ClInclude Include="Cheats\Kill.h" />
+    <ClInclude Include="CRG_EnergyHungerSync.h" />
+    <ClInclude Include="CRG_WaterBehavior.h" />
     <ClInclude Include="LOAD_LoadingSpeed.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BuildCRG.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CapabilityChecker.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CRG_BrainBoost.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CRG_BrainDrain.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CRG_EnergyHungerSync.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CRG_PosessTarget.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CRG_Recharge.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CRG_ResurrectTarget.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CRG_SpawnPlant.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CRG_SwapCreature.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="CRG_WaterBehavior.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Kill.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
+    <ClCompile Include="CapabilityChecker.cpp" />
+    <ClCompile Include="Cheats\BuildCRG.cpp" />
+    <ClCompile Include="Cheats\CRG_BrainBoost.cpp" />
+    <ClCompile Include="Cheats\CRG_BrainDrain.cpp" />
+    <ClCompile Include="Cheats\CRG_PosessTarget.cpp" />
+    <ClCompile Include="Cheats\CRG_Recharge.cpp" />
+    <ClCompile Include="Cheats\CRG_ResurrectTarget.cpp" />
+    <ClCompile Include="Cheats\CRG_SpawnPlant.cpp" />
+    <ClCompile Include="Cheats\CRG_SwapCreature.cpp" />
+    <ClCompile Include="Cheats\Kill.cpp" />
+    <ClCompile Include="CRG_EnergyHungerSync.cpp" />
+    <ClCompile Include="CRG_WaterBehavior.cpp" />
+    <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="LOAD_LoadingSpeed.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

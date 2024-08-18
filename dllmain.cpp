@@ -1,16 +1,16 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
-#include "BuildCRG.h"
 
 // Cheats
-#include "Kill.h"
-#include "CRG_BrainBoost.h"
-#include "CRG_BrainDrain.h"
-#include "CRG_SwapCreature.h"
-#include "CRG_PosessTarget.h"
-#include "CRG_ResurrectTarget.h"
-#include "CRG_Recharge.h"
-#include "CRG_SpawnPlant.h"
+#include "Cheats/BuildCRG.h"
+#include "Cheats/Kill.h"
+#include "Cheats/CRG_BrainBoost.h"
+#include "Cheats/CRG_BrainDrain.h"
+#include "Cheats/CRG_SwapCreature.h"
+#include "Cheats/CRG_PosessTarget.h"
+#include "Cheats/CRG_ResurrectTarget.h"
+#include "Cheats/CRG_Recharge.h"
+#include "Cheats/CRG_SpawnPlant.h"
 
 // Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
