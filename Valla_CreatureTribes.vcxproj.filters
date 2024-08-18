@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Internal">
+      <UniqueIdentifier>{d62ad12d-69d8-4933-8342-03043c9adc22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Valla_CreatureOverhaul">
+      <UniqueIdentifier>{3880d018-2395-4502-abfe-4b83e0817aab}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="targetver.h">
+      <Filter>Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="BuildCRG.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_BrainBoost.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_BrainDrain.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="Kill.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_SwapCreature.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_PosessTarget.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_ResurrectTarget.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_EnergyHungerSync.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_SpawnPlant.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_WaterBehavior.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_Recharge.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="LOAD_LoadingSpeed.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CapabilityChecker.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildCRG.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_BrainBoost.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_BrainDrain.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="Kill.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_SwapCreature.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_PosessTarget.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_ResurrectTarget.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_EnergyHungerSync.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_SpawnPlant.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_WaterBehavior.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_Recharge.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="LOAD_LoadingSpeed.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CapabilityChecker.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SdkPathConfig.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt">
+      <Filter>Internal</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

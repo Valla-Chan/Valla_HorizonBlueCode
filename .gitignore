@@ -1,0 +1,39 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+.vs/Valla_CreatureOverhaul/v17/Solution.VC.db
+.vs/Valla_CreatureOverhaul/v17/ipch/1b3052527077b34f.ipch
+/.vs/Valla_CreatureOverhaul/v17
+/.vs/Valla_CreatureOverhaul/FileContentIndex
+/.vs
+/Debug
+/Valla_Cr.07FC5B61
