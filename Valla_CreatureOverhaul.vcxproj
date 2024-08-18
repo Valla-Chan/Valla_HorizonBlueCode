@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{07FC5B61-B575-4207-B464-AFAE6AF3FC19}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Valla_CreatureTribes</RootNamespace>
+    <RootNamespace>Valla_CreatureOverhaul</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -106,6 +106,7 @@
     <ClInclude Include="Cheats\CRG_Recharge.h" />
     <ClInclude Include="Cheats\CRG_ResurrectTarget.h" />
     <ClInclude Include="Cheats\CRG_SpawnPlant.h" />
+    <ClInclude Include="Cheats\CRG_Starve.h" />
     <ClInclude Include="Cheats\CRG_SwapCreature.h" />
     <ClInclude Include="Cheats\Kill.h" />
     <ClInclude Include="CRG_EnergyHungerSync.h" />
@@ -123,6 +124,7 @@
     <ClCompile Include="Cheats\CRG_Recharge.cpp" />
     <ClCompile Include="Cheats\CRG_ResurrectTarget.cpp" />
     <ClCompile Include="Cheats\CRG_SpawnPlant.cpp" />
+    <ClCompile Include="Cheats\CRG_Starve.cpp" />
     <ClCompile Include="Cheats\CRG_SwapCreature.cpp" />
     <ClCompile Include="Cheats\Kill.cpp" />
     <ClCompile Include="CRG_EnergyHungerSync.cpp" />

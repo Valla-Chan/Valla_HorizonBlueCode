@@ -15,8 +15,8 @@ void Kill::ParseLine(const ArgScript::Line& line)
 {
 	cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
 	if (avatar) {
-		avatar->mEnergy = -90;
-		avatar->mHunger = -90;
+		avatar->mEnergy = -90.0f;
+		avatar->mHunger = -90.0f;
 		avatar->SetHealthPoints(0.0001f);
 	}
 }

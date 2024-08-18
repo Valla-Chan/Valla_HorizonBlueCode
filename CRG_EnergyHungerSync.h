@@ -25,6 +25,7 @@ public:
 	float prev_hunger_f = 100.0;
 
 	int caplvl_energyregen = 0;
+	float energy_to_restore = 0.0f;
 
 	float CRG_EnergyHungerSync::GetEnergyFloat() const;
 	float CRG_EnergyHungerSync::GetHungerFloat() const;

@@ -61,6 +61,9 @@
     <ClInclude Include="Cheats\Kill.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
+    <ClInclude Include="Cheats\CRG_Starve.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -106,6 +109,9 @@
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\Kill.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\CRG_Starve.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
   </ItemGroup>

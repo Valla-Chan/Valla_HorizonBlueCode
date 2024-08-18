@@ -13,13 +13,13 @@ CRG_EnergyHungerSync::~CRG_EnergyHungerSync()
 {
 }
 
-// For internal use, do not modify.
 void CRG_EnergyHungerSync::Update()
 {
 	if (!Simulator::IsCreatureGame()) { return; }
 	cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
 
 	// Link Energy and Hunger
+	// TODO: solve this breaking on respawn
 	if (avatar) {
 
 		// Store prev floats, then update floats with new values from avatar
@@ -35,7 +35,7 @@ void CRG_EnergyHungerSync::Update()
 			prev_energy_f = energy_f;
 			prev_hunger_f = hunger_f;
 			SetEnergyFloat(hunger_f);
-			// TODO: this value needs to update after going into the editor!
+			// NOTE: this value needs to update after going into the editor!
 			caplvl_energyregen = CapabilityChecker.GetCapabilityLevel(avatar, 0x073CE5DD);
 			return;
 		}
@@ -43,6 +43,7 @@ void CRG_EnergyHungerSync::Update()
 		// Handle Energy Recharge
 		if (caplvl_energyregen > 0) {
 			float energy_per_tick = 0.0;
+			//energy_per_tick = caplvl_energyregen * 0.30f;
 			switch (caplvl_energyregen) {
 				case 1:
 					energy_per_tick = 0.25;
@@ -55,7 +56,7 @@ void CRG_EnergyHungerSync::Update()
 			
 		}
 
-		// Ff there is a mismatch in hunger/energy, correct values based on the differences
+		// If there is a mismatch in hunger/energy, correct values based on the differences
 		if ((round(energy_f*100) != (round(hunger_f * 100))) && (energy_f != prev_energy_f || hunger_f != prev_hunger_f)) {
 			//App::ConsolePrintF("update hunger/energy from differences");
 			float diffs = (energy_f - prev_energy_f) + (hunger_f - prev_hunger_f);

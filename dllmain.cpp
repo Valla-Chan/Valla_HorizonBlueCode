@@ -4,6 +4,7 @@
 // Cheats
 #include "Cheats/BuildCRG.h"
 #include "Cheats/Kill.h"
+#include "Cheats/CRG_Starve.h"
 #include "Cheats/CRG_BrainBoost.h"
 #include "Cheats/CRG_BrainDrain.h"
 #include "Cheats/CRG_SwapCreature.h"
@@ -27,6 +28,7 @@ void Initialize()
 	// This method is executed when the game starts, before the user interface is shown
 	CheatManager.AddCheat("Build", new(BuildCRG));
 	CheatManager.AddCheat("Kill", new(Kill));
+	CheatManager.AddCheat("Starve", new(CRG_Starve));
 	CheatManager.AddCheat("BrainBoost", new(CRG_BrainBoost));
 	CheatManager.AddCheat("BrainDrain", new(CRG_BrainDrain));
 	//CheatManager.AddCheat("SwapCreature", new(CRG_SwapCreature));
