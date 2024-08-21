@@ -1,9 +1,6 @@
 #include "stdafx.h"
 #include "CRG_ObjectConverter.h"
-#include <Spore\Simulator\cInteractiveOrnament.h>
 #include "CRG_ObjectManager.h"
-
-
 
 virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreature, void(uint32_t, int*)) {
 	void detoured(uint32_t animID, int* pChoice) {
@@ -13,26 +10,9 @@ virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreatu
 			if (avatar && animID == 0x03DF6DFF) { //gen_dig_hands
 
 
-				// this currently crashes:
-				//ObjectManager.waiting_for_noun = true;
-				
+				// TODO: this currently crashes due to a missing object
+				//ObjectManager.StartWaitingForNoun();
 
-				// loop through all ingame interactables
-				//auto interactables = GetData<cInteractiveOrnament>();
-				/*
-				for (auto object : interactables) {
-					App::ConsolePrintF("Selected: %x", object->IsSelected());
-
-					//NOTE: this will NEVER return true.
-					// find a new way to do this!!
-					if (object->IsSelected()) {
-						if (object->GetModelKey().instanceID == mdl_carcass01) {
-							App::ConsolePrintF("Found a carcass.");
-							object->SetScale(4);
-						}
-					}
-				}
-				*/
 
 				original_function(this, 0x04F65995, pChoice); //eat_meat_mouth_01
 				return;
@@ -43,7 +23,7 @@ virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreatu
 	}
 };
 
-void AddConverterDetour() {
+void AddConverterDetours() {
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
 }
 

@@ -4,4 +4,4 @@
 
 using namespace Simulator;
 
-void AddConverterDetour();
+void AddConverterDetours();

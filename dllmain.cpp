@@ -17,14 +17,13 @@
 // Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
 #include "CRG_WaterBehavior.h"
-#include "CRG_ObjectConverter.h"
 
 
 // Meta Behaviors
 //#include "LOAD_LoadingSpeed.h"
 
 // Scripts
-#include "CRG_ObjectConverter.h"
+//#include "CRG_ObjectConverter.h"
 
 // Singletons
 #include "CapabilityChecker.h"
@@ -51,14 +50,32 @@ void Initialize()
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
 	CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
 
-	
-	cObjectManager* obconverter = new(cObjectManager);
-	MessageManager.AddListener(obconverter, Simulator::kMsgGameNounStatusChanged);
-
 	// Singletons
 	cCapabilityChecker* capchecker = new(cCapabilityChecker);
-
+	cObjectManager* obconverter = new(cObjectManager);
+	MessageManager.AddListener(obconverter, Simulator::kMsgGameNounStatusChanged);
 }
+
+// Detour the animation playing func
+virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreature, void(uint32_t, int*)) {
+	void detoured(uint32_t animID, int* pChoice) {
+
+		if (IsCreatureGame()) {
+			cCreatureAnimal* avatar = GameNounManager.GetAvatar();
+			if (avatar && animID == 0x03DF6DFF) { //gen_dig_hands
+
+				ObjectManager.StartWaitingForNoun();
+
+
+				original_function(this, 0x04F65995, pChoice); //eat_meat_mouth_01
+				return;
+			}
+		}
+		original_function(this, animID, pChoice);
+
+	}
+};
+
 
 void Dispose()
 {
@@ -67,7 +84,8 @@ void Dispose()
 
 void AttachDetours()
 {
-	AddConverterDetour();
+	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
+	//AddConverterDetours();
 }
 
 
