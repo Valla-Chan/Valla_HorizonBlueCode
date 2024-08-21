@@ -22,9 +22,9 @@ void CRG_BrainBoost::ParseLine(const ArgScript::Line& line)
 const char* CRG_BrainBoost::GetDescription(ArgScript::DescriptionMode mode) const
 {
 	if (mode == ArgScript::DescriptionMode::Basic) {
-		return "This cheat advances your creature to the next brain level milestone.";
+		return "Advances your creature to the next brain level milestone.";
 	}
 	else {
-		return "BrainBoost: This cheat advances your creature to the next brain level milestone.";
+		return "BrainBoost: Advances your creature to the next brain level milestone.";
 	}
 }

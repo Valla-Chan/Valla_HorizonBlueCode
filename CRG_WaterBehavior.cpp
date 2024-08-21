@@ -20,17 +20,34 @@ void CRG_WaterBehavior::Update()
 	cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
 
 	if (avatar) {
-		bool in_water = Simulator::cPlanetModel::Get()->IsInWater(avatar->GetPosition());
-		if (in_water && avatar->mHealthPoints >= waterdamage) {
-			avatar->SetHealthPoints(avatar->mHealthPoints - waterdamage);
+
+		//App::ConsolePrintF("X:  %f, Y:  %f,  Z: %f", avatar->GetOrientation().ToEuler().x, avatar->GetOrientation().ToEuler().y, avatar->GetOrientation().ToEuler().z);
+		
+
+		bool in_water = PlanetModel.IsInWater(avatar->GetPosition());
+		if (in_water && !avatar->mbSupported && avatar->mHealthPoints >= waterdamage) {
+
+			/*
+			if (Simulator::cPlanetModel::Get()->mpTerrain2) {
+				App::ConsolePrintF("mpTerrain2 is valid!");
+			}
+			else {
+				App::ConsolePrintF("mpTerrain2 is INVALID...");
+			}*/
+			//avatar->mbKeepPinnedToPlanet = true;
+			//avatar->SetPosition(Simulator::cPlanetModel::Get()->ToSurface(avatar->GetPosition()));
+			//Vector3 pos = PlanetModel.ToSurface(avatar->GetPosition());
+			
+			//avatar->SetHealthPoints(avatar->mHealthPoints - waterdamage);
+			//Math::Quaternion orientation = Simulator::cPlanetModel::Get()->GetOrientation(avatar->GetPosition(), Vector3(90, 0, 0));
+			//avatar->SetVelocity( (orientation.ToEuler().Normalized() * 2.0f) + (avatar->GetOrientation().ToEuler().Normalized() * 2.0f)); //avatar->GetVelocity() +
+			
 		}
 
-		int caplvl = CapabilityChecker.GetCapabilityLevel(avatar, 0x073CE5DD);
-		//App::ConsolePrintF("Avatar creature has %i energy recharge.", caplvl);
-		if (caplvl > 0) {
-			//App::ConsolePrintF("Avatar creature has energy recharge.");
-			avatar->mEnergy += 0.5 * GameTimeManager.GetSpeed();
-		}
+		//caplvl_swim = CapabilityChecker.GetCapabilityLevel(avatar, 0x073CE5DD);
+		
+		//Math::Quaternion orientation = Simulator::cPlanetModel::Get()->GetOrientation(avatar->GetPosition(), Vector3(-90, 0, 0));
+		
 		
 	}
 }

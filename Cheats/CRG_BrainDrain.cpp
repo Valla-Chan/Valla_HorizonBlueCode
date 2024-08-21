@@ -30,9 +30,9 @@ void CRG_BrainDrain::ParseLine(const ArgScript::Line& line)
 const char* CRG_BrainDrain::GetDescription(ArgScript::DescriptionMode mode) const
 {
 	if (mode == ArgScript::DescriptionMode::Basic) {
-		return "This cheat drops your creature's evolution points by 100.";
+		return "Drops your creature's evolution points by 100.";
 	}
 	else {
-		return "BrainDrain: This cheat drops your creature's evolution points by 100.";
+		return "BrainDrain: Drops your creature's evolution points by 100.";
 	}
 }

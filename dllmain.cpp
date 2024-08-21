@@ -12,16 +12,24 @@
 #include "Cheats/CRG_ResurrectTarget.h"
 #include "Cheats/CRG_Recharge.h"
 #include "Cheats/CRG_SpawnPlant.h"
+#include "Cheats/CRG_GrowUp.h"
 
 // Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
 #include "CRG_WaterBehavior.h"
+#include "CRG_ObjectConverter.h"
+
 
 // Meta Behaviors
 //#include "LOAD_LoadingSpeed.h"
 
+// Scripts
+#include "CRG_ObjectConverter.h"
+
 // Singletons
 #include "CapabilityChecker.h"
+#include "CRG_ObjectManager.h"
+
 
 void Initialize()
 {
@@ -36,18 +44,20 @@ void Initialize()
 	CheatManager.AddCheat("ResurrectTarget", new(CRG_ResurrectTarget));
 	CheatManager.AddCheat("Recharge", new(CRG_Recharge));
 	CheatManager.AddCheat("SpawnPlant", new(CRG_SpawnPlant));
+	CheatManager.AddCheat("GrowUp", new(CRG_GrowUp));
 
 	// TODO: these would be better to only attach upon entering creature stage.
 	// (I dont know how to do that yet.)
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
 	CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
 
-	//
-	//LOAD_LoadingSpeed* loadingspeed = new(LOAD_LoadingSpeed);
-	//MessageManager.AddListener(loadingspeed, Simulator::kMsgSwitchGameMode); //make the Ability Manager function
+	
+	cObjectManager* obconverter = new(cObjectManager);
+	MessageManager.AddListener(obconverter, Simulator::kMsgGameNounStatusChanged);
 
-	//
+	// Singletons
 	cCapabilityChecker* capchecker = new(cCapabilityChecker);
+
 }
 
 void Dispose()
@@ -57,8 +67,7 @@ void Dispose()
 
 void AttachDetours()
 {
-	// Call the attach() method on any detours you want to add
-	// For example: cViewer_SetRenderType_detour::attach(GetAddress(cViewer, SetRenderType));
+	AddConverterDetour();
 }
 
 

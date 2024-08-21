@@ -102,6 +102,10 @@
     <ClInclude Include="Cheats\BuildCRG.h" />
     <ClInclude Include="Cheats\CRG_BrainBoost.h" />
     <ClInclude Include="Cheats\CRG_BrainDrain.h" />
+    <ClInclude Include="Cheats\CRG_GrowUp.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Cheats\CRG_PosessTarget.h" />
     <ClInclude Include="Cheats\CRG_Recharge.h" />
     <ClInclude Include="Cheats\CRG_ResurrectTarget.h" />
@@ -110,6 +114,14 @@
     <ClInclude Include="Cheats\CRG_SwapCreature.h" />
     <ClInclude Include="Cheats\Kill.h" />
     <ClInclude Include="CRG_EnergyHungerSync.h" />
+    <ClInclude Include="CRG_ObjectConverter.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="CRG_ObjectManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="CRG_WaterBehavior.h" />
     <ClInclude Include="LOAD_LoadingSpeed.h" />
     <ClInclude Include="stdafx.h" />
@@ -120,6 +132,10 @@
     <ClCompile Include="Cheats\BuildCRG.cpp" />
     <ClCompile Include="Cheats\CRG_BrainBoost.cpp" />
     <ClCompile Include="Cheats\CRG_BrainDrain.cpp" />
+    <ClCompile Include="Cheats\CRG_GrowUp.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="Cheats\CRG_PosessTarget.cpp" />
     <ClCompile Include="Cheats\CRG_Recharge.cpp" />
     <ClCompile Include="Cheats\CRG_ResurrectTarget.cpp" />
@@ -128,6 +144,14 @@
     <ClCompile Include="Cheats\CRG_SwapCreature.cpp" />
     <ClCompile Include="Cheats\Kill.cpp" />
     <ClCompile Include="CRG_EnergyHungerSync.cpp" />
+    <ClCompile Include="CRG_ObjectConverter.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="CRG_ObjectManager.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="CRG_WaterBehavior.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="LOAD_LoadingSpeed.cpp" />
