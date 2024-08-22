@@ -114,10 +114,6 @@
     <ClInclude Include="Cheats\CRG_SwapCreature.h" />
     <ClInclude Include="Cheats\Kill.h" />
     <ClInclude Include="CRG_EnergyHungerSync.h" />
-    <ClInclude Include="CRG_ObjectConverter.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
     <ClInclude Include="CRG_ObjectManager.h">
       <SubType>
       </SubType>
@@ -144,10 +140,6 @@
     <ClCompile Include="Cheats\CRG_SwapCreature.cpp" />
     <ClCompile Include="Cheats\Kill.cpp" />
     <ClCompile Include="CRG_EnergyHungerSync.cpp" />
-    <ClCompile Include="CRG_ObjectConverter.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
     <ClCompile Include="CRG_ObjectManager.cpp">
       <SubType>
       </SubType>

@@ -29,6 +29,7 @@
 #include "CapabilityChecker.h"
 #include "CRG_ObjectManager.h"
 
+cObjectManager* obconverter;
 
 void Initialize()
 {
@@ -50,11 +51,14 @@ void Initialize()
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
 	CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
 
+	// Object Converter
+	obconverter = new(cObjectManager);
+	//MessageManager.AddListener(obconverter, Simulator::kMsgGameNounStatusChanged);
+
 	// Singletons
 	cCapabilityChecker* capchecker = new(cCapabilityChecker);
-	cObjectManager* obconverter = new(cObjectManager);
-	MessageManager.AddListener(obconverter, Simulator::kMsgGameNounStatusChanged);
 }
+
 
 // Detour the animation playing func
 virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreature, void(uint32_t, int*)) {
@@ -64,11 +68,18 @@ virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreatu
 			cCreatureAnimal* avatar = GameNounManager.GetAvatar();
 			if (avatar && animID == 0x03DF6DFF) { //gen_dig_hands
 
-				ObjectManager.StartWaitingForNoun();
+				cInteractiveOrnament* object = ObjectManager.FindInteractedObject();
+				obconverter->SetInteractedObject(object);
 
+				ResourceKey animkey = ObjectManager.GetModelInteractAnim(object->GetModelKey());
 
-				original_function(this, 0x04F65995, pChoice); //eat_meat_mouth_01
-				return;
+				if (animkey.instanceID != 0x0) {
+					//obconverter->waiting_for_noun = true;
+					obconverter->StartWaitingForNoun();
+					original_function(this, animkey.instanceID, pChoice); // 0x04F65995, eat_meat_mouth_01
+					return;
+				}
+				
 			}
 		}
 		original_function(this, animID, pChoice);
@@ -79,13 +90,13 @@ virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreatu
 
 void Dispose()
 {
+	obconverter = nullptr;
 	// This method is called when the game is closing
 }
 
 void AttachDetours()
 {
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
-	//AddConverterDetours();
 }
 
 

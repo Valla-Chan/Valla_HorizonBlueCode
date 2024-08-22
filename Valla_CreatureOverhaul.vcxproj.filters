@@ -64,9 +64,6 @@
     <ClInclude Include="Cheats\CRG_Starve.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
-    <ClInclude Include="CRG_ObjectConverter.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClInclude>
     <ClInclude Include="Cheats\CRG_GrowUp.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
@@ -122,9 +119,6 @@
     </ClCompile>
     <ClCompile Include="Cheats\CRG_Starve.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
-    </ClCompile>
-    <ClCompile Include="CRG_ObjectConverter.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_GrowUp.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>

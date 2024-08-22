@@ -45,6 +45,46 @@ int cCapabilityChecker::GetCapabilityLevel(const cCreatureBasePtr& creature, con
 	return caplvl;
 }
 
+// Open a model resource and find a key from a property
+ResourceKey cCapabilityChecker::GetModelKeyValue(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	ResourceKey anim;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetKey(mpPropList.get(), property, anim);
+		return anim;
+	}
+	else { return ResourceKey(0, 0, 0); }
+}
+
+// Open a model resource and find a float value of a property
+float cCapabilityChecker::GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	float value;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetFloat(mpPropList.get(), property, value);
+		return value;
+	}
+	else { return 0.0f; }
+}
+
+// Open a model resource and find an int value of a property
+int cCapabilityChecker::GetModelIntValue(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	int value;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetInt32(mpPropList.get(), property, value);
+		return value;
+	}
+	else { return 0; }
+}
+
+
 // For internal use, do not modify.
 int cCapabilityChecker::AddRef()
 {

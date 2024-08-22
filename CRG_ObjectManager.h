@@ -12,13 +12,16 @@ using namespace Simulator;
 class cObjectManager
 	: public Object
 	, public DefaultRefCounted
-	, public App::IMessageListener
+	, public App::IUpdatable
 {
 public:
 	static const uint32_t TYPE = id("cObjectManager");
 	cObjectManager();
 	~cObjectManager();
+
+	void Update() override;
 	
+	static cObjectManager* Get();
 
 	//--------------------
 	// object models
@@ -29,15 +32,36 @@ public:
 	//--------------------
 
 	bool waiting_for_noun = false;
+	cInteractiveOrnamentPtr last_object;
+	ResourceKey last_object_model;
 
-	cInteractiveOrnament* GetSelectedObject() const;
-	bool AvatarIsCarnivore() const;
+	cInteractiveOrnament* GetNearestObject() const;
+	cInteractiveOrnament* FindInteractedObject();
+	void SetInteractedObject(cInteractiveOrnament* object);
+	void ClearInteractedObject();
+	bool HasModelChanged() const;
 	void StartWaitingForNoun();
+	void TestInteractableForDestruction();
 
+	void ApplyModelRewards(const cCreatureBasePtr& creature, const ResourceKey& modelKey);
 
-	bool HandleMessage(uint32_t messageID, void* msg) override;
+	bool IsCarnivore(const cCreatureBasePtr& creature) const;
+	bool DoesCreatureSucceedModel(const cCreatureBasePtr& creature, const ResourceKey& modelKey) const;
+	bool MatchesProperty(const uint32_t property, const cCreatureBasePtr& creature, const ResourceKey& modelKey) const;
 
-	static cObjectManager* Get();
+	ResourceKey GetModelInteractAnim(const ResourceKey& modelKey) const;
+	ResourceKey GetModelSuccessAnim(const ResourceKey& modelKey) const;
+	ResourceKey GetModelFailureAnim(const ResourceKey& modelKey) const;
+	
+	// Rewards
+	float GetModelHealthReward(const ResourceKey& modelKey) const;
+	float GetModelFoodReward(const ResourceKey& modelKey) const;
+	float GetModelDNAReward(const ResourceKey& modelKey) const;
+	// Penalties
+	float GetModelHealthPenalty(const ResourceKey& modelKey) const;
+	float GetModelFoodPenalty(const ResourceKey& modelKey) const;
+	float GetModelDNAPenalty(const ResourceKey& modelKey) const;
+
 	int AddRef() override;
 	int Release() override;
 	void* Cast(uint32_t type) const override;
@@ -46,5 +70,6 @@ protected:
 	static cObjectManager* sInstance;
 
 private:
-	intrusive_ptr<App::ScheduledTaskListener> mWaitTask;
+
+	//intrusive_ptr<Simulator::ScheduledTaskListener> mWaitTask;
 };
