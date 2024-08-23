@@ -70,6 +70,9 @@
     <ClInclude Include="CRG_ObjectManager.h">
       <Filter>Valla_CreatureOverhaul</Filter>
     </ClInclude>
+    <ClInclude Include="Cheats\PrintCursor.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -125,6 +128,9 @@
     </ClCompile>
     <ClCompile Include="CRG_ObjectManager.cpp">
       <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\PrintCursor.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

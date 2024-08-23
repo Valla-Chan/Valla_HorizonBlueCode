@@ -18,6 +18,7 @@ public:
 	static cCapabilityChecker* Get();
 
 	int GetCapabilityLevel(const cCreatureBasePtr& creature, const uint32_t propertyID) const;
+	bool cCapabilityChecker::HasModelKeyValue(const ResourceKey& modelKey, const uint32_t property) const;
 	ResourceKey cCapabilityChecker::GetModelKeyValue(const ResourceKey& modelKey, const uint32_t property) const;
 	float cCapabilityChecker::GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const;
 	int cCapabilityChecker::GetModelIntValue(const ResourceKey& modelKey, const uint32_t property) const;

@@ -31,6 +31,7 @@ public:
 	const uint32_t anim_eat_meat_mouth = 0x04F65995;
 	//--------------------
 
+	bool interaction_success = false;
 	bool waiting_for_noun = false;
 	cInteractiveOrnamentPtr last_object;
 	ResourceKey last_object_model;
@@ -44,23 +45,14 @@ public:
 	void TestInteractableForDestruction();
 
 	void ApplyModelRewards(const cCreatureBasePtr& creature, const ResourceKey& modelKey);
-
-	bool IsCarnivore(const cCreatureBasePtr& creature) const;
 	bool DoesCreatureSucceedModel(const cCreatureBasePtr& creature, const ResourceKey& modelKey) const;
 	bool MatchesProperty(const uint32_t property, const cCreatureBasePtr& creature, const ResourceKey& modelKey) const;
 
-	ResourceKey GetModelInteractAnim(const ResourceKey& modelKey) const;
+	ResourceKey GetModelInteractAnim(const cCreatureBasePtr& creature, const ResourceKey& modelKey, const uint32_t default_animID);
 	ResourceKey GetModelSuccessAnim(const ResourceKey& modelKey) const;
 	ResourceKey GetModelFailureAnim(const ResourceKey& modelKey) const;
 	
-	// Rewards
-	float GetModelHealthReward(const ResourceKey& modelKey) const;
-	float GetModelFoodReward(const ResourceKey& modelKey) const;
-	float GetModelDNAReward(const ResourceKey& modelKey) const;
-	// Penalties
-	float GetModelHealthPenalty(const ResourceKey& modelKey) const;
-	float GetModelFoodPenalty(const ResourceKey& modelKey) const;
-	float GetModelDNAPenalty(const ResourceKey& modelKey) const;
+	float GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const;
 
 	int AddRef() override;
 	int Release() override;

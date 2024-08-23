@@ -25,7 +25,6 @@ void cObjectManager::Update()
 {
 	if (waiting_for_noun) {
 		TestInteractableForDestruction();
-		//App::ConsolePrintF("Begin waiting");
 	}
 }
 
@@ -78,6 +77,7 @@ void cObjectManager::ClearInteractedObject() {
 	last_object = nullptr;
 	last_object_model = { 0,0,0 };
 	waiting_for_noun = false;
+	interaction_success = false;
 }
 
 bool cObjectManager::HasModelChanged() const {
@@ -94,52 +94,45 @@ void cObjectManager::StartWaitingForNoun() {
 void cObjectManager::TestInteractableForDestruction() {
 	if (last_object && HasModelChanged()) {
 		cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
-		if (IsCarnivore(avatar)) {
-			ApplyModelRewards(avatar, last_object_model);
-		}
-		else {
-			avatar->mpAnimatedCreature->PlayAnimation(0x931FDCDA); // mot_fruit_eat_chew_vom
-		}
+		ApplyModelRewards(avatar, last_object_model);
 
 		ClearInteractedObject();
 	}
 }
 
-// Apply rewards from the model onto a creature
+// Apply rewards/penalties from the model onto a creature
 void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const ResourceKey& modelKey) {
-	bool success = DoesCreatureSucceedModel(creature, modelKey);
-	
-	if (success) {
+	if (interaction_success) {
 		// Read Reward values
-		float health = GetModelHealthReward(modelKey);
-		float food = GetModelFoodReward(modelKey);
-		float dna = GetModelDNAReward(modelKey);
+		float health = GetModelFloatValue(modelKey, id("modelHealthReward"));
+		float food = GetModelFloatValue(modelKey, id("modelFoodReward"));
+		float dna = GetModelFloatValue(modelKey, id("modelDNAReward"));
 
 		// Apply values
-		if (health != 0) { creature->SetHealthPoints(creature->mHealthPoints + health); }
-		if (food != 0) { creature->mHunger += food; }
-		if (dna != 0) { Simulator::cCreatureGameData::AddEvolutionPoints(dna); }
+		if (health != 0.0f) { creature->SetHealthPoints(creature->mHealthPoints + health); }
+		if (food != 0.0f) { creature->mHunger += food; }
+		if (dna != 0.0f) { Simulator::cCreatureGameData::AddEvolutionPoints(dna); }
 
 		ResourceKey animkey = GetModelSuccessAnim(modelKey);
 		if (animkey.instanceID != 0x0) {
-			creature->mpAnimatedCreature->PlayAnimation(0x931FDCDA);
+			creature->mpAnimatedCreature->PlayAnimation(animkey.instanceID);
 		}
 	}
 	// Failure
 	else {
 		// Read Penalty values
-		float health = GetModelHealthPenalty(modelKey);
-		float food = GetModelFoodPenalty(modelKey);
-		float dna = GetModelDNAPenalty(modelKey);
+		float health = GetModelFloatValue(modelKey, id("modelHealthPenalty"));
+		float food = GetModelFloatValue(modelKey, id("modelFoodPenalty"));
+		float dna = GetModelFloatValue(modelKey, id("modelDNAPenalty"));
 
 		// Apply values
-		if (health != 0) { creature->SetHealthPoints(creature->mHealthPoints - health); }
-		if (food != 0) { creature->mHunger -= food; }
-		if (dna != 0) { Simulator::cCreatureGameData::AddEvolutionPoints(-1*dna); }
+		if (health != 0.0f) { creature->SetHealthPoints(creature->mHealthPoints - health); }
+		if (food != 0.0f) { creature->mHunger -= food; }
+		if (dna != 0.0f) { Simulator::cCreatureGameData::AddEvolutionPoints(-1*dna); }
 
 		ResourceKey animkey = GetModelFailureAnim(modelKey);
 		if (animkey.instanceID != 0x0) {
-			creature->mpAnimatedCreature->PlayAnimation(0x931FDCDA);
+			creature->mpAnimatedCreature->PlayAnimation(animkey.instanceID);
 		}
 	}
 	
@@ -150,15 +143,7 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 // Capability / Property Checks
 //------------------------------
 
-// TODO: is this still needed?
-bool cObjectManager::IsCarnivore(const cCreatureBasePtr& creature) const {
-	if (creature) {
-		return CapabilityChecker.GetCapabilityLevel(creature, 0x022E7847) > 0;
-	}
-	else { return false; }
-}
-
-// Return if the creature matches ALL the object's criteria.
+// Return if the creature matches/surpasses ALL the object's criteria.
 bool cObjectManager::DoesCreatureSucceedModel(const cCreatureBasePtr& creature, const ResourceKey& modelKey) const {
 	int value = 0;
 	value += !MatchesProperty(0x022E7847, creature, modelKey); // carn
@@ -167,44 +152,41 @@ bool cObjectManager::DoesCreatureSucceedModel(const cCreatureBasePtr& creature, 
 	return value == 0;
 }
 
-// Return if the creature matches the object's single property criteria.
+// Return if the creature matches or surpassed the object in one property criteria.
 bool cObjectManager::MatchesProperty(const uint32_t property, const cCreatureBasePtr& creature, const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetCapabilityLevel(creature, property) > CapabilityChecker.GetModelIntValue(modelKey, property);
+	return CapabilityChecker.GetCapabilityLevel(creature, property) >= CapabilityChecker.GetModelIntValue(modelKey, property);
 }
 
 
-// Open a model resource and find what anim it wants the avatar to use
-ResourceKey cObjectManager::GetModelInteractAnim(const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelInteractAnim"));
+// Open a model resource and get a float value from a property
+float cObjectManager::GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const {
+	return CapabilityChecker.GetModelFloatValue(modelKey, property);
 }
+
+// Open a model resource and find what anim it wants the avatar to use when first interacting
+// Also aalculate success var.
+ResourceKey cObjectManager::GetModelInteractAnim(const cCreatureBasePtr& creature, const ResourceKey& modelKey, const uint32_t default_animID) {
+	interaction_success = DoesCreatureSucceedModel(creature, modelKey);
+
+	// Succeeded, or has no failure anim
+	if (interaction_success || !CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
+		if (CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractAnim"))) {
+			return CapabilityChecker.GetModelKeyValue(modelKey, id("modelInteractAnim"));
+		}
+	}
+	// Failed and has special anim
+	else if (CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
+			return CapabilityChecker.GetModelKeyValue(modelKey, id("modelInteractFailureAnim"));
+	}
+	return ResourceKey{ default_animID, 0, 0};
+}
+
 ResourceKey cObjectManager::GetModelSuccessAnim(const ResourceKey& modelKey) const {
 	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelSuccessAnim"));
 }
 ResourceKey cObjectManager::GetModelFailureAnim(const ResourceKey& modelKey) const {
 	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelFailureAnim"));
 }
-
-// Rewards
-float cObjectManager::GetModelHealthReward(const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetModelFloatValue(modelKey, id("modelDNAReward"));
-}
-float cObjectManager::GetModelFoodReward(const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetModelFloatValue(modelKey, id("modelFoodReward"));
-}
-float cObjectManager::GetModelDNAReward(const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetModelFloatValue(modelKey, id("modelDNAReward"));
-}
-// Penalties
-float cObjectManager::GetModelHealthPenalty(const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetModelFloatValue(modelKey, id("modelDNAPenalty"));
-}
-float cObjectManager::GetModelFoodPenalty(const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetModelFloatValue(modelKey, id("modelFoodPenalty"));
-}
-float cObjectManager::GetModelDNAPenalty(const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetModelFloatValue(modelKey, id("modelDNAPenalty"));
-}
-
 
 //------------------------------
 

@@ -13,6 +13,7 @@
 #include "Cheats/CRG_Recharge.h"
 #include "Cheats/CRG_SpawnPlant.h"
 #include "Cheats/CRG_GrowUp.h"
+#include "Cheats/PrintCursor.h"
 
 // Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
@@ -45,6 +46,7 @@ void Initialize()
 	CheatManager.AddCheat("Recharge", new(CRG_Recharge));
 	CheatManager.AddCheat("SpawnPlant", new(CRG_SpawnPlant));
 	CheatManager.AddCheat("GrowUp", new(CRG_GrowUp));
+	CheatManager.AddCheat("PrintCursor", new(PrintCursor));
 
 	// TODO: these would be better to only attach upon entering creature stage.
 	// (I dont know how to do that yet.)
@@ -71,7 +73,7 @@ virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreatu
 				cInteractiveOrnament* object = ObjectManager.FindInteractedObject();
 				obconverter->SetInteractedObject(object);
 
-				ResourceKey animkey = ObjectManager.GetModelInteractAnim(object->GetModelKey());
+				ResourceKey animkey = obconverter->GetModelInteractAnim(avatar, object->GetModelKey(), animID);
 
 				if (animkey.instanceID != 0x0) {
 					//obconverter->waiting_for_noun = true;

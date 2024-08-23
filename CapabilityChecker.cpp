@@ -45,15 +45,27 @@ int cCapabilityChecker::GetCapabilityLevel(const cCreatureBasePtr& creature, con
 	return caplvl;
 }
 
+// Open a model resource and find if a property key exists in the file
+bool cCapabilityChecker::HasModelKeyValue(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	ResourceKey key;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		return App::Property::GetKey(mpPropList.get(), property, key);
+	}
+	else { return false; }
+}
+
 // Open a model resource and find a key from a property
 ResourceKey cCapabilityChecker::GetModelKeyValue(const ResourceKey& modelKey, const uint32_t property) const
 {
 	PropertyListPtr mpPropList;
-	ResourceKey anim;
+	ResourceKey key;
 	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
 	{
-		bool test = App::Property::GetKey(mpPropList.get(), property, anim);
-		return anim;
+		bool test = App::Property::GetKey(mpPropList.get(), property, key);
+		return key;
 	}
 	else { return ResourceKey(0, 0, 0); }
 }
@@ -66,9 +78,11 @@ float cCapabilityChecker::GetModelFloatValue(const ResourceKey& modelKey, const 
 	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
 	{
 		bool test = App::Property::GetFloat(mpPropList.get(), property, value);
-		return value;
+		if (test) {
+			return value;
+		}
 	}
-	else { return 0.0f; }
+	return 0.0f;
 }
 
 // Open a model resource and find an int value of a property
@@ -79,9 +93,11 @@ int cCapabilityChecker::GetModelIntValue(const ResourceKey& modelKey, const uint
 	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
 	{
 		bool test = App::Property::GetInt32(mpPropList.get(), property, value);
-		return value;
+		if (test) {
+			return value;
+		}
 	}
-	else { return 0; }
+	return 0;
 }
 
 
