@@ -14,6 +14,7 @@
 #include "Cheats/CRG_SpawnPlant.h"
 #include "Cheats/CRG_GrowUp.h"
 #include "Cheats/PrintCursor.h"
+#include "Cheats/SetCursorCheat.h"
 
 // Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
@@ -47,6 +48,7 @@ void Initialize()
 	CheatManager.AddCheat("SpawnPlant", new(CRG_SpawnPlant));
 	CheatManager.AddCheat("GrowUp", new(CRG_GrowUp));
 	CheatManager.AddCheat("PrintCursor", new(PrintCursor));
+	CheatManager.AddCheat("SetCursor", new(SetCursorCheat));
 
 	// TODO: these would be better to only attach upon entering creature stage.
 	// (I dont know how to do that yet.)
@@ -89,6 +91,23 @@ virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreatu
 	}
 };
 
+// Detour the cursor setting func
+virtual_detour(SetCursor_detour, UTFWin::cCursorManager, UTFWin::cCursorManager, void(uint32_t)) {
+	void detoured(uint32_t id) {
+
+		if (IsCreatureGame()) {
+			cInteractiveOrnament* object = ObjectManager.GetHoveredObject();
+			if (object) {
+				uint32_t cursorid = ObjectManager.GetModelCursorID(object->GetModelKey(), id);
+				original_function(this, cursorid);
+				return;
+			}
+		}
+		original_function(this, id);
+
+	}
+};
+
 
 void Dispose()
 {
@@ -99,6 +118,7 @@ void Dispose()
 void AttachDetours()
 {
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
+	SetCursor_detour::attach(GetAddress(UTFWin::cCursorManager, SetActiveCursor));
 }
 
 

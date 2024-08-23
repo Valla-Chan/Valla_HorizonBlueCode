@@ -50,6 +50,18 @@ cInteractiveOrnament* cObjectManager::GetNearestObject() const {
 	return object_nearest;
 }
 
+cInteractiveOrnament* cObjectManager::GetHoveredObject() const {
+	cCreatureAnimal* avatar = GameNounManager.GetAvatar();
+	if (!avatar) { return nullptr; }
+
+	// loop through all ingame interactables
+	auto interactables = GetData<cInteractiveOrnament>();
+	for (auto object : interactables) {
+		if (object->IsRolledOver()) { return object.get(); }
+	}
+	return nullptr;
+}
+
 cInteractiveOrnament* cObjectManager::FindInteractedObject() {
 	cCreatureBase* avatar = object_cast<Simulator::cCreatureBase>(GameNounManager.GetAvatar());
 	if (!avatar) { return nullptr; }
@@ -186,6 +198,13 @@ ResourceKey cObjectManager::GetModelSuccessAnim(const ResourceKey& modelKey) con
 }
 ResourceKey cObjectManager::GetModelFailureAnim(const ResourceKey& modelKey) const {
 	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelFailureAnim"));
+}
+
+uint32_t cObjectManager::GetModelCursorID(const ResourceKey& modelKey, const uint32_t default_ID) const {
+	if (CapabilityChecker.HasModelUInt32Value(modelKey, id("modelCursorID"))) {
+		return CapabilityChecker.GetModelUInt32Value(modelKey, id("modelCursorID"));
+	}
+	return default_ID;
 }
 
 //------------------------------

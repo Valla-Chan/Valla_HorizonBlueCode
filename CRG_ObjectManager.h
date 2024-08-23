@@ -36,8 +36,10 @@ public:
 	cInteractiveOrnamentPtr last_object;
 	ResourceKey last_object_model;
 
+	cInteractiveOrnament* GetHoveredObject() const;
 	cInteractiveOrnament* GetNearestObject() const;
 	cInteractiveOrnament* FindInteractedObject();
+
 	void SetInteractedObject(cInteractiveOrnament* object);
 	void ClearInteractedObject();
 	bool HasModelChanged() const;
@@ -51,7 +53,8 @@ public:
 	ResourceKey GetModelInteractAnim(const cCreatureBasePtr& creature, const ResourceKey& modelKey, const uint32_t default_animID);
 	ResourceKey GetModelSuccessAnim(const ResourceKey& modelKey) const;
 	ResourceKey GetModelFailureAnim(const ResourceKey& modelKey) const;
-	
+
+	uint32_t GetModelCursorID(const ResourceKey& modelKey, const uint32_t default_ID) const;
 	float GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const;
 
 	int AddRef() override;

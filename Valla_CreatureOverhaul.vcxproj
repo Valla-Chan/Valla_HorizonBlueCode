@@ -117,6 +117,14 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="Cheats\SetCursorCheat.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="Cheats\TRG_AddFood.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="CRG_EnergyHungerSync.h" />
     <ClInclude Include="CRG_ObjectManager.h">
       <SubType>
@@ -144,6 +152,14 @@
     <ClCompile Include="Cheats\CRG_SwapCreature.cpp" />
     <ClCompile Include="Cheats\Kill.cpp" />
     <ClCompile Include="Cheats\PrintCursor.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetCursorCheat.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="Cheats\TRG_AddFood.cpp">
       <SubType>
       </SubType>
     </ClCompile>

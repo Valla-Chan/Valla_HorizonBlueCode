@@ -70,7 +70,34 @@ ResourceKey cCapabilityChecker::GetModelKeyValue(const ResourceKey& modelKey, co
 	else { return ResourceKey(0, 0, 0); }
 }
 
-// Open a model resource and find a float value of a property
+// Open a model resource and find if a property uint32 exists in the file
+bool cCapabilityChecker::HasModelUInt32Value(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	uint32_t value;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		return App::Property::GetUInt32(mpPropList.get(), property, value);
+	}
+	else { return false; }
+}
+
+// Open a model resource and get a uint32 value of a property
+uint32_t cCapabilityChecker::GetModelUInt32Value(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	uint32_t value;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetUInt32(mpPropList.get(), property, value);
+		if (test) {
+			return value;
+		}
+	}
+	return 0x0;
+}
+
+// Open a model resource and get a float value of a property
 float cCapabilityChecker::GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const
 {
 	PropertyListPtr mpPropList;
@@ -85,7 +112,7 @@ float cCapabilityChecker::GetModelFloatValue(const ResourceKey& modelKey, const 
 	return 0.0f;
 }
 
-// Open a model resource and find an int value of a property
+// Open a model resource and get an int value of a property
 int cCapabilityChecker::GetModelIntValue(const ResourceKey& modelKey, const uint32_t property) const
 {
 	PropertyListPtr mpPropList;

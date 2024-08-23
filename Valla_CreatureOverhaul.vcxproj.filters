@@ -73,6 +73,12 @@
     <ClInclude Include="Cheats\PrintCursor.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
+    <ClInclude Include="Cheats\TRG_AddFood.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\SetCursorCheat.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -130,6 +136,12 @@
       <Filter>Valla_CreatureOverhaul</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\PrintCursor.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\TRG_AddFood.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetCursorCheat.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
   </ItemGroup>
