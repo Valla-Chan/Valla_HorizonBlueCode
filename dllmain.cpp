@@ -1,5 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
+#include <Spore/Effects.h>
+#include <Spore/Swarm/cEffectsManager.h>
 
 // Cheats
 #include "Cheats/BuildCRG.h"
@@ -15,23 +17,21 @@
 #include "Cheats/CRG_GrowUp.h"
 #include "Cheats/PrintCursor.h"
 #include "Cheats/SetCursorCheat.h"
+#include "Cheats/TRG_GetTribeInfo.h"
+#include "Cheats/SetChieftainColor.h"
+#include "Cheats/SetGlideSpeed.h"
 
 // Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
 #include "CRG_WaterBehavior.h"
 
-
-// Meta Behaviors
-//#include "LOAD_LoadingSpeed.h"
-
-// Scripts
-//#include "CRG_ObjectConverter.h"
-
 // Singletons
 #include "CapabilityChecker.h"
 #include "CRG_ObjectManager.h"
+#include "TRG_ChieftainManager.h"
 
 cObjectManager* obconverter;
+TRG_ChieftainManager* chiefmanager;
 
 void Initialize()
 {
@@ -48,16 +48,20 @@ void Initialize()
 	CheatManager.AddCheat("SpawnPlant", new(CRG_SpawnPlant));
 	CheatManager.AddCheat("GrowUp", new(CRG_GrowUp));
 	CheatManager.AddCheat("PrintCursor", new(PrintCursor));
-	CheatManager.AddCheat("SetCursor", new(SetCursorCheat));
+	//CheatManager.AddCheat("SetCursor", new(SetCursorCheat));
+	CheatManager.AddCheat("TribeInfo", new(TRG_GetTribeInfo));
+	CheatManager.AddCheat("SetChieftainColor", new(SetChieftainColor));
+	//CheatManager.AddCheat("SetGlideSpeed", new(SetGlideSpeed));
 
-	// TODO: these would be better to only attach upon entering creature stage.
-	// (I dont know how to do that yet.)
+	// CRG
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
 	CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
 
-	// Object Converter
+	// Managers
 	obconverter = new(cObjectManager);
-	//MessageManager.AddListener(obconverter, Simulator::kMsgGameNounStatusChanged);
+	chiefmanager = new(TRG_ChieftainManager);
+	MessageManager.AddListener(chiefmanager, kMsgCombatantKilled); //make the Ability Manager function
+	MessageManager.AddListener(chiefmanager, id("TRG_GetTool")); //make the Ability Manager function
 
 	// Singletons
 	cCapabilityChecker* capchecker = new(cCapabilityChecker);
@@ -65,8 +69,8 @@ void Initialize()
 
 
 // Detour the animation playing func
-virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreature, void(uint32_t, int*)) {
-	void detoured(uint32_t animID, int* pChoice) {
+member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*)) {
+	bool detoured(uint32_t animID, int* pChoice) {
 
 		if (IsCreatureGame()) {
 			cCreatureAnimal* avatar = GameNounManager.GetAvatar();
@@ -78,36 +82,89 @@ virtual_detour(AnimOverride_detour, Anim::AnimatedCreature, Anim::AnimatedCreatu
 				ResourceKey animkey = obconverter->GetModelInteractAnim(avatar, object->GetModelKey(), animID);
 
 				if (animkey.instanceID != 0x0) {
-					//obconverter->waiting_for_noun = true;
 					obconverter->StartWaitingForNoun();
-					original_function(this, animkey.instanceID, pChoice); // 0x04F65995, eat_meat_mouth_01
-					return;
+					return original_function(this, animkey.instanceID, pChoice);
 				}
 				
 			}
 		}
-		original_function(this, animID, pChoice);
+
+		/*
+		if (animID == 0x05EF4EE1) {
+			App::ConsolePrintF("started using torch grasper overlay!");
+		}
+		if (animID == 0x03CDACC0) {
+			App::ConsolePrintF("get_tool_rack");
+		}
+		if (animID == 0x02C39200) {
+			App::ConsolePrintF("get_tool");
+		}
+		*/
+
+		return original_function(this, animID, pChoice);
 
 	}
 };
 
 // Detour the cursor setting func
-virtual_detour(SetCursor_detour, UTFWin::cCursorManager, UTFWin::cCursorManager, void(uint32_t)) {
-	void detoured(uint32_t id) {
+member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
+	bool detoured(uint32_t id) {
 
 		if (IsCreatureGame()) {
 			cInteractiveOrnament* object = ObjectManager.GetHoveredObject();
 			if (object) {
 				uint32_t cursorid = ObjectManager.GetModelCursorID(object->GetModelKey(), id);
-				original_function(this, cursorid);
-				return;
+				return original_function(this, cursorid);
 			}
 		}
-		original_function(this, id);
+		//App::ConsolePrintF("Setting cursor: %x", id);
+		return original_function(this, id);
 
 	}
 };
 
+// Detour the model setting func
+/*
+virtual_detour(SetModel_detour, Simulator::cSpatialObject, Simulator::cSpatialObject, void (const ResourceKey&)) {
+	void detoured(const ResourceKey& modelKey) {
+		original_function(this, modelKey);
+	}
+};
+*/
+// Detour the tribe spawning func
+member_detour(TribeSpawn_detour, Simulator::cTribe, void(const Math::Vector3&, int, int, bool)) {
+	void detoured(const Math::Vector3& position, int numMembers, int value, bool boolvalue) {
+		//App::ConsolePrintF("Tribe Spawned");
+		original_function(this, position, numMembers, value, boolvalue);
+		return;
+	}
+};
+
+
+// Detour the effect playing func
+member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint32_t))
+{
+	int detoured(uint32_t instanceId, uint32_t groupId) //Detouring the function for obtaining effect indexes...
+	{
+		// 0 = reg  1 = fish  2 = seaweed
+		int swapnum = -1;
+
+		if (instanceId == id("trg_chieftain_staff")) {swapnum = 0;}
+		if (instanceId == id("trg_chieftain_staff_fish")) {swapnum = 1;}
+		if (instanceId == id("trg_chieftain_staff_seaweed")) {swapnum = 2;}
+
+		int dietvalue = 0;
+		if (swapnum > -1) {
+			int dietvalue = chiefmanager->NextQueueItem();
+		}
+		uint32_t staff_id = chiefmanager->GetStaffID(dietvalue, swapnum);
+
+		if (staff_id != 0x0) {
+			return original_function(this, staff_id, groupId);
+		}
+		return original_function(this, instanceId, groupId); //And call the original function with the new instance ID.
+	}
+};
 
 void Dispose()
 {
@@ -119,6 +176,9 @@ void AttachDetours()
 {
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
 	SetCursor_detour::attach(GetAddress(UTFWin::cCursorManager, SetActiveCursor));
+	EffectOverride_detour::attach(GetAddress(Swarm::cEffectsManager, GetDirectoryAndEffectIndex));
+	//SetModel_detour::attach(GetAddress(Simulator::cSpatialObject, SetModelKey));  
+	//TribeSpawn_detour::attach(Address(ModAPI::ChooseAddress(0xC92860, 0xC932F0)));
 }
 
 

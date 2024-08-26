@@ -13,22 +13,54 @@ Kill::~Kill()
 
 void Kill::ParseLine(const ArgScript::Line& line)
 {
+	
 	cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
 	if (avatar) {
-		avatar->mEnergy = -90.0f;
-		avatar->mHunger = -90.0f;
-		avatar->SetHealthPoints(0.0001f);
+		auto target = avatar->GetTarget();
+		if (target) {
+			target->SetHealthPoints(0);
+		}
+		else {
+			KillTarget(avatar);
+		}
 	}
+
+	if (Simulator::IsTribeGame()) {
+		auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
+		for (auto tribe : tribes) {
+			eastl::vector<cSpatialObjectPtr>& members = tribe->GetSelectableMembers();
+			for (auto member : members) {
+				auto creature = object_cast<Simulator::cCreatureBase>(member);
+				if (member->IsSelected() && creature) {
+					KillTarget(creature);
+				}
+			}
+		}
+	}
+
+
+
 }
 
+void Kill::KillTarget(const cCreatureBasePtr target) {
+	if (Simulator::IsCreatureGame() && target == object_cast<Simulator::cCreatureBase>(GameNounManager.GetAvatar())) {
+		target->mEnergy = -90.0f;
+		target->mHunger = -90.0f;
+		target->SetHealthPoints(0.0001f);
+	}
+	else {
+		target->SetHealthPoints(0.0f);
+	}
+	
+}
 
 
 const char* Kill::GetDescription(ArgScript::DescriptionMode mode) const
 {
 	if (mode == ArgScript::DescriptionMode::Basic) {
-		return "Kills the avatar creature instantly.";
+		return "Kills the targeted creature instantly, or kills the avatar creature if nothing is selected.";
 	}
 	else {
-		return "Kill: Kills the avatar creature instantly.";
+		return "Kill: Kills the targeted creature instantly, or kills the avatar creature if nothing is selected.";
 	}
 }

@@ -28,7 +28,6 @@ void cObjectManager::Update()
 	}
 }
 
-
 cInteractiveOrnament* cObjectManager::GetNearestObject() const {
 	cCreatureAnimal* avatar = GameNounManager.GetAvatar();
 	if (!avatar) { return nullptr; }
@@ -60,6 +59,23 @@ cInteractiveOrnament* cObjectManager::GetHoveredObject() const {
 		if (object->IsRolledOver()) { return object.get(); }
 	}
 	return nullptr;
+}
+
+cCreatureCitizen* cObjectManager::GetNearestTribalLeader(cSpatialObject* object, const float within) const {
+	if (!IsTribeGame()) { return nullptr; }
+
+	float last_distance = within;
+	cCreatureCitizen* closest_leader = nullptr;
+
+	auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
+	for (auto tribe : tribes) {
+		cCreatureCitizen* leader = tribe->GetLeaderCitizen();
+		float dist = (leader->GetPosition() - object->mPosition).SquaredLength();
+		if (dist < last_distance) {
+			closest_leader = leader;
+		}
+	}
+	return closest_leader;
 }
 
 cInteractiveOrnament* cObjectManager::FindInteractedObject() {

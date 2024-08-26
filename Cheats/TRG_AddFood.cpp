@@ -18,7 +18,7 @@ void TRG_AddFood::ParseLine(const ArgScript::Line& line)
 	{
 		//TODO: how to add food?
 		cTribePtr tribe = Simulator::GetDataByCast<Simulator::cTribe>()[0];
-		//tribe->mpTribePlanner->
+		tribe->GetTotalFood();
 	}
 }
 

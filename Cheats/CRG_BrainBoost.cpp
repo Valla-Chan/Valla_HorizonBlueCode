@@ -15,7 +15,14 @@ CRG_BrainBoost::~CRG_BrainBoost()
 void CRG_BrainBoost::ParseLine(const ArgScript::Line& line)
 {
 	if (Simulator::IsCreatureGame() && GameNounManager.GetAvatar()) {
-		Simulator::cCreatureGameData::AddEvolutionPoints(Simulator::cCreatureGameData::GetEvoPointsToNextBrainLevel());
+		float points_to_next = Simulator::cCreatureGameData::GetEvoPointsToNextBrainLevel();
+		if (points_to_next > 0) {
+			Simulator::cCreatureGameData::AddEvolutionPoints(points_to_next);
+		}
+		else {
+			GameNounManager.GetAvatar()->SetCurrentBrainLevel(6);
+		}
+
 	}
 }
 

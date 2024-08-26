@@ -79,6 +79,21 @@
     <ClInclude Include="Cheats\SetCursorCheat.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
+    <ClInclude Include="Cheats\TRG_GetTribeInfo.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="SetChieftainColor.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\SetChieftainColor.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\SetGlideSpeed.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_ChieftainManager.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -141,8 +156,17 @@
     <ClCompile Include="Cheats\TRG_AddFood.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
-    <ClCompile Include="Cheats\SetCursorCheat.cpp">
+    <ClCompile Include="Cheats\TRG_GetTribeInfo.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetChieftainColor.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetGlideSpeed.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_ChieftainManager.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

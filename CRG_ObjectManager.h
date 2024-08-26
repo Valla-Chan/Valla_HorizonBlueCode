@@ -36,8 +36,11 @@ public:
 	cInteractiveOrnamentPtr last_object;
 	ResourceKey last_object_model;
 
+	void ChieftainDied(const cCreatureBasePtr& creature);
+
 	cInteractiveOrnament* GetHoveredObject() const;
 	cInteractiveOrnament* GetNearestObject() const;
+	cCreatureCitizen* cObjectManager::GetNearestTribalLeader(cSpatialObject* object, const float within = 256.0f) const;
 	cInteractiveOrnament* FindInteractedObject();
 
 	void SetInteractedObject(cInteractiveOrnament* object);
