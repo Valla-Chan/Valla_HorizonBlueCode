@@ -24,6 +24,12 @@ public:
 	// 0 = carn  1 = herb  2 = omni
 	int tribe_staff_id = -1;
 
+	int last_tribe_count = 0;
+	int tribe_count = 0;
+
+	void TRG_ChieftainManager::Reset();
+
+	cCreatureCitizen* TRG_ChieftainManager::GetNearestTribalLeader(Vector3 pos, const float within) const;
 	cCreatureCitizen* GetAnimCreatureOwner(const AnimatedCreaturePtr& animcreature);
 	bool IsCreatureTribeLeader(const cCreatureCitizenPtr& creature);
 	int GetChiefDietValue(const cCreatureCitizenPtr chief);

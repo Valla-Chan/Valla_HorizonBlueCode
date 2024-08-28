@@ -20,10 +20,13 @@
 #include "Cheats/TRG_GetTribeInfo.h"
 #include "Cheats/SetChieftainColor.h"
 #include "Cheats/SetGlideSpeed.h"
+#include "Cheats/CRG_GetPart.h"
+#include "Cheats/CRG_GetSick.h"
 
-// Ingame Behaviors
+// CRG Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
 #include "CRG_WaterBehavior.h"
+#include "CRG_DiseaseManager.h"
 
 // Singletons
 #include "CapabilityChecker.h"
@@ -32,6 +35,7 @@
 
 cObjectManager* obconverter;
 TRG_ChieftainManager* chiefmanager;
+CRG_DiseaseManager* diseasemanager;
 
 void Initialize()
 {
@@ -52,6 +56,8 @@ void Initialize()
 	CheatManager.AddCheat("TribeInfo", new(TRG_GetTribeInfo));
 	CheatManager.AddCheat("SetChieftainColor", new(SetChieftainColor));
 	//CheatManager.AddCheat("SetGlideSpeed", new(SetGlideSpeed));
+	CheatManager.AddCheat("GetSick", new(CRG_GetSick));
+	CheatManager.AddCheat("GivePart", new(CRG_GetPart));
 
 	// CRG
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
@@ -62,6 +68,8 @@ void Initialize()
 	chiefmanager = new(TRG_ChieftainManager);
 	MessageManager.AddListener(chiefmanager, kMsgCombatantKilled); //make the Ability Manager function
 	MessageManager.AddListener(chiefmanager, id("TRG_GetTool")); //make the Ability Manager function
+
+	diseasemanager = new(CRG_DiseaseManager);
 
 	// Singletons
 	cCapabilityChecker* capchecker = new(cCapabilityChecker);
@@ -140,37 +148,46 @@ member_detour(TribeSpawn_detour, Simulator::cTribe, void(const Math::Vector3&, i
 	}
 };
 
+// Detour the herd spawning func
+member_detour(HerdSpawn_detour, Simulator::cHerd, cHerd*(const Vector3&, cSpeciesProfile*, int, bool, int, bool)) {
+	cHerd* detoured(const Vector3 & position, cSpeciesProfile* pSpeciesProfile, int herdSize, bool isOwnedByAvatar, int creaturePersonality, bool createNest)
+	{
+		App::ConsolePrintF("Herd Spawned");
+		cHerd* herd = original_function(this, position, pSpeciesProfile, herdSize, isOwnedByAvatar, creaturePersonality, createNest);
+		return herd;
+	}
+};
+
 
 // Detour the effect playing func
 member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint32_t))
 {
 	int detoured(uint32_t instanceId, uint32_t groupId) //Detouring the function for obtaining effect indexes...
 	{
-		// 0 = reg  1 = fish  2 = seaweed
-		int swapnum = -1;
+		if (IsTribeGame()) {
+			// 0 = reg  1 = fish  2 = seaweed
+			int swapnum = -1;
 
-		if (instanceId == id("trg_chieftain_staff")) {swapnum = 0;}
-		if (instanceId == id("trg_chieftain_staff_fish")) {swapnum = 1;}
-		if (instanceId == id("trg_chieftain_staff_seaweed")) {swapnum = 2;}
+			if (instanceId == id("trg_chieftain_staff")) { swapnum = 0; }
+			if (instanceId == id("trg_chieftain_staff_fish")) { swapnum = 1; }
+			if (instanceId == id("trg_chieftain_staff_seaweed")) { swapnum = 2; }
 
-		int dietvalue = 0;
-		if (swapnum > -1) {
-			int dietvalue = chiefmanager->NextQueueItem();
+			int dietvalue = 0;
+			if (swapnum > -1) {
+				dietvalue = chiefmanager->NextQueueItem();
+				uint32_t staff_id = chiefmanager->GetStaffID(dietvalue, swapnum);
+
+				if (staff_id != 0x0) {
+					return original_function(this, staff_id, groupId);
+				}
+			}
+			
 		}
-		uint32_t staff_id = chiefmanager->GetStaffID(dietvalue, swapnum);
 
-		if (staff_id != 0x0) {
-			return original_function(this, staff_id, groupId);
-		}
 		return original_function(this, instanceId, groupId); //And call the original function with the new instance ID.
 	}
 };
 
-void Dispose()
-{
-	obconverter = nullptr;
-	// This method is called when the game is closing
-}
 
 void AttachDetours()
 {
@@ -179,8 +196,15 @@ void AttachDetours()
 	EffectOverride_detour::attach(GetAddress(Swarm::cEffectsManager, GetDirectoryAndEffectIndex));
 	//SetModel_detour::attach(GetAddress(Simulator::cSpatialObject, SetModelKey));  
 	//TribeSpawn_detour::attach(Address(ModAPI::ChooseAddress(0xC92860, 0xC932F0)));
+	HerdSpawn_detour::attach(GetAddress(Simulator::cGameNounManager, CreateHerd));
 }
 
+void Dispose()
+{
+	obconverter = nullptr;
+	chiefmanager = nullptr;
+	// This method is called when the game is closing
+}
 
 // Generally, you don't need to touch any code here
 BOOL APIENTRY DllMain( HMODULE hModule,

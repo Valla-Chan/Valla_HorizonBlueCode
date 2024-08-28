@@ -94,6 +94,15 @@
     <ClInclude Include="TRG_ChieftainManager.h">
       <Filter>Valla_CreatureOverhaul</Filter>
     </ClInclude>
+    <ClInclude Include="CRG_DiseaseManager.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\CRG_GetSick.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\CRG_GetPart.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -167,6 +176,15 @@
     </ClCompile>
     <ClCompile Include="TRG_ChieftainManager.cpp">
       <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_DiseaseManager.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\CRG_GetSick.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\CRG_GetPart.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

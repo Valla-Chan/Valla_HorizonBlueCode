@@ -21,6 +21,12 @@ TRG_ChieftainManager* TRG_ChieftainManager::Get()
 	return sInstance;
 }
 
+void TRG_ChieftainManager::Reset() {
+	last_tribe_count = 0;
+	tribe_count = 0;
+	tribe_staff_id = -1;
+}
+
 bool TRG_ChieftainManager::HandleMessage(uint32_t messageID, void* msg)
 {
 	if (!IsTribeGame()) { return nullptr; }
@@ -53,6 +59,22 @@ cCreatureCitizen* TRG_ChieftainManager::GetAnimCreatureOwner(const AnimatedCreat
 
 }
 
+cCreatureCitizen* TRG_ChieftainManager::GetNearestTribalLeader(Vector3 pos, const float within) const {
+	if (!IsTribeGame()) { return nullptr; }
+
+	float last_distance = within;
+	cCreatureCitizen* closest_leader = nullptr;
+
+	auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
+	for (auto tribe : tribes) {
+		cCreatureCitizen* leader = tribe->GetLeaderCitizen();
+		float dist = (leader->GetPosition() - pos).SquaredLength();
+		if (dist < last_distance) {
+			closest_leader = leader;
+		}
+	}
+	return closest_leader;
+}
 
 bool TRG_ChieftainManager::IsCreatureTribeLeader(const cCreatureCitizenPtr& creature) {
 	// compare citizen to each tribal leaders till we find a match
@@ -67,10 +89,24 @@ bool TRG_ChieftainManager::IsCreatureTribeLeader(const cCreatureCitizenPtr& crea
 
 int TRG_ChieftainManager::GetChiefDietValue(cCreatureCitizenPtr chief) {
 	int value = 0;
+	if (!IsTribeGame()) { return value; }
+	last_tribe_count = tribe_count;
+	auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
+	tribe_count = tribes.size();
 	// if no chief, get the one from the most recently spawned tribe
 	if (!chief) {
-		auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
-		chief = tribes[tribes.size() - 1]->GetLeaderCitizen();
+		// a new tribe has spawned since last time
+		if (tribe_count > last_tribe_count) {
+			chief = tribes[tribe_count - 1]->GetLeaderCitizen();
+		}
+		// a new tribe has not spawned, meaning that the effect has probably just popped in via distance culling.
+		else {
+			chief = GetNearestTribalLeader(GameViewManager.GetWorldMousePosition(),4096);
+			// fall back to last tribe if this is null.
+			if (!chief) {
+				chief = tribes[tribe_count - 1]->GetLeaderCitizen();
+			}
+		}
 	}
 	int carn = CapabilityChecker.GetCapabilityLevel(chief, 0x022E7847);
 	int herb = CapabilityChecker.GetCapabilityLevel(chief, 0x022E785C);
@@ -87,7 +123,7 @@ int TRG_ChieftainManager::GetChiefDietValue(cCreatureCitizenPtr chief) {
 // Add a chief creature's diet value to the queue
 void TRG_ChieftainManager::AddChiefToQueue(const cCreatureCitizenPtr chief) {
 	int value = GetChiefDietValue(chief);
-	App::ConsolePrintF(" - Storing diet value %i",value);
+	//App::ConsolePrintF(" - Storing diet value %i",value);
 	tribe_staff_id = value;
 }
 

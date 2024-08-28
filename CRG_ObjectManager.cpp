@@ -44,8 +44,6 @@ cInteractiveOrnament* cObjectManager::GetNearestObject() const {
 			last_distance = dist;
 		}
 	}
-	// DEV TEST
-	//object_nearest->SetScale(4);
 	return object_nearest;
 }
 
@@ -138,7 +136,15 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 
 		// Apply values
 		if (health != 0.0f) { creature->SetHealthPoints(creature->mHealthPoints + health); }
-		if (food != 0.0f) { creature->mHunger += food; }
+		if (food != 0.0f) {
+			creature->mHunger += food;
+			// reset the food timer if this adds to the food value.
+			if (food > 0) {
+				LARGE_INTEGER b = { 0 };
+				creature->mHungerDelayTimer.SetTime(b);
+				creature->mHungerDelayTimer.Start();
+			}
+		}
 		if (dna != 0.0f) { Simulator::cCreatureGameData::AddEvolutionPoints(dna); }
 
 		ResourceKey animkey = GetModelSuccessAnim(modelKey);
