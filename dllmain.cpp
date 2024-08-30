@@ -22,6 +22,7 @@
 #include "Cheats/SetGlideSpeed.h"
 #include "Cheats/CRG_GetPart.h"
 #include "Cheats/CRG_GetSick.h"
+#include "Cheats/CRG_GiveAllParts.h"
 
 // CRG Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
@@ -58,6 +59,7 @@ void Initialize()
 	//CheatManager.AddCheat("SetGlideSpeed", new(SetGlideSpeed));
 	CheatManager.AddCheat("GetSick", new(CRG_GetSick));
 	CheatManager.AddCheat("GivePart", new(CRG_GetPart));
+	CheatManager.AddCheat("GiveAllParts", new(CRG_GiveAllParts));
 
 	// CRG
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
@@ -132,13 +134,35 @@ member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 };
 
 // Detour the model setting func
-/*
 virtual_detour(SetModel_detour, Simulator::cSpatialObject, Simulator::cSpatialObject, void (const ResourceKey&)) {
 	void detoured(const ResourceKey& modelKey) {
+
+		if (modelKey.instanceID == id("CRG_Meteorite")) {
+			App::ConsolePrintF("CRG_Meteorite");
+		}
+		if (modelKey.instanceID == id("CR_Meteorite_Small")) {
+			App::ConsolePrintF("CR_Meteorite_Small");
+		}
+		if (modelKey.instanceID == id("cr_feature_meteorite_a")) {
+			App::ConsolePrintF("cr_feature_meteorite_a");
+		}
+
+		// if this is a nest, check its herd type
+		cNestPtr nest = object_cast<Simulator::cNest>(this);
+		if (nest && !nest->mpHerd->mOwnedByAvatar) {
+			cHerdPtr herd = nest->mpHerd;
+
+			// set nest model from override
+			ResourceKey nestmodelkey = ObjectManager.GetHerdNestModel(herd->mDefinitionID);
+			if (nestmodelkey.instanceID != 0x0) {
+				original_function(this, nestmodelkey);
+				return;
+			}
+		}
 		original_function(this, modelKey);
 	}
 };
-*/
+
 // Detour the tribe spawning func
 member_detour(TribeSpawn_detour, Simulator::cTribe, void(const Math::Vector3&, int, int, bool)) {
 	void detoured(const Math::Vector3& position, int numMembers, int value, bool boolvalue) {
@@ -188,21 +212,77 @@ member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint3
 	}
 };
 
+// Detour a player part unlocking function
+member_detour(CRGunlock_detour, Simulator::CreatureGamePartUnlocking, struct cCollectableItemID(UnkHashMap&, bool, int, int))
+{
+	struct cCollectableItemID detoured(UnkHashMap& unk1, bool unk2, int unk3, int unk4)
+	{
+		SporeDebugPrint("unlocking part! hashmap size: %x, bool: %b, ints: %i %i", unk1.size(), unk2, unk3, unk4);
+		cCollectableItemID partid = original_function(this, unk1, unk2, unk3, unk4);
+		SporeDebugPrint("part ID: 0x%x ! 0x%x ", partid.groupID, partid.instanceID );
+		
+		//if (partid.instanceID != 0xffffffff) {
+		//partid.groupID = 0x887C91BB;
+		//}
+		
+		//Simulator::GetPlayer()->mpCRGItems->AddUnlockableItem(id("ce_details_wing_04-symmetric"), 0x40626000, 4, id("ce_category_wings"), 0, 3, 0, 1.0f, id("CRG_partUnlock_detail"));
+		Simulator::GetPlayer()->mpCRGItems->AddUnlockableItemFromProp(ResourceKey(id("ce_details_wing_04-symmetric"), TypeIDs::Names::prop, 0x40626000), id("ce_category_wings"), 0, 3, 0);
+
+		return partid;
+
+	}
+};
+
+// Detour an unknown unlockable func 1: sub_597BC0
+member_detour(CRGunlockUnk1_detour, Simulator::cCollectableItems, void(UnkHashMap&, int, const ResourceKey&))
+{
+	void detoured(UnkHashMap& dst, int unk0, const ResourceKey& speciesKey)
+	{
+		SporeDebugPrint("unknown unlock func 1 ------");
+		SporeDebugPrint("int: %i, hashmap size: %i", unk0, dst.size());
+		//if (speciesKey != ResourceKey()) {
+		//	SporeDebugPrint("species: 0x%x ! 0x%x", speciesKey.groupID, speciesKey.instanceID);
+		//}
+		original_function(this, dst, unk0, speciesKey);
+		return;
+	}
+};
+
+// Detour an unknown unlockable func 2: sub_597390
+member_detour(CRGunlockUnk2_detour, Simulator::cCollectableItems, void(eastl::vector<int>&, struct cCollectableItemID, int))
+{
+	void detoured(eastl::vector<int>&dst, struct cCollectableItemID itemID, int unk0)
+	{
+		SporeDebugPrint("unknown unlock func 2 ------");
+		for (auto i : dst) {
+			SporeDebugPrint("vector value: %i", i);
+		}
+		SporeDebugPrint("instance: %x, group: %x,  int: %i", itemID.instanceID, itemID.groupID, unk0);
+		original_function(this, dst, itemID, unk0);
+		return;
+	}
+};
 
 void AttachDetours()
 {
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
 	SetCursor_detour::attach(GetAddress(UTFWin::cCursorManager, SetActiveCursor));
 	EffectOverride_detour::attach(GetAddress(Swarm::cEffectsManager, GetDirectoryAndEffectIndex));
-	//SetModel_detour::attach(GetAddress(Simulator::cSpatialObject, SetModelKey));  
+	SetModel_detour::attach(GetAddress(Simulator::cSpatialObject, SetModelKey));  
 	//TribeSpawn_detour::attach(Address(ModAPI::ChooseAddress(0xC92860, 0xC932F0)));
 	HerdSpawn_detour::attach(GetAddress(Simulator::cGameNounManager, CreateHerd));
+
+	CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
+
+	CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
+	CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));
 }
 
 void Dispose()
 {
 	obconverter = nullptr;
 	chiefmanager = nullptr;
+	diseasemanager = nullptr;
 	// This method is called when the game is closing
 }
 

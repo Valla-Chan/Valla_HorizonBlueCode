@@ -44,13 +44,13 @@ void BuildCRG::Update()
 					herd->mHerd[0]->SetCurrentBrainLevel(5);
 					herd->mHerd[1]->SetCurrentBrainLevel(5);
 					herd->mHerd[2]->SetCurrentBrainLevel(5);
-					herd->mHerd[2]->mbIsDiseased = true;
+					//herd->mHerd[2]->mbIsDiseased = true;
 					herd->mHerd[3]->SetCurrentBrainLevel(5);
 
 					herd->mHerd[3]->mbColorIsIdentity = true;
-					herd->mHerd[3]->SetIdentityColor(ColorRGB(2.0f, 2.0f, 2.0f));
+					//herd->mHerd[3]->SetIdentityColor(ColorRGB(2.0f, 2.0f, 2.0f));
 
-					avatar->mbIsDiseased = true;
+					//avatar->mbIsDiseased = true;
 				}
 				
 		}
@@ -82,12 +82,17 @@ void BuildCRG::ParseLine(const ArgScript::Line& line)
 	avatar = GameNounManager.GetAvatar();
 	//
 	if (CompareStrings(mParameter, "Nest")){
-		herd = GameNounManager.CreateHerd(avatar->GetPosition(), avatar->mpSpeciesProfile, 4, false, 0, true);
+		//herd = GameNounManager.CreateHerd(avatar->GetPosition(), avatar->mpSpeciesProfile, 4, false, 0, true);
+		// grox test:
+		Simulator::cSpeciesProfile* grox = SpeciesManager.GetSpeciesProfile(ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200));
+		herd = GameNounManager.CreateHerd(avatar->GetPosition(), grox, 4, false, 9, true);
+
 		type = 1;
 		clocktest.SetMode(Clock::Mode::Milliseconds);
 		clocktest.Start();
-		herd->mpHerdMom = avatar;
-		herd->mpEggLayer = avatar;
+		herd->mHitpointOverride = 0;
+		//herd->mpHerdMom = avatar;
+		//herd->mpEggLayer = avatar;
 	}
 	else if (CompareStrings(mParameter, "Hut")) {
 		//herd = GameNounManager.CreateHerd(avatar->GetPosition(), avatar->mpSpeciesProfile, 2, false, 0, true);

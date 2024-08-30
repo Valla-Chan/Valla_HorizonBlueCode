@@ -2,12 +2,12 @@
 
 #include <Spore\BasicIncludes.h>
 
-class CRG_GetPart 
+class CRG_GiveAllParts 
 	: public ArgScript::ICommand
 {
 public:
-	CRG_GetPart();
-	~CRG_GetPart();
+	CRG_GiveAllParts();
+	~CRG_GiveAllParts();
 
 	// Called when the cheat is invoked
 	void ParseLine(const ArgScript::Line& line) override;
