@@ -127,11 +127,23 @@ void cObjectManager::TestInteractableForDestruction() {
 // Apply rewards/penalties from the model onto a creature
 void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const ResourceKey& modelKey) {
 	if (interaction_success) {
+
 		// Read Reward values
 		float health = GetModelFloatValue(modelKey, id("modelHealthReward"));
 		float food = GetModelFloatValue(modelKey, id("modelFoodReward"));
 		float dna = GetModelFloatValue(modelKey, id("modelDNAReward"));
-		Vector2* parts = GetModelVector2sValue(modelKey, id("modelPartsReward"));
+
+		Vector2* partLevels = {};
+		size_t numParts = 0;
+
+		PropertyListPtr mpPropList;
+		if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+		{
+			bool test = App::Property::GetArrayVector2(mpPropList.get(), id("modelPartsReward"), numParts, partLevels);
+			if (!test) {
+				numParts = 0;
+			}
+		}
 
 		// Apply values
 		if (health != 0.0f) { creature->SetHealthPoints(creature->mHealthPoints + health); }
@@ -145,16 +157,15 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 			}
 		}
 		if (dna != 0.0f) { Simulator::cCreatureGameData::AddEvolutionPoints(dna); }
-		if (parts) {
-			for (int i = 0; i < parts->Length(); i++) {
-				int minValue = min(floor(parts[i].x), floor(parts[i].y));
-				int maxValue = max(floor(parts[i].x), floor(parts[i].y));
+		if (numParts > 0 && partLevels) {
+			for (size_t i = 0; i < numParts; i++) {
+				int minValue = int(min(floor(partLevels[i].x), floor(partLevels[i].y)));
+				int maxValue = int(max(floor(partLevels[i].x), floor(partLevels[i].y)));
 
 				// randomize part level
 				int level = minValue + rand(maxValue - minValue + 1); // add 1 in order to include last value
 
 				// Unlock a part in this range.
-				// TODO: why is this crashing?
 				App::CreatureModeStrategies::UnlockPart action = { GameNounManager.GetAvatar(), 0, level };
 				CreatureModeStrategy.ExecuteAction(action.ID, &action);
 			}
