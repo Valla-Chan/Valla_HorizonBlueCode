@@ -59,6 +59,7 @@ public:
 
 	uint32_t GetModelCursorID(const ResourceKey& modelKey, const uint32_t default_ID) const;
 	float GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const;
+	Vector2* GetModelVector2sValue(const ResourceKey& modelKey, const uint32_t property) const;
 
 	ResourceKey GetHerdNestModel(const uint32_t herdID) const;
 

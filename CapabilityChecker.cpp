@@ -112,6 +112,24 @@ float cCapabilityChecker::GetModelFloatValue(const ResourceKey& modelKey, const 
 	return 0.0f;
 }
 
+// Open a model resource and get an array of vector2 values of a property
+Vector2* cCapabilityChecker::GetModelVector2sValue(const ResourceKey& modelKey, const uint32_t property) const
+{
+	//Initialize some pointers
+	Vector2* partLevels;
+	size_t numParts;
+
+	PropertyListPtr mpPropList;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetArrayVector2(mpPropList.get(), property, numParts, partLevels);
+		if (test) {
+			return partLevels;
+		}
+	}
+	return nullptr;
+}
+
 // Open a model resource and get an int value of a property
 int cCapabilityChecker::GetModelIntValue(const ResourceKey& modelKey, const uint32_t property) const
 {

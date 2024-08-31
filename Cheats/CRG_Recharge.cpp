@@ -16,7 +16,7 @@ void CRG_Recharge::ParseLine(const ArgScript::Line& line)
 	cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
 	if (avatar) {
 		avatar->mEnergy = avatar->mMaxEnergy;
-		avatar->mRechargingAbilityBits.reset();
+		//avatar->mRechargingAbilityBits.reset();
 	}
 }
 

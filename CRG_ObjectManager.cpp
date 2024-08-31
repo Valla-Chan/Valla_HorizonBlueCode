@@ -79,8 +79,6 @@ cCreatureCitizen* cObjectManager::GetNearestTribalLeader(cSpatialObject* object,
 cInteractiveOrnament* cObjectManager::FindInteractedObject() {
 	cCreatureBase* avatar = object_cast<Simulator::cCreatureBase>(GameNounManager.GetAvatar());
 	if (!avatar) { return nullptr; }
-
-	float last_distance = 4096.0f;
 	cInteractiveOrnament* object_nearest = nullptr;
 
 	// loop through all ingame interactables
@@ -133,6 +131,7 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 		float health = GetModelFloatValue(modelKey, id("modelHealthReward"));
 		float food = GetModelFloatValue(modelKey, id("modelFoodReward"));
 		float dna = GetModelFloatValue(modelKey, id("modelDNAReward"));
+		Vector2* parts = GetModelVector2sValue(modelKey, id("modelPartsReward"));
 
 		// Apply values
 		if (health != 0.0f) { creature->SetHealthPoints(creature->mHealthPoints + health); }
@@ -146,6 +145,20 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 			}
 		}
 		if (dna != 0.0f) { Simulator::cCreatureGameData::AddEvolutionPoints(dna); }
+		if (parts) {
+			for (int i = 0; i < parts->Length(); i++) {
+				int minValue = min(floor(parts[i].x), floor(parts[i].y));
+				int maxValue = max(floor(parts[i].x), floor(parts[i].y));
+
+				// randomize part level
+				int level = minValue + rand(maxValue - minValue + 1); // add 1 in order to include last value
+
+				// Unlock a part in this range.
+				// TODO: why is this crashing?
+				App::CreatureModeStrategies::UnlockPart action = { GameNounManager.GetAvatar(), 0, level };
+				CreatureModeStrategy.ExecuteAction(action.ID, &action);
+			}
+		}
 
 		ResourceKey animkey = GetModelSuccessAnim(modelKey);
 		if (animkey.instanceID != 0x0) {
@@ -195,6 +208,11 @@ bool cObjectManager::MatchesProperty(const uint32_t property, const cCreatureBas
 // Open a model resource and get a float value from a property
 float cObjectManager::GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const {
 	return CapabilityChecker.GetModelFloatValue(modelKey, property);
+}
+
+// Open a model resource and get an array of vector2 values of a property
+Vector2* cObjectManager::GetModelVector2sValue(const ResourceKey& modelKey, const uint32_t property) const {
+	return CapabilityChecker.GetModelVector2sValue(modelKey, property);
 }
 
 // Open a model resource and find what anim it wants the avatar to use when first interacting

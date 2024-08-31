@@ -143,6 +143,14 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="CRE_ViewerAnims.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="CRG_AttackBasic.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="CRG_DiseaseManager.h">
       <SubType>
       </SubType>
@@ -203,6 +211,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="Cheats\TRG_GetTribeInfo.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="CRG_AttackBasic.cpp">
       <SubType>
       </SubType>
     </ClCompile>

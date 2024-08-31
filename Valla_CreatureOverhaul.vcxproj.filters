@@ -103,6 +103,12 @@
     <ClInclude Include="Cheats\CRG_GiveAllParts.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
+    <ClInclude Include="CRE_ViewerAnims.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_AttackBasic.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -185,6 +191,9 @@
     </ClCompile>
     <ClCompile Include="Cheats\CRG_GiveAllParts.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_AttackBasic.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

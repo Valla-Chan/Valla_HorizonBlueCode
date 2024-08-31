@@ -28,11 +28,15 @@
 #include "CRG_EnergyHungerSync.h"
 #include "CRG_WaterBehavior.h"
 #include "CRG_DiseaseManager.h"
+#include "CRG_AttackBasic.h"
 
 // Singletons
 #include "CapabilityChecker.h"
 #include "CRG_ObjectManager.h"
 #include "TRG_ChieftainManager.h"
+
+// Scripts
+#include "CRE_ViewerAnims.h"
 
 cObjectManager* obconverter;
 TRG_ChieftainManager* chiefmanager;
@@ -64,6 +68,8 @@ void Initialize()
 	// CRG
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
 	CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
+	CRG_AttackBasic* attackbasic = new(CRG_AttackBasic);
+	WindowManager.GetMainWindow()->AddWinProc(attackbasic);
 
 	// Managers
 	obconverter = new(cObjectManager);
@@ -82,6 +88,7 @@ void Initialize()
 member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*)) {
 	bool detoured(uint32_t animID, int* pChoice) {
 
+		// CRG
 		if (IsCreatureGame()) {
 			cCreatureAnimal* avatar = GameNounManager.GetAvatar();
 			if (avatar && animID == 0x03DF6DFF) { //gen_dig_hands
@@ -98,18 +105,13 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 				
 			}
 		}
-
-		/*
-		if (animID == 0x05EF4EE1) {
-			App::ConsolePrintF("started using torch grasper overlay!");
+		// Sporepedia viewer
+		else if (GetGameModeID() == kGGEMode) {
+			if (ShouldReplaceAnim(animID)) {
+				App::ConsolePrintF("Replace that thang");
+				animID = GetRandViewerAnim();
+			}
 		}
-		if (animID == 0x03CDACC0) {
-			App::ConsolePrintF("get_tool_rack");
-		}
-		if (animID == 0x02C39200) {
-			App::ConsolePrintF("get_tool");
-		}
-		*/
 
 		return original_function(this, animID, pChoice);
 
@@ -226,7 +228,7 @@ member_detour(CRGunlock_detour, Simulator::CreatureGamePartUnlocking, struct cCo
 		//}
 		
 		//Simulator::GetPlayer()->mpCRGItems->AddUnlockableItem(id("ce_details_wing_04-symmetric"), 0x40626000, 4, id("ce_category_wings"), 0, 3, 0, 1.0f, id("CRG_partUnlock_detail"));
-		Simulator::GetPlayer()->mpCRGItems->AddUnlockableItemFromProp(ResourceKey(id("ce_details_wing_04-symmetric"), TypeIDs::Names::prop, 0x40626000), id("ce_category_wings"), 0, 3, 0);
+		//Simulator::GetPlayer()->mpCRGItems->AddUnlockableItemFromProp(ResourceKey(id("ce_details_wing_04-symmetric"), TypeIDs::Names::prop, 0x40626000), id("ce_category_wings"), 0, 3, 0);
 
 		return partid;
 
@@ -240,10 +242,11 @@ member_detour(CRGunlockUnk1_detour, Simulator::cCollectableItems, void(UnkHashMa
 	{
 		SporeDebugPrint("unknown unlock func 1 ------");
 		SporeDebugPrint("int: %i, hashmap size: %i", unk0, dst.size());
-		//if (speciesKey != ResourceKey()) {
-		//	SporeDebugPrint("species: 0x%x ! 0x%x", speciesKey.groupID, speciesKey.instanceID);
+		//if (speciesKey != 0) {
+			//SporeDebugPrint("species: 0x%x ! 0x%x", speciesKey.groupID, speciesKey.instanceID);
 		//}
 		original_function(this, dst, unk0, speciesKey);
+		SporeDebugPrint("int: %i, hashmap size: %i", unk0, dst.size());
 		return;
 	}
 };
@@ -274,8 +277,8 @@ void AttachDetours()
 
 	CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
 
-	CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
-	CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));
+	//CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
+	//CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));
 }
 
 void Dispose()
