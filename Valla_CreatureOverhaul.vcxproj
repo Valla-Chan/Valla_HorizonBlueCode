@@ -161,6 +161,7 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="CRG_WaterBehavior.h" />
+    <ClInclude Include="CR_JetHover.h" />
     <ClInclude Include="SetChieftainColor.h">
       <SubType>
       </SubType>
@@ -168,6 +169,10 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TRG_ChieftainManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="TRG_CreaturePickup.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -234,6 +239,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TRG_ChieftainManager.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="TRG_CreaturePickup.cpp">
       <SubType>
       </SubType>
     </ClCompile>

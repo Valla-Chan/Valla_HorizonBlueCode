@@ -145,6 +145,21 @@ int cCapabilityChecker::GetModelIntValue(const ResourceKey& modelKey, const uint
 	return 0;
 }
 
+// Open a model resource and get a bool value of a property
+bool cCapabilityChecker::GetModelBoolValue(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	bool value;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetBool(mpPropList.get(), property, value);
+		if (test) {
+			return value;
+		}
+	}
+	return false;
+}
+
 
 // For internal use, do not modify.
 int cCapabilityChecker::AddRef()

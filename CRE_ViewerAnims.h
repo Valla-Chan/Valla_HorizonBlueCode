@@ -38,14 +38,12 @@ int last_idx = 0;
 bool ShouldReplaceAnim(uint32_t animID) {
 	// high chance of replace
 	for (auto item : replaced_animations) {
-		App::ConsolePrintF("%x %x", item, animID);
 		if (item == animID) {
 			return bool(rand(3));
 		}
 	}
 	// lower chance of replace
 	for (auto item : default_animations) {
-		App::ConsolePrintF("%x %x", item, animID);
 		if (item == animID) {
 			return randf() > 0.7;
 		}

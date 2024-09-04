@@ -109,6 +109,12 @@
     <ClInclude Include="CRG_AttackBasic.h">
       <Filter>Valla_CreatureOverhaul</Filter>
     </ClInclude>
+    <ClInclude Include="CR_JetHover.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_CreaturePickup.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -193,6 +199,9 @@
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="CRG_AttackBasic.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_CreaturePickup.cpp">
       <Filter>Valla_CreatureOverhaul</Filter>
     </ClCompile>
   </ItemGroup>

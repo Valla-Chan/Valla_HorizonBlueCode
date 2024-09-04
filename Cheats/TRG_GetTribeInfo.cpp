@@ -37,10 +37,10 @@ void TRG_GetTribeInfo::ParseLine(const ArgScript::Line& line)
 		for (auto tool : tools) {
 			toolnum += 1;
 			App::ConsolePrintF("Tool %i data below:", toolnum);
+			App::ConsolePrintF("	mToolType:  %x", tool->mToolType);
 			App::ConsolePrintF("	field_1F0:  %x", tool->field_1F0);
 			App::ConsolePrintF("	field_1F4:  %x", tool->field_1F4);
 			App::ConsolePrintF("	field_1F8:  %x", tool->field_1F8);
-			App::ConsolePrintF("	mToolType:  %x", tool->mToolType);
 			App::ConsolePrintF("	field_240:  %x", tool->field_240);
 			App::ConsolePrintF("	field_244:  %x", tool->field_244);
 		}

@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <Spore/Effects.h>
 #include <Spore/Swarm/cEffectsManager.h>
+#include <Spore\Simulator\cCreatureGameData.h>
 
 // Cheats
 #include "Cheats/BuildCRG.h"
@@ -30,6 +31,9 @@
 #include "CRG_DiseaseManager.h"
 #include "CRG_AttackBasic.h"
 
+// TRG Ingame Behaviors
+#include "TRG_CreaturePickup.h"
+
 // Singletons
 #include "CapabilityChecker.h"
 #include "CRG_ObjectManager.h"
@@ -37,10 +41,12 @@
 
 // Scripts
 #include "CRE_ViewerAnims.h"
+#include "CR_JetHover.h"
 
 cObjectManager* obconverter;
 TRG_ChieftainManager* chiefmanager;
 CRG_DiseaseManager* diseasemanager;
+TRG_CreaturePickup* trg_creaturepickup;
 
 void Initialize()
 {
@@ -68,14 +74,21 @@ void Initialize()
 	// CRG
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
 	CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
-	CRG_AttackBasic* attackbasic = new(CRG_AttackBasic);
-	WindowManager.GetMainWindow()->AddWinProc(attackbasic);
+
+	CRG_AttackBasic* crg_attackbasic = new(CRG_AttackBasic);
+	WindowManager.GetMainWindow()->AddWinProc(crg_attackbasic);
+	MessageManager.AddListener(crg_attackbasic, id("CRG_AttackGeneric")); // listen for anim event
+	MessageManager.AddListener(crg_attackbasic, id("CRG_AttackGeneric_Done")); // listen for anim event
+	
+	// TRG
+	trg_creaturepickup = new(TRG_CreaturePickup);
+	WindowManager.GetMainWindow()->AddWinProc(trg_creaturepickup);
+
 
 	// Managers
 	obconverter = new(cObjectManager);
 	chiefmanager = new(TRG_ChieftainManager);
-	MessageManager.AddListener(chiefmanager, kMsgCombatantKilled); //make the Ability Manager function
-	MessageManager.AddListener(chiefmanager, id("TRG_GetTool")); //make the Ability Manager function
+	MessageManager.AddListener(chiefmanager, id("TRG_GetTool")); // listen for anim event
 
 	diseasemanager = new(CRG_DiseaseManager);
 
@@ -83,10 +96,47 @@ void Initialize()
 	cCapabilityChecker* capchecker = new(cCapabilityChecker);
 }
 
+cCreatureAnimal* GetAnimCreatureOwner(const AnimatedCreaturePtr& animcreature) {
+	cCombatantPtr target = nullptr;
+	for (auto creature : Simulator::GetData<Simulator::cCreatureAnimal>()) { //loop through all creatures
+		if (creature->mpAnimatedCreature.get() == animcreature) //if the current creature is the owner of the AnimatedCreature that triggered the event
+		{
+			return creature.get(); //set the crt pointer to the current creature
+		}
+	}
+	return nullptr;
+}
 
 // Detour the animation playing func
 member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*)) {
 	bool detoured(uint32_t animID, int* pChoice) {
+
+		if (IsCreatureGame() || IsScenarioMode()) {
+			uint32_t jetanim = JetHover_GetAnim(animID);
+			if (jetanim != animID) {
+				return original_function(this, jetanim, pChoice);
+			}
+
+
+			// Scenario Social behaviors
+			if (animID == 0xb225328f) { // "soc_hurrayclap"
+				auto creature = GetAnimCreatureOwner(this);
+				// if it is a sentient creature, replace the clapping with a salute
+				if (creature && creature->GetCurrentBrainLevel() >= 5 && creature->mAge >= 1) {
+					return original_function(this, 0x00BF10B3, pChoice); //"soc_posse_salute_01a"
+				}
+				
+			}
+			// swap the wave for a flex intimidate.
+			// TODO: make this only play if avatar in combat stance mode when interacting
+			if (animID == 0x5403B863) { // "gen_posse_call"
+				// for some reason these are opposite.
+				if ((IsScenarioMode() && CreatureGameData.GetAbilityMode() != cCreatureGameData::AbilityMode::Attack) ||
+					(IsCreatureGame() && CreatureGameData.GetAbilityMode() == cCreatureGameData::AbilityMode::Attack) ){
+					return original_function(this, 0x0418B841, pChoice); //"csa_phpto_flex"
+				}
+			}
+		}
 
 		// CRG
 		if (IsCreatureGame()) {
@@ -113,6 +163,7 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 			}
 		}
 
+		//SporeDebugPrint("Animation: %x", animID);
 		return original_function(this, animID, pChoice);
 
 	}
@@ -122,6 +173,7 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 	bool detoured(uint32_t id) {
 
+
 		if (IsCreatureGame()) {
 			cInteractiveOrnament* object = ObjectManager.GetHoveredObject();
 			if (object) {
@@ -129,9 +181,38 @@ member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 				return original_function(this, cursorid);
 			}
 		}
+		
+		else if (IsTribeGame()) {
+			if (trg_creaturepickup->held_member) {
+				return original_function(this, 0x03C32077);
+			}
+			else {
+				auto tribe = trg_creaturepickup->GetPlayerTribe();
+				if (tribe) {
+					auto members = tribe->GetSelectableMembers();
+					for (auto member : members) {
+						if (member && member->IsRolledOver()) {
+							return original_function(this, BasicCursorIDs::Cursors::GrabOpen);
+						}
+					}
+				}
+			}
+		}
+		
+
 		//App::ConsolePrintF("Setting cursor: %x", id);
 		return original_function(this, id);
 
+	}
+};
+
+
+// Detour the cursor LOADING func
+member_detour(LoadCursor_detour, UTFWin::cCursorManager, bool(uint32_t, const char16_t*, bool, int, int)) {
+	bool detoured(uint32_t id, const char16_t* fileName, bool loadFromFile = true, int xHotspot = 0, int yHotspot = 0) {
+		App::ConsolePrintF("Loading cursor: %x, %b,  %i %i", id, loadFromFile, xHotspot, yHotspot);
+		App::ConsolePrintF("cursor file: %ls", fileName);
+		return original_function(this, id, fileName, loadFromFile, xHotspot, yHotspot);
 	}
 };
 
@@ -178,7 +259,7 @@ member_detour(TribeSpawn_detour, Simulator::cTribe, void(const Math::Vector3&, i
 member_detour(HerdSpawn_detour, Simulator::cHerd, cHerd*(const Vector3&, cSpeciesProfile*, int, bool, int, bool)) {
 	cHerd* detoured(const Vector3 & position, cSpeciesProfile* pSpeciesProfile, int herdSize, bool isOwnedByAvatar, int creaturePersonality, bool createNest)
 	{
-		App::ConsolePrintF("Herd Spawned");
+		//App::ConsolePrintF("Herd Spawned");
 		cHerd* herd = original_function(this, position, pSpeciesProfile, herdSize, isOwnedByAvatar, creaturePersonality, createNest);
 		return herd;
 	}
@@ -266,16 +347,28 @@ member_detour(CRGunlockUnk2_detour, Simulator::cCollectableItems, void(eastl::ve
 	}
 };
 
+// Detour CalculateAvatarNormalizingScale
+static_detour(AvatarScaling_detour, void())
+{
+	void detoured()
+	{
+		original_function();
+		CreatureGameData.mAvatarNormalizingScale = (CreatureGameData.mAvatarNormalizingScale + 0.3f) / 1.3f;
+	}
+};
+
 void AttachDetours()
 {
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
 	SetCursor_detour::attach(GetAddress(UTFWin::cCursorManager, SetActiveCursor));
+	//LoadCursor_detour::attach(GetAddress(UTFWin::cCursorManager, Load));
 	EffectOverride_detour::attach(GetAddress(Swarm::cEffectsManager, GetDirectoryAndEffectIndex));
 	SetModel_detour::attach(GetAddress(Simulator::cSpatialObject, SetModelKey));  
 	//TribeSpawn_detour::attach(Address(ModAPI::ChooseAddress(0xC92860, 0xC932F0)));
 	HerdSpawn_detour::attach(GetAddress(Simulator::cGameNounManager, CreateHerd));
 
 	CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
+	AvatarScaling_detour::attach(GetAddress(Simulator::cCreatureGameData, CalculateAvatarNormalizingScale));
 
 	//CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
 	//CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));
@@ -286,6 +379,7 @@ void Dispose()
 	obconverter = nullptr;
 	chiefmanager = nullptr;
 	diseasemanager = nullptr;
+	trg_creaturepickup = nullptr;
 	// This method is called when the game is closing
 }
 

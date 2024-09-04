@@ -52,16 +52,32 @@ bool CRG_AttackBasic::HandleUIMessage(IWindow* window, const Message& message)
 	if (!avatar) { return false; }
 
 	// Did the user press the F key? 
-	if (message.IsType(kMsgKeyDown) && message.Key.vkey == 'F') {
-		avatar->PlayAnimation(0xAFF68933);
-		AffectNearbyCreatures();
-		AffectClosestInteractable();
+	if ((!attacking || true) && message.IsType(kMsgKeyDown) && message.Key.vkey == 'F') {
+		attacking = true;
+		//avatar->PlayAnimation(0xAFF68933);
+		avatar->PlayAnimation(0xDE283096); // block
 		return true; // Message handled
 	}
 	return false;
 }
 
-const float attackrange = 5.0f;
+bool CRG_AttackBasic::HandleMessage(uint32_t messageID, void* msg)
+{
+	if (!IsCreatureGame()) { return nullptr; }
+
+	if (messageID == id("CRG_AttackGeneric"))
+	{
+		AffectNearbyCreatures();
+		AffectClosestInteractable();
+		return true;
+	}
+	else if (messageID == id("CRG_AttackGeneric_Done")) {
+		attacking = false;
+		return true;
+	}
+	return false;
+}
+
 
 float CRG_AttackBasic::GetDistance(Vector3 point1, Vector3 point2) const {
 	return abs((point1 - point2).Length());
@@ -98,7 +114,7 @@ void CRG_AttackBasic::AffectNearbyCreatures() {
 	auto creatures = Simulator::GetDataByCast<Simulator::cCreatureAnimal>();
 
 	for (auto creature : creatures) {
-		if (creature.get() != avatar && abs((avatar->GetPosition() - creature->GetPosition()).Length()) <= within) {
+		if (creature && creature.get() != avatar && abs((avatar->GetPosition() - creature->GetPosition()).Length()) <= within) {
 			AffectCreature(creature);
 		}
 	}
@@ -109,8 +125,9 @@ void CRG_AttackBasic::AffectCreature(cCreatureAnimalPtr creature) {
 	if (!avatar || avatar->mbDead || avatar->mAge < 1) { return; }
 
 	creature->SetCreatureTarget(avatar, true, 1);
-	creature->mpLastAttacker = avatar;
+	//creature->mpLastAttacker = avatar;
 	creature->SetTarget(avatar);
+	creature->mpCombatantTarget = avatar;
 
 	creature->PlayAnimation(0x02481E14); //com_stun
 	//creature->PlayAnimation(0x92314082); //gen_startled

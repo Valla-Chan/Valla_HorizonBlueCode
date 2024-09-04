@@ -133,6 +133,7 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 		float food = GetModelFloatValue(modelKey, id("modelFoodReward"));
 		float dna = GetModelFloatValue(modelKey, id("modelDNAReward"));
 
+		// Part Rewards
 		Vector2* partLevels = {};
 		size_t numParts = 0;
 
@@ -182,11 +183,13 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 		float health = GetModelFloatValue(modelKey, id("modelHealthPenalty"));
 		float food = GetModelFloatValue(modelKey, id("modelFoodPenalty"));
 		float dna = GetModelFloatValue(modelKey, id("modelDNAPenalty"));
+		float disease = GetModelBoolValue(modelKey, id("modelSicknessPenalty"));
 
 		// Apply values
 		if (health != 0.0f) { creature->SetHealthPoints(creature->mHealthPoints - health); }
 		if (food != 0.0f) { creature->mHunger -= food; }
 		if (dna != 0.0f) { Simulator::cCreatureGameData::AddEvolutionPoints(-1*dna); }
+		if (disease) { creature->mbIsDiseased = true; }
 
 		ResourceKey animkey = GetModelFailureAnim(modelKey);
 		if (animkey.instanceID != 0x0) {
@@ -219,6 +222,11 @@ bool cObjectManager::MatchesProperty(const uint32_t property, const cCreatureBas
 // Open a model resource and get a float value from a property
 float cObjectManager::GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const {
 	return CapabilityChecker.GetModelFloatValue(modelKey, property);
+}
+
+// Open a model resource and get a bool value from a property
+bool cObjectManager::GetModelBoolValue(const ResourceKey& modelKey, const uint32_t property) const {
+	return CapabilityChecker.GetModelBoolValue(modelKey, property);
 }
 
 // Open a model resource and get an array of vector2 values of a property
