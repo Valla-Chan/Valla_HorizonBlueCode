@@ -14,6 +14,15 @@
     <Filter Include="Valla_CreatureOverhaul\Cheats">
       <UniqueIdentifier>{86f3ec91-0e86-4bec-bea2-1c4573a64d8f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Valla_CreatureOverhaul\EP1">
+      <UniqueIdentifier>{4ec34b06-99c9-4a0a-a2a9-c3e7a0662e99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Valla_CreatureOverhaul\CRG">
+      <UniqueIdentifier>{0d4177db-35f9-4cef-b40e-10c505c785fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Valla_CreatureOverhaul\TRG">
+      <UniqueIdentifier>{79da3ef8-3a11-4046-8b9b-37fd3ca7088b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -23,12 +32,6 @@
       <Filter>Internal</Filter>
     </ClInclude>
     <ClInclude Include="CapabilityChecker.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClInclude>
-    <ClInclude Include="CRG_EnergyHungerSync.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClInclude>
-    <ClInclude Include="CRG_WaterBehavior.h">
       <Filter>Valla_CreatureOverhaul</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\BuildCRG.h">
@@ -64,9 +67,6 @@
     <ClInclude Include="Cheats\CRG_GrowUp.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
-    <ClInclude Include="CRG_ObjectManager.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClInclude>
     <ClInclude Include="Cheats\PrintCursor.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
@@ -88,12 +88,6 @@
     <ClInclude Include="Cheats\SetGlideSpeed.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
-    <ClInclude Include="TRG_ChieftainManager.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClInclude>
-    <ClInclude Include="CRG_DiseaseManager.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClInclude>
     <ClInclude Include="Cheats\CRG_GetSick.h">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClInclude>
@@ -106,14 +100,50 @@
     <ClInclude Include="CRE_ViewerAnims.h">
       <Filter>Valla_CreatureOverhaul</Filter>
     </ClInclude>
-    <ClInclude Include="CRG_AttackBasic.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClInclude>
     <ClInclude Include="CR_JetHover.h">
       <Filter>Valla_CreatureOverhaul</Filter>
     </ClInclude>
-    <ClInclude Include="TRG_CreaturePickup.h">
+    <ClInclude Include="Common.h">
       <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="EP1_CaptainAbilities.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClInclude>
+    <ClInclude Include="EP1_GameplayObject_DriveMarker.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClInclude>
+    <ClInclude Include="EP1_GameplayObject_IceCube.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClInclude>
+    <ClInclude Include="EP1_PosseCommand.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClInclude>
+    <ClInclude Include="EP1_PosseScheduleItem.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_AttackBasic.h">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_DiseaseManager.h">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_EnergyHungerSync.h">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_ObjectManager.h">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_WaterBehavior.h">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_ChieftainManager.h">
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_CreaturePickup.h">
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="EP1_GameplayObject_HoloProjector.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -121,12 +151,6 @@
       <Filter>Internal</Filter>
     </ClCompile>
     <ClCompile Include="CapabilityChecker.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClCompile>
-    <ClCompile Include="CRG_EnergyHungerSync.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClCompile>
-    <ClCompile Include="CRG_WaterBehavior.cpp">
       <Filter>Valla_CreatureOverhaul</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
@@ -165,9 +189,6 @@
     <ClCompile Include="Cheats\CRG_GrowUp.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
-    <ClCompile Include="CRG_ObjectManager.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClCompile>
     <ClCompile Include="Cheats\PrintCursor.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
@@ -183,12 +204,6 @@
     <ClCompile Include="Cheats\SetGlideSpeed.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
-    <ClCompile Include="TRG_ChieftainManager.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClCompile>
-    <ClCompile Include="CRG_DiseaseManager.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
-    </ClCompile>
     <ClCompile Include="Cheats\CRG_GetSick.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
@@ -198,11 +213,44 @@
     <ClCompile Include="Cheats\CRG_GiveAllParts.cpp">
       <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
+    <ClCompile Include="EP1_CaptainAbilities.cpp">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClCompile>
+    <ClCompile Include="EP1_GameplayObject_DriveMarker.cpp">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClCompile>
+    <ClCompile Include="EP1_GameplayObject_IceCube.cpp">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClCompile>
+    <ClCompile Include="EP1_PosseCommand.cpp">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClCompile>
+    <ClCompile Include="EP1_PosseScheduleItem.cpp">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClCompile>
     <ClCompile Include="CRG_AttackBasic.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_DiseaseManager.cpp">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_EnergyHungerSync.cpp">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_ObjectManager.cpp">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_WaterBehavior.cpp">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_ChieftainManager.cpp">
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
     </ClCompile>
     <ClCompile Include="TRG_CreaturePickup.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+    </ClCompile>
+    <ClCompile Include="EP1_GameplayObject_HoloProjector.cpp">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

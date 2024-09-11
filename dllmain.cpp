@@ -34,6 +34,13 @@
 // TRG Ingame Behaviors
 #include "TRG_CreaturePickup.h"
 
+// EP1 Ingame Behaviors
+#include "EP1_PosseCommand.h"
+#include "EP1_CaptainAbilities.h"
+#include "EP1_GameplayObject_HoloProjector.h"
+#include "EP1_GameplayObject_DriveMarker.h"
+#include "EP1_GameplayObject_IceCube.h"
+
 // Singletons
 #include "CapabilityChecker.h"
 #include "CRG_ObjectManager.h"
@@ -47,6 +54,11 @@ cObjectManager* obconverter;
 TRG_ChieftainManager* chiefmanager;
 CRG_DiseaseManager* diseasemanager;
 TRG_CreaturePickup* trg_creaturepickup;
+EP1_PosseCommand* ep1_possecommand;
+EP1_CaptainAbilities* ep1_captainabilities;
+EP1_GameplayObject_HoloProjector* ep1_gameplayobject_projector;
+EP1_GameplayObject_DriveMarker* ep1_gameplayobject_drivemarker;
+EP1_GameplayObject_IceCube* ep1_gameplayobject_icecube;
 
 void Initialize()
 {
@@ -71,6 +83,7 @@ void Initialize()
 	CheatManager.AddCheat("GivePart", new(CRG_GetPart));
 	CheatManager.AddCheat("GiveAllParts", new(CRG_GiveAllParts));
 
+
 	// CRG
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
 	CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
@@ -80,9 +93,30 @@ void Initialize()
 	MessageManager.AddListener(crg_attackbasic, id("CRG_AttackGeneric")); // listen for anim event
 	MessageManager.AddListener(crg_attackbasic, id("CRG_AttackGeneric_Done")); // listen for anim event
 	
+
 	// TRG
 	trg_creaturepickup = new(TRG_CreaturePickup);
 	WindowManager.GetMainWindow()->AddWinProc(trg_creaturepickup);
+
+
+	// EP1
+	ep1_possecommand = new(EP1_PosseCommand);
+	WindowManager.GetMainWindow()->AddWinProc(ep1_possecommand);
+
+	ep1_captainabilities = new(EP1_CaptainAbilities);
+	WindowManager.GetMainWindow()->AddWinProc(ep1_captainabilities);
+
+	ep1_gameplayobject_projector = new(EP1_GameplayObject_HoloProjector);
+	WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_projector);
+	MessageManager.AddListener(ep1_gameplayobject_projector, SimulatorMessages::kMsgScenarioRedo);
+	MessageManager.AddListener(ep1_gameplayobject_projector, SimulatorMessages::kMsgScenarioUndo);
+	MessageManager.AddListener(ep1_gameplayobject_projector, SimulatorMessages::kMsgSwitchGameMode);
+
+	ep1_gameplayobject_drivemarker = new(EP1_GameplayObject_DriveMarker);
+	WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_drivemarker);
+
+	ep1_gameplayobject_icecube = new(EP1_GameplayObject_IceCube);
+	MessageManager.AddListener(ep1_gameplayobject_icecube, SimulatorMessages::kMsgSwitchGameMode);
 
 
 	// Managers
@@ -92,8 +126,10 @@ void Initialize()
 
 	diseasemanager = new(CRG_DiseaseManager);
 
+
 	// Singletons
 	cCapabilityChecker* capchecker = new(cCapabilityChecker);
+
 }
 
 cCreatureAnimal* GetAnimCreatureOwner(const AnimatedCreaturePtr& animcreature) {
@@ -112,13 +148,16 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 	bool detoured(uint32_t animID, int* pChoice) {
 
 		if (IsCreatureGame() || IsScenarioMode()) {
+
+			// replace the jump jet animations when in mid-flight
 			uint32_t jetanim = JetHover_GetAnim(animID);
-			if (jetanim != animID) {
+			if (jetanim != animID && ep1_captainabilities->can_jumpburst) {
 				return original_function(this, jetanim, pChoice);
 			}
 
 
 			// Scenario Social behaviors
+			// detect when creature waves after being allied
 			if (animID == 0xb225328f) { // "soc_hurrayclap"
 				auto creature = GetAnimCreatureOwner(this);
 				// if it is a sentient creature, replace the clapping with a salute
@@ -127,10 +166,20 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 				}
 				
 			}
-			// swap the wave for a flex intimidate.
-			// TODO: make this only play if avatar in combat stance mode when interacting
+
+			// make holograms not play the hover animation
+			if (animID == 0x0692E6A9) { // "gen_jump_loop"
+				auto creature = GetAnimCreatureOwner(this);
+				if (creature && ep1_gameplayobject_projector->IsCreatureHologram(creature)) {
+					return original_function(this, 0x04330667, pChoice); //"csa_idle_gen_editor"
+				}
+				
+			}
+
+			// Swap the wave for a flex intimidate.
 			if (animID == 0x5403B863) { // "gen_posse_call"
-				// for some reason these are opposite.
+				// Make this only play if avatar in combat stance mode when interacting
+				// For some reason, these are opposite.
 				if ((IsScenarioMode() && CreatureGameData.GetAbilityMode() != cCreatureGameData::AbilityMode::Attack) ||
 					(IsCreatureGame() && CreatureGameData.GetAbilityMode() == cCreatureGameData::AbilityMode::Attack) ){
 					return original_function(this, 0x0418B841, pChoice); //"csa_phpto_flex"
@@ -158,7 +207,6 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 		// Sporepedia viewer
 		else if (GetGameModeID() == kGGEMode) {
 			if (ShouldReplaceAnim(animID)) {
-				App::ConsolePrintF("Replace that thang");
 				animID = GetRandViewerAnim();
 			}
 		}
@@ -247,7 +295,7 @@ virtual_detour(SetModel_detour, Simulator::cSpatialObject, Simulator::cSpatialOb
 };
 
 // Detour the tribe spawning func
-member_detour(TribeSpawn_detour, Simulator::cTribe, void(const Math::Vector3&, int, int, bool)) {
+member_detour(TribeSpawn_detour, Simulator::cTribe, void(const Vector3&, int, int, bool)) {
 	void detoured(const Math::Vector3& position, int numMembers, int value, bool boolvalue) {
 		//App::ConsolePrintF("Tribe Spawned");
 		original_function(this, position, numMembers, value, boolvalue);
@@ -290,7 +338,9 @@ member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint3
 			}
 			
 		}
-
+		//if (instanceId != 0x0) {
+		//	SporeDebugPrint("%x", instanceId);
+		//}
 		return original_function(this, instanceId, groupId); //And call the original function with the new instance ID.
 	}
 };
@@ -357,6 +407,59 @@ static_detour(AvatarScaling_detour, void())
 	}
 };
 
+// Detour Creature WalkTo
+virtual_detour(WalkTo_detour, Simulator::cCreatureAnimal, Simulator::cCreatureBase, void(int, const Vector3&, const Vector3&, float, float)) //cCreatureAnimal
+{
+	void detoured(int speedState, const Vector3& dstPos, const Vector3& arg_8, float goalStopDistance = 1.0f, float acceptableStopDistance = 2.0f)
+	{
+		for (auto creature : ep1_gameplayobject_projector->mHolograms) {
+			if (object_cast<Simulator::cCreatureAnimal>(this) == creature) {
+				return;
+			}
+		}
+
+		// Check if the creature is in the captain posse playing a scheduled walk. If so, do not interrupt them!
+		auto schedule = ep1_possecommand->GetCreatureSchedule(object_cast<Simulator::cCreatureAnimal>(this));
+		
+		auto pos = GameViewManager.GetWorldMousePosition(0);
+		if (schedule && (!schedule->mbCanMove && pos != dstPos)) {
+			return;
+		}
+		original_function(this, speedState, dstPos, arg_8, goalStopDistance, acceptableStopDistance);
+	}
+};
+
+// Detour Creature OnJumpLand
+virtual_detour(OnJumpLand_detour, Simulator::cCreatureAnimal, Simulator::cCreatureBase, void())
+{
+	void detoured()
+	{
+		ep1_captainabilities->ResetJumpCount();
+		original_function(this);
+	}
+};
+
+member_detour(ScenarioPlayModeUpdateGoals_detour, Simulator::cScenarioPlayMode, bool())
+{
+	bool detoured()
+	{
+		bool result = original_function(this);
+		ep1_gameplayobject_projector->ApplyHologramsToProjectors(true);
+		ep1_gameplayobject_icecube->ApplyFrozenToIce();
+		return result;
+	}
+};
+
+// Called when a combatant takes damage
+virtual_detour(CombatTakeDamage_detour, Simulator::cCombatant, Simulator::cCombatant, int(float, uint32_t, int, const Vector3&, cCombatant*))
+{
+	int detoured(float damage, uint32_t attackerPoliticalID, int integer, const Vector3& vector, cCombatant* pAttacker)
+	{
+
+		return original_function(this, damage, attackerPoliticalID, integer, vector, pAttacker);
+	}
+};
+
 void AttachDetours()
 {
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
@@ -370,17 +473,29 @@ void AttachDetours()
 	CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
 	AvatarScaling_detour::attach(GetAddress(Simulator::cCreatureGameData, CalculateAvatarNormalizingScale));
 
+	WalkTo_detour::attach(GetAddress(Simulator::cCreatureBase, WalkTo));
+	OnJumpLand_detour::attach(GetAddress(Simulator::cCreatureAnimal, OnJumpLand));
+
+	ScenarioPlayModeUpdateGoals_detour::attach(GetAddress(Simulator::cScenarioPlayMode, UpdateGoals));
+
+	CombatTakeDamage_detour::attach(Address(0x00bfcf10));
+
 	//CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
 	//CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));
 }
 
+// This method is called when the game is closing
 void Dispose()
 {
 	obconverter = nullptr;
 	chiefmanager = nullptr;
 	diseasemanager = nullptr;
 	trg_creaturepickup = nullptr;
-	// This method is called when the game is closing
+	ep1_possecommand = nullptr;
+	ep1_captainabilities = nullptr;
+	ep1_gameplayobject_projector = nullptr;
+	ep1_gameplayobject_drivemarker = nullptr;
+	ep1_gameplayobject_icecube = nullptr;
 }
 
 // Generally, you don't need to touch any code here

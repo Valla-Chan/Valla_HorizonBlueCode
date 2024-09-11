@@ -30,6 +30,7 @@ public:
 	int GetModelIntValue(const ResourceKey& modelKey, const uint32_t property) const;
 	bool GetModelBoolValue(const ResourceKey& modelKey, const uint32_t property) const;
 	Vector2* GetModelVector2sValue(const ResourceKey& modelKey, const uint32_t property) const;
+	ColorRGB GetModelColorRGBValue(const ResourceKey& modelKey, const uint32_t property) const;
 	//
 
 

@@ -143,6 +143,7 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="Common.h" />
     <ClInclude Include="CRE_ViewerAnims.h">
       <SubType>
       </SubType>
@@ -162,6 +163,27 @@
     </ClInclude>
     <ClInclude Include="CRG_WaterBehavior.h" />
     <ClInclude Include="CR_JetHover.h" />
+    <ClInclude Include="EP1_CaptainAbilities.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="EP1_GameplayObject_DriveMarker.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="EP1_GameplayObject_HoloProjector.h" />
+    <ClInclude Include="EP1_GameplayObject_IceCube.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="EP1_PosseCommand.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="EP1_PosseScheduleItem.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="SetChieftainColor.h">
       <SubType>
       </SubType>
@@ -234,6 +256,27 @@
     </ClCompile>
     <ClCompile Include="CRG_WaterBehavior.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="EP1_CaptainAbilities.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="EP1_GameplayObject_DriveMarker.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="EP1_GameplayObject_HoloProjector.cpp" />
+    <ClCompile Include="EP1_GameplayObject_IceCube.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="EP1_PosseCommand.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="EP1_PosseScheduleItem.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

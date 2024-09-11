@@ -17,9 +17,7 @@ TRG_CreaturePickup::~TRG_CreaturePickup()
 //-----------------------------------------------------------------------------------------------
 
 cTribePtr TRG_CreaturePickup::GetPlayerTribe() {
-	auto tribedata = Simulator::GetDataByCast<Simulator::cTribe>();
-	if (tribedata.size() < 1) { return nullptr; }
-	return tribedata[0];
+	return GameNounManager.mpPlayerTribe;
 }
 
 
@@ -76,9 +74,6 @@ void TRG_CreaturePickup::Pickup(cCreatureCitizenPtr creature) {
 	held_member->mbDead = true; // dead means they cannot be attacked and cannot perform most actions
 	held_member->PlayAnimation(0x074D1B28); // "EP1_lifted_CrTr_loop"
 
-	// TODO: figure out what the grabbing closed cursor is
-	//CursorManager.SetActiveCursor(BasicCursorIDs::Cursors::Link);
-
 	held_member->mbPickable = false;
 	held_member->mbIsInvalid = true;
 }
@@ -87,7 +82,6 @@ void TRG_CreaturePickup::Drop() {
 	if (!held_member) { return; }
 
 	possible_member = nullptr;
-	held_member->SetIsSelected(false);
 	held_member->mbDead = false;
 	held_member->mbPickable = true;
 	held_member->mbIsInvalid = false;

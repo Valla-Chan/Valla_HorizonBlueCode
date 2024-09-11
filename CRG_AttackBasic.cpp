@@ -47,15 +47,17 @@ int CRG_AttackBasic::GetEventFlags() const
 // checking what kind of message was sent...
 bool CRG_AttackBasic::HandleUIMessage(IWindow* window, const Message& message)
 {
-	if (!Simulator::IsCreatureGame() || GameTimeManager.IsPaused()) { return false; }
+	if (!(Simulator::IsCreatureGame() || (IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::PlayMode))
+		|| GameTimeManager.IsPaused()) { return false; }
+
 	auto avatar = GameNounManager.GetAvatar();
 	if (!avatar) { return false; }
 
 	// Did the user press the F key? 
 	if ((!attacking || true) && message.IsType(kMsgKeyDown) && message.Key.vkey == 'F') {
 		attacking = true;
-		//avatar->PlayAnimation(0xAFF68933);
-		avatar->PlayAnimation(0xDE283096); // block
+		avatar->PlayAnimation(0xAFF68933);
+		//avatar->PlayAnimation(0xDE283096); // block
 		return true; // Message handled
 	}
 	return false;
@@ -63,7 +65,12 @@ bool CRG_AttackBasic::HandleUIMessage(IWindow* window, const Message& message)
 
 bool CRG_AttackBasic::HandleMessage(uint32_t messageID, void* msg)
 {
-	if (!IsCreatureGame()) { return nullptr; }
+	if (!(Simulator::IsCreatureGame() || (IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::PlayMode))
+		|| GameTimeManager.IsPaused()) {
+		return false;
+	}
+
+
 
 	if (messageID == id("CRG_AttackGeneric"))
 	{
@@ -78,11 +85,6 @@ bool CRG_AttackBasic::HandleMessage(uint32_t messageID, void* msg)
 	return false;
 }
 
-
-float CRG_AttackBasic::GetDistance(Vector3 point1, Vector3 point2) const {
-	return abs((point1 - point2).Length());
-}
-
 void CRG_AttackBasic::AffectClosestInteractable() {
 	auto avatar = GameNounManager.GetAvatar();
 	if (!avatar) { return; }
@@ -90,17 +92,18 @@ void CRG_AttackBasic::AffectClosestInteractable() {
 	float last_distance = attackrange;
 	cInteractiveOrnamentPtr object_nearest = nullptr;
 
+
 	// loop through all ingame interactables
 	auto interactables = GetData<cInteractiveOrnament>();
 	for (auto object : interactables) {
-		float dist = GetDistance(avatar->GetPosition(), object->GetPosition());
+		float dist = abs((avatar->GetPosition() - object->GetPosition()).Length());
 		if (dist < last_distance) {
 			object_nearest = object.get();
 			last_distance = dist;
 		}
 	}
 	if (object_nearest) {
-		object_nearest->SetScale(0.3);
+		object_nearest->SetScale(0.3f);
 		//App::CreatureModeStrategies::Interact action = { GameNounManager.GetAvatar(), object_cast<Simulator::cGameData>(object_nearest), 0};
 		//CreatureModeStrategy.ExecuteAction(action.ID, &action);
 	}

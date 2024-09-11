@@ -130,6 +130,21 @@ Vector2* cCapabilityChecker::GetModelVector2sValue(const ResourceKey& modelKey, 
 	return nullptr;
 }
 
+// Open a model resource and get a Color value of a colorRGB property
+ColorRGB cCapabilityChecker::GetModelColorRGBValue(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	ColorRGB value;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetColorRGB(mpPropList.get(), property, value);
+		if (test) {
+			return value;
+		}
+	}
+	return ColorRGB(0,0,0);
+}
+
 // Open a model resource and get an int value of a property
 int cCapabilityChecker::GetModelIntValue(const ResourceKey& modelKey, const uint32_t property) const
 {

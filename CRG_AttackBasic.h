@@ -27,8 +27,6 @@ public:
 	const float attackrange = 5.0f;
 	bool attacking = false; // TODO: set this back to false on a timer as well, so if the animation does not complete then it can still be used again
 
-	float GetDistance(Vector3 point1, Vector3 point2) const;
-
 	void AffectClosestInteractable();
 	void AffectNearbyCreatures();
 	void AffectCreature(cCreatureAnimalPtr creature);
