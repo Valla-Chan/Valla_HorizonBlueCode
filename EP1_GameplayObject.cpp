@@ -70,25 +70,11 @@ cCreatureAnimalPtr EP1_GameplayObject::GetRolledCreature() {
 }
 
 
-
-//-----------------------------------------------------------------------------------------------
-
-void EP1_GameplayObject::Pickup() {
-	pSelectedObject = GetRolledObject();
-}
-
-void EP1_GameplayObject::Drop() {
-	pSelectedObject = nullptr;
-}
-
-void EP1_GameplayObject::Moved() {
-	if (!pSelectedObject) { return; }
-}
-
 //-----------------------------------------------------------------------------------------------
 
 // UI Window Messages
 
+/*
 bool EP1_GameplayObject::HandleMouseInput(const Message& message) {
 	// released mouse
 	// TODO: detect if this is the left mouse. Usual methods to check this do not work.
@@ -114,62 +100,17 @@ bool EP1_GameplayObject::HandleMouseInput(const Message& message) {
 	}
 	return false;
 }
-
-// Virtuals - Game Messages
-
-void EP1_GameplayObject::UserMessage(uint32_t messageID)
-{
-	return;
-}
-
-void EP1_GameplayObject::UndoRedo()
-{
-	return;
-}
-
-void EP1_GameplayObject::SwitchMode()
-{
-	auto task = Simulator::ScheduleTask(this, &EP1_GameplayObject_HoloProjector::FireIfScenario, 0.2f);
-	return;
-}
+*/
 
 //-----------------------------------------------------------------------------------------------
 
-int EP1_GameplayObject::GetEventFlags() const
-{
-	return kEventFlagBasicInput;
-}
-
-bool EP1_GameplayObject::HandleUIMessage(IWindow* window, const Message& message)
-{
-	// cancel if not in edit mode.
-	if (!(IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::EditMode)) { return false; }
-
-	bool mouseInput = HandleMouseInput();
-
-	return false;
-}
-
-bool EP1_GameplayObject::HandleMessage(uint32_t messageID, void* msg)
-{
-	if (messageID == kMsgScenarioRedo || messageID == kMsgScenarioUndo) {
-		if (IsScenarioMode()) {
-			UndoRedo();
-		}
-	}
-	else if (messageID == kMsgSwitchGameMode) {
-		SwitchMode();
-	}
-
-	return false;
-}
-
+/*
 void EP1_GameplayObject::FireIfScenario() {
 	if (IsScenarioMode()) {
+		return;
 	}
 	return;
-}
-
+}*/
 
 //-----------------------------------------------------------------------------------------------
 

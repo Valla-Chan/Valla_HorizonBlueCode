@@ -189,6 +189,10 @@ void EP1_GameplayObject_HoloProjector::ApplyHologramsToProjectors(bool playmode)
 
 //-----------------------------------------------------------------------------------------------
 
+void EP1_GameplayObject_HoloProjector::UserMessage(uint32_t messageID)
+{
+}
+
 void EP1_GameplayObject_HoloProjector::Pickup() {
 	selectedCreature = GetRolledCreature();
 	if (selectedCreature) {

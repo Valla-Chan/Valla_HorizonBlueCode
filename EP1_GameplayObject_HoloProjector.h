@@ -1,6 +1,5 @@
 #pragma once
 
-//#include <Spore\BasicIncludes.h>
 #include "EP1_GameplayObject.h"
 
 #define EP1_GameplayObject_HoloProjectorPtr intrusive_ptr<EP1_GameplayObject_HoloProjector>
@@ -39,6 +38,7 @@ public:
 
 	void ApplyHologramsToProjectors(bool playmode = false);
 
+	void UserMessage(uint32_t messageID) override;
 
 	void Pickup() override;
 	void Drop() override;
