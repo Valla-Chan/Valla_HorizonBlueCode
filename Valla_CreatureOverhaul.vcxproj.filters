@@ -145,6 +145,9 @@
     <ClInclude Include="EP1_GameplayObject_HoloProjector.h">
       <Filter>Valla_CreatureOverhaul\EP1</Filter>
     </ClInclude>
+    <ClInclude Include="EP1_GameplayObjectManager.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -250,6 +253,9 @@
       <Filter>Valla_CreatureOverhaul\TRG</Filter>
     </ClCompile>
     <ClCompile Include="EP1_GameplayObject_HoloProjector.cpp">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClCompile>
+    <ClCompile Include="EP1_GameplayObjectManager.cpp">
       <Filter>Valla_CreatureOverhaul\EP1</Filter>
     </ClCompile>
   </ItemGroup>

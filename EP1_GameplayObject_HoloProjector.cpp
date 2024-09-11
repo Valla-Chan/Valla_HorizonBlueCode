@@ -189,11 +189,8 @@ void EP1_GameplayObject_HoloProjector::ApplyHologramsToProjectors(bool playmode)
 
 //-----------------------------------------------------------------------------------------------
 
-void EP1_GameplayObject_HoloProjector::UserMessage(uint32_t messageID)
-{
-}
 
-void EP1_GameplayObject_HoloProjector::Pickup() {
+bool EP1_GameplayObject_HoloProjector::Pickup() {
 	selectedCreature = GetRolledCreature();
 	if (selectedCreature) {
 		auto projector = GetClosestProjector(selectedCreature);
@@ -201,8 +198,9 @@ void EP1_GameplayObject_HoloProjector::Pickup() {
 			MakeObjectHologram(selectedCreature, projector);
 		}
 	}
+	return false;
 }
-void EP1_GameplayObject_HoloProjector::Drop() {
+bool EP1_GameplayObject_HoloProjector::Drop() {
 
 	// if near a hologram projector when dropped, teleport the creature above it.
 	auto holo = GetClosestProjector(selectedCreature);
@@ -210,13 +208,15 @@ void EP1_GameplayObject_HoloProjector::Drop() {
 		SnapToProjector(selectedCreature, holo);
 	}
 	selectedCreature = nullptr;
+	return false;
 }
 
-void EP1_GameplayObject_HoloProjector::Moved() {
+bool EP1_GameplayObject_HoloProjector::Moved() {
 	// make the hologram state be set by the creature's proximity to the holo projector
 	if (selectedCreature) {
 		auto projector = GetClosestProjector(selectedCreature);
 		MakeObjectHologram(selectedCreature, projector, projector);
+		return false;
 	}
 }
 

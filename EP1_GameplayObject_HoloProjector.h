@@ -38,13 +38,9 @@ public:
 
 	void ApplyHologramsToProjectors(bool playmode = false);
 
-	void UserMessage(uint32_t messageID) override;
-
-	void Pickup() override;
-	void Drop() override;
-	void Moved() override;
+	bool Pickup() override;
+	bool Drop() override;
+	bool Moved() override;
 
 	void UndoRedo();
-
-	void FireIfScenario();
 };

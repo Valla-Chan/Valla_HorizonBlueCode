@@ -17,19 +17,37 @@ void EP1_GameplayObject::Update() {
 
 //-----------------------------------------------------------------------------------------------
 
-bool EP1_GameplayObject::IsPlayingAdventure() {
-	return (IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::PlayMode);
-}
-bool EP1_GameplayObject::IsEditingAdventure() {
-	return (IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::EditMode);
+eastl::vector<cSpatialObjectPtr> EP1_GameplayObject::GetAllObjects() {
+	// loop thru all objects
+	auto objects = Simulator::GetDataByCast<Simulator::cSpatialObjectPtr>();
+	for (auto object : objects) {
+		if (IsHa)
+	}
 }
 
-//-----------------------------------------------------------------------------------------------
+// Get the closest gameplay object to a creature
+// TODO: this! make sure to check if the distance is both within last_dist and within the object's max radius, after finding an object.
+cSpatialObjectPtr EP1_GameplayObject::GetClosestObject(cCreatureAnimalPtr creature, bool exclude_avatar) {
+	auto origin = creature->GetPosition();
+	float last_dist = 4096;
+
+	cSpatialObjectPtr found_object = nullptr;
+	if (creature == GameNounManager.GetAvatar() && exclude_avatar) {
+		return nullptr;
+	}
+
+	// loop thru all objects
+	auto objects = Simulator::GetDataByCast<Simulator::cSpatialObjectPtr>();
+	for (auto object : objects) {
+
+	}
+
+}
 
 // Get the closest creature to a gameplay object
-cCreatureAnimalPtr EP1_GameplayObject::GetClosestCreature(cSpatialObjectPtr gameplayob, float max_distance, bool exclude_avatar) {
+cCreatureAnimalPtr EP1_GameplayObject::GetClosestCreature(cSpatialObjectPtr object, bool exclude_avatar) {
 	auto origin = gameplayob->GetPosition();
-	float last_dist = max_distance; //gameplayob->GetScale() * 4.0f;
+	float last_dist = GetObjectMaxRadius(object);
 
 	cCreatureAnimalPtr found_creature = nullptr;
 	auto avatar = GameNounManager.GetAvatar();
@@ -71,46 +89,49 @@ cCreatureAnimalPtr EP1_GameplayObject::GetRolledCreature() {
 
 
 //-----------------------------------------------------------------------------------------------
+// Virtuals - Object Definition
 
-// UI Window Messages
-
-/*
-bool EP1_GameplayObject::HandleMouseInput(const Message& message) {
-	// released mouse
-	// TODO: detect if this is the left mouse. Usual methods to check this do not work.
-	if (message.IsType(kMsgMouseUp) && pSelectedObject) {
-		Drop();
-		return true;
-	}
-
-	// Player has left clicked the mouse
-	else if (message.Mouse.IsLeftButton() && message.IsType(kMsgMouseDown) && !pSelectedObject) {
-		Pickup();
-		return true;
-	}
-
-	// Player has moved the mouse
-	else if (message.Mouse.IsLeftButton() && message.IsType(kMsgMouseMove)) {
-		// already held, therefor move it
-		if (pSelectedObject) {
-			Moved();
-			return true;
-		}
-
-	}
+// Return true if an object is one that is handled by this class.
+bool EP1_GameplayObject::IsHandledObject(cSpatialObjectPtr object) {
 	return false;
+}
+
+float EP1_GameplayObject::GetObjectMaxRadius(cSpatialObjectPtr object) {
+	return 4.0f * object->GetScale();
+}
+
+//-----------------------------------------------------------------------------------------------
+// Virtuals - Actions from Manager
+
+void EP1_GameplayObject::ApplyAllObjectEffects() {
+	for (auto object : GetAllObjects()) {
+		ApplyObjectEffect(object);
+	}
+}
+
+// pure virtual, must be overriden
+/*
+void EP1_GameplayObject::ApplyObjectEffect(cSpatialObjectPtr object) {
+}
+
+void EP1_GameplayObject::ApplyCreatureEffect(cCreatureAnimalPtr creature, cSpatialObjectPtr object) {
 }
 */
 
-//-----------------------------------------------------------------------------------------------
+void EP1_GameplayObject::UndoRedo() {
+	ApplyAllObjectEffects();
+}
 
-/*
-void EP1_GameplayObject::FireIfScenario() {
-	if (IsScenarioMode()) {
-		return;
+void EP1_GameplayObject::SwitchMode(bool to_scenario) {
+	if (to_scenario) {
+		ApplyAllObjectEffects();
 	}
-	return;
-}*/
+	
+}
+
+
+
+
 
 //-----------------------------------------------------------------------------------------------
 
