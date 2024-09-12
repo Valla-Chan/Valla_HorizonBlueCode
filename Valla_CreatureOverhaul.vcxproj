@@ -167,6 +167,8 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="EP1_Detours.h" />
+    <ClInclude Include="EP1_GameplayObject.h" />
     <ClInclude Include="EP1_GameplayObjectManager.h">
       <SubType>
       </SubType>
@@ -264,6 +266,7 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="EP1_GameplayObject.cpp" />
     <ClCompile Include="EP1_GameplayObjectManager.cpp">
       <SubType>
       </SubType>

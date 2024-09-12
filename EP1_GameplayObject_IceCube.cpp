@@ -23,6 +23,12 @@ void EP1_GameplayObject_IceCube::Update()
 
 //------------------------------------------------------------------------------------------------
 
+bool EP1_GameplayObject_IceCube::IsHandledObject(cSpatialObjectPtr object) const {
+	return CapabilityChecker.GetModelBoolValue(object->GetModelKey(), id("modelCapabilityIce")) == true;
+}
+ 
+//------------------------------------------------------------------------------------------------
+
 // get the closest creature to a gameplay object
 cCreatureAnimalPtr EP1_GameplayObject_IceCube::GetClosestCreature(cSpatialObjectPtr gameplayob) {
 	auto origin = gameplayob->GetPosition();
@@ -41,9 +47,7 @@ cCreatureAnimalPtr EP1_GameplayObject_IceCube::GetClosestCreature(cSpatialObject
 	return found_creature;
 }
 
-bool EP1_GameplayObject_IceCube::IsObjectIce(cSpatialObjectPtr object) const {
-	return CapabilityChecker.GetModelBoolValue(object->GetModelKey(), id("modelCapabilityIce")) == true;
-}
+
 
 void EP1_GameplayObject_IceCube::BreakIce(cSpatialObjectPtr object) {
 	

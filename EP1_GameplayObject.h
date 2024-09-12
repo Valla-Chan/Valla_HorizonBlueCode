@@ -1,14 +1,14 @@
 #pragma once
 
 #include <Spore\BasicIncludes.h>
+//#include <Spore\UTFWin\Message.h>
 
 #define EP1_GameplayObjectPtr intrusive_ptr<EP1_GameplayObject>
 
-using namespace UTFWin;
 using namespace Simulator;
 
 class EP1_GameplayObject 
-	: public IWinProc
+	: public Object
 	, public DefaultRefCounted
 {
 public:
@@ -22,33 +22,100 @@ public:
 	void* Cast(uint32_t type) const override;
 
 	//------------------------------------------------------------
-	// Vars
+	// Vars Structs and Enums
 
-	// Can be creature or gameplay object.
-	cSpatialObjectPtr pSelectedObject = nullptr;
+	enum Mode {
+		Unk1,
+		EditMode,
+		PlayMode,
+	};
+
+	// currently there can only be one activator at a time.
+	struct GameplayObject {
+		cSpatialObjectPtr object = nullptr;
+		cCombatantPtr activator = nullptr;
+		bool active = true;
+		// TODO: add in a way to check if a cSpatialObjectPtr object is active
+		// and create a cooldown for when object is triggered, to turn off active and turn on again after it is over.
+
+		GameplayObject(cSpatialObjectPtr& p_object, cCombatantPtr p_activator, bool p_active = true) {
+			object = p_object;
+			activator = p_activator;
+			active = p_active;
+		}
+	};
+
+	// vector of object structs to use when ingame
+	eastl::vector<GameplayObject> mpIngameObjects = {};
+
+	// Currently selected/edited object. Can be creature or gameplay object.
+	cSpatialObjectPtr pHeldObject = nullptr;
+	cCombatantPtr GetHeldCombatant() { return object_cast<cCombatant>(pHeldObject); }
+	cCombatantPtr GetHeldCreature() { return object_cast<cCreatureAnimal>(pHeldObject); }
+
+	bool mbExcludeAvatar = true;
+	bool mbCheckRadiusPerFrame = false;
+
+	bool mbCombatantCanBeCreature = true;
+	bool mbCombatantCanBeVehicle = false;
+	bool mbCombatantCanBeBuilding = false;
+	bool mbCombatantCanBeMisc = false;
+	
 
 	//------------------------------------------------------------
 	
 	// States
 	static bool IsPlayingAdventure() { return (IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::PlayMode); }
 	static bool IsEditingAdventure() { return (IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::EditMode); }
+	static auto Avatar() { return GameNounManager.GetAvatar(); }
+	bool IsObjectHeld(cSpatialObjectPtr object) { return object == pHeldObject; }
 
 	// Get Object Pointers
-	static eastl::vector<cSpatialObjectPtr> GetAllObjects(); // all handled objects
-	static cSpatialObjectPtr GetClosestObject(cCreatureAnimalPtr creature, bool exclude_avatar = false); // closest handled object
-	static cCreatureAnimalPtr GetClosestCreature(cSpatialObjectPtr object,  bool exclude_avatar = false); // closest creature
-	static cSpatialObjectPtr GetRolledObject();
-	static cCreatureAnimalPtr GetRolledCreature();
+	eastl::vector<cSpatialObjectPtr> GetAllObjects(); // all handled objects
+	void StoreObjects(); // GetAllObjects() and store them in mpIngameObjects
+	tGameDataVectorT<cCombatant> GetCombatantData() const;
 
+	cSpatialObjectPtr GetClosestHandledObject(cSpatialObjectPtr srcobject); // closest handled object (to a src object)
+	virtual cCombatantPtr GetClosestCombatant(cSpatialObjectPtr srcobject); // closest creature, vehicle, etc (to a src object)
+	cSpatialObjectPtr GetRolledHandledObject();
+	cCombatantPtr GetRolledCombatant();
+
+	GameplayObject GetIngameObject(cSpatialObjectPtr srcobject);
+
+	// Helper funcs
+	void InternalUpdate();
+	void CheckRadius();
+	// Input Precursors
+	bool DoPickup();
+	bool DoDrop();
+	bool DoMoved();
+	// Damage precursor
+	void DoTakeDamage(cCombatantPtr target, float damage, cCombatantPtr attacker);
 
 	//------------------------------------------------------------
 	// Virtuals - Object Definition
 
-	// returns if an object is one that is handled by this class.
-	virtual bool IsHandledObject(cSpatialObjectPtr object);
+	// Returns if an object is one that is handled by this class.
+	virtual bool IsHandledObject(cSpatialObjectPtr object) const = 0; //{ return false; }
 
-	// returns the max radius of influence of an object. Often multiplies by the scale of the object.
+	// Returns if a combatant is of the valid types
+	virtual bool IsValidCombatantType(cCombatantPtr object);
+
+	// Returns the max radius of influence of an object. Often multiplies by the scale of the object.
 	virtual float GetObjectMaxRadius(cSpatialObjectPtr object);
+	// Returns the reference pos an object. Can be overridden to include an offset.
+	virtual Vector3 GetObjectPos(cSpatialObjectPtr object);
+
+
+	//------------------------------------------------------------
+	// Virtuals - External Actions
+
+	// fired when damage is taken
+	virtual void OnDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker);
+
+	// radius refers to the value returned by GetObjectMaxRadius()
+	virtual void OnEnterRadius(cSpatialObjectPtr object, cCombatantPtr pActivator);
+	virtual void OnExitRadius(cSpatialObjectPtr object, cCombatantPtr pActivator);
 
 
 	//------------------------------------------------------------
@@ -57,23 +124,26 @@ public:
 	// Apply desired behavior to all objects.
 	void ApplyAllObjectEffects();
 
-	// tell the object to apply its effect.
-	virtual void ApplyObjectEffect(cSpatialObjectPtr object) = 0;
-	// apply effect from an object onto a creature ('object' ptr can be used for getting offsets, colors, etc)
-	virtual void ApplyCreatureEffect(cCreatureAnimalPtr creature, cSpatialObjectPtr object) = 0;
+	// Tell the object to apply its effect.
+	virtual void ApplyObjectEffect(cSpatialObjectPtr object);
+	// Apply effect from an object onto a creature ('object' ptr can be used for getting offsets, colors, etc)
+	virtual void ApplyCombatantEffect(cCombatantPtr combatant, cSpatialObjectPtr object);
+	virtual void ResetCombatantEffect(cCombatantPtr combatant);
 
 
 	// Inputs
-	virtual bool Pickup() { return false; }
-	virtual bool Drop() { return false; }
-	virtual bool Moved() { return false; }
+	virtual bool Pickup();
+	virtual bool Drop();
+	virtual bool Moved();
 
 	// Messages
-	virtual void Update() { return; };
+	virtual void Update();
 	virtual void UndoRedo();
-	virtual void SwitchMode(bool to_scenario);
+	virtual void SwitchGameMode(bool to_scenario);
+	virtual void EnterMode(int mode);
+	virtual void UpdateScenarioGoals();
 
-	virtual bool UserUIMessage(Message& message) { return false; }
+	virtual bool UserUIMessage(UTFWin::Message& message) { return false; }
 	virtual bool UserGameMessage(uint32_t messageID) { return false; }
 
 	//------------------------------------------------------------

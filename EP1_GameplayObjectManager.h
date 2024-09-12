@@ -33,21 +33,37 @@ public:
 		UndoRedo,
 		SwitchToScenario,
 		SwitchAwayFromScenario,
+		UpdateScenarioGoals,
+		EnterEditMode,
+		EnterPlayMode,
+
+		TakeDamage,
 
 		UserUIMessage,
 		UserGameMessage,
-
+		
 		Pickup,
 		Drop,
 		Moved,
-
 	};
 
-	EP1_GameplayObjectPtr AddGameplayObjectSubmanager(EP1_GameplayObjectPtr object);
+	EP1_GameplayObject* AddGameplayObjectSubmanager(EP1_GameplayObject* object);
+
+	// send an action to all stored object submanagers
+	bool PropagateAction(Actions action);
+
+	// handle damage data, then propagate it to submanagers
+	void DoTakeDamage(cCombatantPtr target, float damage, cCombatantPtr attacker) {
+		mpStoredDmgTarget = target;
+		mpStoredDmgAttacker = attacker;
+		mStoredDmg = damage;
+		PropagateAction(TakeDamage);
+	}
 
 //----------------------------------------------------------------------------------------
 private:
 	bool mbInScenarioMode = false;
+	bool mbInEditMode = false;
 
 	static bool IsPlayingAdventure() { return (IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::PlayMode); }
 	static bool IsEditingAdventure() { return (IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::EditMode); }
@@ -58,9 +74,6 @@ private:
 	
 	// List of all classes that define gameplay object behaviors
 	eastl::vector<EP1_GameplayObjectPtr> mObjectSubmanagers = {};
-
-	// send an action to all stored object submanagers
-	bool PropagateAction(Actions action);
 
 //-------------------------------------------------
 // Input Management
@@ -73,12 +86,24 @@ private:
 	int GetEventFlags() const override;
 	bool HandleUIMessage(IWindow* pWindow, const Message& message) override;
 	bool HandleMessage(uint32_t messageID, void* msg) override;
+	
+	// fire these from a delay
 	void FireSwitchIfScenario();
+	void FireUndoRedo();
 
 protected:
+	bool mbMouseDown = false;
+
+	// Stored Message Data
 	void ClearStoredMessages();
 	Message& mStoredUIMessage = Message();
 	uint32_t mStoredGameMessage = 0x0;
+
+	// Stored Damage Data
+	void ClearStoredDmgData();
+	float mStoredDmg = 0.0f;
+	cCombatantPtr mpStoredDmgTarget;
+	cCombatantPtr mpStoredDmgAttacker;
 
 	static EP1_GameplayObjectManager* sInstance;
 };

@@ -5,6 +5,11 @@ EP1_GameplayObjectManager::EP1_GameplayObjectManager()
 {
 	App::AddUpdateFunction(this);
 	sInstance = this;
+
+	WindowManager.GetMainWindow()->AddWinProc(this);
+	MessageManager.AddListener(this, SimulatorMessages::kMsgScenarioRedo);
+	MessageManager.AddListener(this, SimulatorMessages::kMsgScenarioUndo);
+	MessageManager.AddListener(this, SimulatorMessages::kMsgSwitchGameMode);
 }
 
 EP1_GameplayObjectManager::~EP1_GameplayObjectManager()
@@ -21,13 +26,25 @@ EP1_GameplayObjectManager* EP1_GameplayObjectManager::Get()
 
 void EP1_GameplayObjectManager::Update()
 {
+	if (!mbInEditMode) {
+		if (IsEditingAdventure()) {
+			mbInEditMode = true;
+			PropagateAction(EnterEditMode);
+		}
+	}
+	else {
+		if (IsPlayingAdventure()) {
+			mbInEditMode = false;
+			PropagateAction(EnterPlayMode);
+		}
+	}
 	PropagateAction(DoUpdate);
 }
 
 //----------------------------------------------------------------------------------------------------
 // Public
 
-EP1_GameplayObjectPtr EP1_GameplayObjectManager::AddGameplayObjectSubmanager(EP1_GameplayObjectPtr object) {
+EP1_GameplayObject* EP1_GameplayObjectManager::AddGameplayObjectSubmanager(EP1_GameplayObject* object) {
 	mObjectSubmanagers.push_back(object);
 	return object;
 }
@@ -40,23 +57,46 @@ EP1_GameplayObjectPtr EP1_GameplayObjectManager::AddGameplayObjectSubmanager(EP1
 bool EP1_GameplayObjectManager::PropagateAction(Actions action) {
 	// loop through all object submanagers
 	for (size_t i = 0; i < mObjectSubmanagers.size(); i++) {
+		bool value = false;
 		auto object = mObjectSubmanagers[i];
 
 		// find what func to perform on all objects
 		switch (action) {
 
-		case DoUpdate: object->Update(); break;
-		case UndoRedo: object->UndoRedo(); break;
-		case SwitchToScenario: object->SwitchMode(true); break;
-		case SwitchAwayFromScenario: object->SwitchMode(false); break;
+			case DoUpdate: object->InternalUpdate(); break;
+			case UndoRedo: object->UndoRedo(); break;
+			case SwitchToScenario: object->SwitchGameMode(true); break;
+			case SwitchAwayFromScenario: object->SwitchGameMode(false); break;
+			case UpdateScenarioGoals: object->UpdateScenarioGoals(); break;
 
-		// NOTE: these have return cases.
-		case UserUIMessage:		bool value = object->UserUIMessage(mStoredUIMessage);	  ClearStoredMessages();			if (value) { return true; } break;
-		case UserGameMessage:	bool value = object->UserGameMessage(mStoredGameMessage);  ClearStoredMessages();	if (value) { return true; } break;
+			case EnterEditMode: object->EnterMode(EP1_GameplayObject::Mode::EditMode); break;
+			case EnterPlayMode: object->EnterMode(EP1_GameplayObject::Mode::PlayMode); break;
 
-		case Pickup: bool value = object->Pickup();		if (value) { return true; } break;
-		case Drop: bool value = object->Drop();			if (value) { return true; } break;
-		case Moved: bool value = object->Moved();		if (value) { return true; } break;
+			case TakeDamage: object->DoTakeDamage(mpStoredDmgTarget, mStoredDmg, mpStoredDmgAttacker); ClearStoredDmgData(); break;
+
+			// NOTE: these have return cases.
+			case UserUIMessage: {
+				value = object->UserUIMessage(mStoredUIMessage); ClearStoredMessages();
+				if (value) { return true; } break;
+			}
+			case UserGameMessage: {
+				value = object->UserGameMessage(mStoredGameMessage); ClearStoredMessages();
+				if (value) { return true; } break;
+			}
+
+			case Pickup: {
+				value = object->DoPickup();
+				if (value) { return true; } break;
+			}
+			case Drop: {
+				value = object->DoDrop();
+				if (value) { return true; } break;
+			}	
+			case Moved: {
+				value = object->DoMoved();
+				if (value) { return true; } break;
+			}
+			
 
 
 		}
@@ -73,25 +113,30 @@ bool EP1_GameplayObjectManager::PropagateAction(Actions action) {
 // NOTE: this func does not detect if an object is selected!
 // Consider making the propagation call a private version of the object->func(), that only calls the user-defined if the selection criteria is met.
 bool EP1_GameplayObjectManager::HandleMouseInput(const Message& message) {
-	PropagateAction(Drop);
-
 	if (IsEditingAdventure()) {
+
 		// Player has released mouse
-		// TODO: detect if this is the left mouse. Usual methods to check this do not work.
-		if (message.IsType(kMsgMouseUp)) { // && pSelectedObject
+		// TODO: check if they released the left mouse... normal methods dont work.
+		if (mbMouseDown && message.IsType(kMsgMouseUp)) {
+			mbMouseDown = false;
 			return PropagateAction(Drop);
 		}
-
-		// Player has left clicked the mouse
-		else if (message.Mouse.IsLeftButton() && message.IsType(kMsgMouseDown)) { // && !pSelectedObject
-			return PropagateAction(Pickup);
+		else if (message.Mouse.IsLeftButton()) {
+			
+			// Player has moved the mouse
+			if (mbMouseDown && message.IsType(kMsgMouseMove)) {
+				return PropagateAction(Moved);
+			}
+			// Player has left clicked the mouse
+			else if (!mbMouseDown && message.IsType(kMsgMouseDown)) {
+				mbMouseDown = true;
+				return PropagateAction(Pickup);
+			}
 		}
-
-		// Player has moved the mouse
-		else if (message.Mouse.IsLeftButton() && message.IsType(kMsgMouseMove)) {
-			return PropagateAction(Moved);
-
-		}
+		
+	}
+	else if (IsPlayingAdventure()) {
+		// TODO: add click / select funcs into this, for stuff like driving cars
 	}
 	
 	return false;
@@ -116,7 +161,7 @@ bool EP1_GameplayObjectManager::HandleMessage(uint32_t messageID, void* msg) {
 	mStoredGameMessage = messageID;
 	
 	if (messageID == kMsgScenarioRedo || messageID == kMsgScenarioUndo) {
-		if (IsScenarioMode()) { PropagateAction(UndoRedo); }
+		auto task = Simulator::ScheduleTask(this, &EP1_GameplayObjectManager::FireUndoRedo, 0.01f);
 	}
 	else if (messageID == kMsgSwitchGameMode) {
 		auto task = Simulator::ScheduleTask(this, &EP1_GameplayObjectManager::FireSwitchIfScenario, 0.2f);
@@ -124,6 +169,9 @@ bool EP1_GameplayObjectManager::HandleMessage(uint32_t messageID, void* msg) {
 	}
 	return false;
 }
+
+//---------------------------------------
+// fire these from a delay
 
 // fire switchmode, only if in scenario.
 void EP1_GameplayObjectManager::FireSwitchIfScenario() {
@@ -137,9 +185,20 @@ void EP1_GameplayObjectManager::FireSwitchIfScenario() {
 	}
 }
 
+void EP1_GameplayObjectManager::FireUndoRedo() {
+	if (IsScenarioMode()) { PropagateAction(UndoRedo); }
+}
+//---------------------------------------
+
 void EP1_GameplayObjectManager::ClearStoredMessages() {
 	mStoredUIMessage = Message();
 	mStoredGameMessage = 0x0;
+}
+
+void EP1_GameplayObjectManager::ClearStoredDmgData() {
+	mStoredDmg = 0.0f;
+	mpStoredDmgTarget = nullptr;
+	mpStoredDmgAttacker = nullptr;
 }
 
 //----------------------------------------------------------------------------------------------------

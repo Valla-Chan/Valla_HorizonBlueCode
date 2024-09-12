@@ -45,6 +45,7 @@
 #include "CapabilityChecker.h"
 #include "CRG_ObjectManager.h"
 #include "TRG_ChieftainManager.h"
+#include "EP1_GameplayObjectManager.h"
 
 // Scripts
 #include "CRE_ViewerAnims.h"
@@ -56,6 +57,10 @@ CRG_DiseaseManager* diseasemanager;
 TRG_CreaturePickup* trg_creaturepickup;
 EP1_PosseCommand* ep1_possecommand;
 EP1_CaptainAbilities* ep1_captainabilities;
+
+// manager
+EP1_GameplayObjectManager* gameplayobjectmanager;
+// submanagers
 EP1_GameplayObject_HoloProjector* ep1_gameplayobject_projector;
 EP1_GameplayObject_DriveMarker* ep1_gameplayobject_drivemarker;
 EP1_GameplayObject_IceCube* ep1_gameplayobject_icecube;
@@ -106,17 +111,17 @@ void Initialize()
 	ep1_captainabilities = new(EP1_CaptainAbilities);
 	WindowManager.GetMainWindow()->AddWinProc(ep1_captainabilities);
 
+	// Manager
+	gameplayobjectmanager = new(EP1_GameplayObjectManager);
+	// Submanagers
 	ep1_gameplayobject_projector = new(EP1_GameplayObject_HoloProjector);
-	WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_projector);
-	MessageManager.AddListener(ep1_gameplayobject_projector, SimulatorMessages::kMsgScenarioRedo);
-	MessageManager.AddListener(ep1_gameplayobject_projector, SimulatorMessages::kMsgScenarioUndo);
-	MessageManager.AddListener(ep1_gameplayobject_projector, SimulatorMessages::kMsgSwitchGameMode);
+	gameplayobjectmanager->AddGameplayObjectSubmanager(ep1_gameplayobject_projector);
 
-	ep1_gameplayobject_drivemarker = new(EP1_GameplayObject_DriveMarker);
-	WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_drivemarker);
+	//ep1_gameplayobject_drivemarker = new(EP1_GameplayObject_DriveMarker);
+	//WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_drivemarker);
 
-	ep1_gameplayobject_icecube = new(EP1_GameplayObject_IceCube);
-	MessageManager.AddListener(ep1_gameplayobject_icecube, SimulatorMessages::kMsgSwitchGameMode);
+	//ep1_gameplayobject_icecube = new(EP1_GameplayObject_IceCube);
+	//MessageManager.AddListener(ep1_gameplayobject_icecube, SimulatorMessages::kMsgSwitchGameMode);
 
 
 	// Managers
@@ -130,6 +135,23 @@ void Initialize()
 	// Singletons
 	cCapabilityChecker* capchecker = new(cCapabilityChecker);
 
+}
+
+// This method is called when the game is closing
+void Dispose()
+{
+	obconverter = nullptr;
+	chiefmanager = nullptr;
+	diseasemanager = nullptr;
+	trg_creaturepickup = nullptr;
+
+	ep1_possecommand = nullptr;
+	ep1_captainabilities = nullptr;
+
+	gameplayobjectmanager = nullptr;
+	ep1_gameplayobject_projector = nullptr;
+	ep1_gameplayobject_drivemarker = nullptr;
+	ep1_gameplayobject_icecube = nullptr;
 }
 
 cCreatureAnimal* GetAnimCreatureOwner(const AnimatedCreaturePtr& animcreature) {
@@ -444,8 +466,11 @@ member_detour(ScenarioPlayModeUpdateGoals_detour, Simulator::cScenarioPlayMode, 
 	bool detoured()
 	{
 		bool result = original_function(this);
-		ep1_gameplayobject_projector->ApplyHologramsToProjectors(true);
-		ep1_gameplayobject_icecube->ApplyFrozenToIce();
+		if (this->mCurrentActIndex > 0) {
+			gameplayobjectmanager->PropagateAction(EP1_GameplayObjectManager::UpdateScenarioGoals);
+		}
+		//ep1_gameplayobject_projector->ApplyHologramsToProjectors(true);
+		//ep1_gameplayobject_icecube->ApplyFrozenToIce();
 		return result;
 	}
 };
@@ -455,7 +480,9 @@ virtual_detour(CombatTakeDamage_detour, Simulator::cCombatant, Simulator::cComba
 {
 	int detoured(float damage, uint32_t attackerPoliticalID, int integer, const Vector3& vector, cCombatant* pAttacker)
 	{
-
+		// TODO: send the message of this to the gameplayobjectmanager, including the attacker and object
+		// and have that class propogate it to the rest of the submanagers to check for if the object can be handled, then call OnDamaged
+		gameplayobjectmanager->DoTakeDamage(this, damage, pAttacker);
 		return original_function(this, damage, attackerPoliticalID, integer, vector, pAttacker);
 	}
 };
@@ -482,20 +509,6 @@ void AttachDetours()
 
 	//CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
 	//CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));
-}
-
-// This method is called when the game is closing
-void Dispose()
-{
-	obconverter = nullptr;
-	chiefmanager = nullptr;
-	diseasemanager = nullptr;
-	trg_creaturepickup = nullptr;
-	ep1_possecommand = nullptr;
-	ep1_captainabilities = nullptr;
-	ep1_gameplayobject_projector = nullptr;
-	ep1_gameplayobject_drivemarker = nullptr;
-	ep1_gameplayobject_icecube = nullptr;
 }
 
 // Generally, you don't need to touch any code here

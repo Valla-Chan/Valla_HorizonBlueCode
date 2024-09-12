@@ -16,31 +16,24 @@ public:
 	int AddRef() override;
 	int Release() override;
 	void* Cast(uint32_t type) const override;
-	void Update() override;
 
 	const float max_holo_dist = 2.5f;
 	const float holo_zdist = 2.0f;
 
-	cCreatureAnimalPtr selectedCreature = nullptr;
-	eastl::vector<cCreatureAnimalPtr> mHolograms = {};
-	bool in_playmode = false;
+	//eastl::vector<cCreatureAnimalPtr> mHolograms = {};
 
-	cCreatureAnimalPtr GetSelectedCreature() const;
-	cCreatureAnimalPtr GetRolledCreature() const;
-	cSpatialObjectPtr GetClosestProjector(cCreatureAnimalPtr creature) const;
-	cCreatureAnimalPtr GetClosestCreature(cSpatialObjectPtr projector) const;
-	Vector3 GetHologramPos(cSpatialObjectPtr projector) const;
-	void MakeObjectHologram(cCreatureAnimalPtr creature, cSpatialObjectPtr projector = nullptr, bool state = true);
+	void Update() override;
+	bool IsHandledObject(cSpatialObjectPtr object) const override;
+	
+	Vector3 GetObjectPos(cSpatialObjectPtr object) override;
+	float GetObjectMaxRadius(cSpatialObjectPtr object) override;
+
+	void MakeCreatureHologram(cCreatureAnimalPtr creature, cSpatialObjectPtr projector = nullptr, bool state = true);
 	void SnapToProjector(cCreatureAnimalPtr creature, cSpatialObjectPtr projector);
 
-	eastl::vector<cSpatialObjectPtr> GetProjectors() const;
 	bool IsCreatureHologram(cCreatureAnimalPtr creature) const;
 
-	void ApplyHologramsToProjectors(bool playmode = false);
+	void ApplyCombatantEffect(cCombatantPtr combatant, cSpatialObjectPtr object) override;
+	void ResetCombatantEffect(cCombatantPtr combatant) override;
 
-	bool Pickup() override;
-	bool Drop() override;
-	bool Moved() override;
-
-	void UndoRedo();
 };

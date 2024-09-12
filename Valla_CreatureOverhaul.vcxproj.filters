@@ -148,6 +148,12 @@
     <ClInclude Include="EP1_GameplayObjectManager.h">
       <Filter>Valla_CreatureOverhaul\EP1</Filter>
     </ClInclude>
+    <ClInclude Include="EP1_GameplayObject.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClInclude>
+    <ClInclude Include="EP1_Detours.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -256,6 +262,9 @@
       <Filter>Valla_CreatureOverhaul\EP1</Filter>
     </ClCompile>
     <ClCompile Include="EP1_GameplayObjectManager.cpp">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClCompile>
+    <ClCompile Include="EP1_GameplayObject.cpp">
       <Filter>Valla_CreatureOverhaul\EP1</Filter>
     </ClCompile>
   </ItemGroup>
