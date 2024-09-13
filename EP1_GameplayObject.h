@@ -50,6 +50,7 @@ public:
 
 	// Currently selected/edited object. Can be creature or gameplay object.
 	cSpatialObjectPtr pHeldObject = nullptr;
+
 	cCombatantPtr GetHeldCombatant() { return object_cast<cCombatant>(pHeldObject); }
 	cCombatantPtr GetHeldCreature() { return object_cast<cCreatureAnimal>(pHeldObject); }
 
@@ -101,10 +102,17 @@ public:
 	// Returns if a combatant is of the valid types
 	virtual bool IsValidCombatantType(cCombatantPtr object);
 
+
 	// Returns the max radius of influence of an object. Often multiplies by the scale of the object.
 	virtual float GetObjectMaxRadius(cSpatialObjectPtr object);
+
 	// Returns the reference pos an object. Can be overridden to include an offset.
 	virtual Vector3 GetObjectPos(cSpatialObjectPtr object);
+
+	// Returns the abs(distance) if object A is in range of object B.
+	// Defaults to a double distance check; can be overriden to check anything, such as origin within bbox or etc.
+	// if not within range, return -1.
+	virtual float IsObjectInRange(cSpatialObjectPtr objectA, cSpatialObjectPtr objectB);
 
 
 	//------------------------------------------------------------

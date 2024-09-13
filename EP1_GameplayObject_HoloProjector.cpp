@@ -15,13 +15,15 @@ void EP1_GameplayObject_HoloProjector::Update() {
 		for (auto item : mpIngameObjects) {
 			auto creature = object_cast<cCreatureAnimal>(item.activator);
 			if (creature) {
-				MakeCreatureHologram(creature);
+				//MakeCreatureHologram(creature);
+				creature->mbStealthed = true;
+				creature->field_B7C = 0.4f;
 			}
 		}
 	}
 }
 
-bool EP1_GameplayObject_HoloProjector::IsHandledObject(cSpatialObjectPtr object) {
+bool EP1_GameplayObject_HoloProjector::IsHandledObject(cSpatialObjectPtr object) const {
 	auto powerup = object_cast<cScenarioPowerup>(object);
 	// check if this is a projector
 	if (powerup && CapabilityChecker.GetModelColorRGBValue(object->GetModelKey(), id("modelHologramColor")) != ColorRGB(0.0f, 0.0f, 0.0f)) {

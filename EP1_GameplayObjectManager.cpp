@@ -72,7 +72,7 @@ bool EP1_GameplayObjectManager::PropagateAction(Actions action) {
 			case EnterEditMode: object->EnterMode(EP1_GameplayObject::Mode::EditMode); break;
 			case EnterPlayMode: object->EnterMode(EP1_GameplayObject::Mode::PlayMode); break;
 
-			case TakeDamage: object->DoTakeDamage(mpStoredDmgTarget, mStoredDmg, mpStoredDmgAttacker); ClearStoredDmgData(); break;
+			case TakeDamage: object->DoTakeDamage(mpStoredDmgTarget, mStoredDmg, mpStoredDmgAttacker); /*ClearStoredDmgData();*/ break;
 
 			// NOTE: these have return cases.
 			case UserUIMessage: {

@@ -22,11 +22,15 @@ public:
 	void Update() override;
 	bool IsHandledObject(cSpatialObjectPtr object) const override;
 
-	static cCreatureAnimalPtr GetClosestCreature(cSpatialObjectPtr gameplayob);
-	void BreakIce(cSpatialObjectPtr object);
-	eastl::vector<cSpatialObjectPtr> GetIceCubes() const;
+	void ApplyCombatantEffect(cCombatantPtr combatant, cSpatialObjectPtr object) override;
+	void ResetCombatantEffect(cCombatantPtr combatant) override;
 
-	void ApplyFrozenToIce();
+	void OnDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker) override;
+
+	//----------------------------------------
+
+	void BreakIce(cSpatialObjectPtr object);
+
 	void SetCreatureFrozen(cCreatureAnimalPtr creature, bool frozen);
 
 

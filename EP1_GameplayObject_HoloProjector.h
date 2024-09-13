@@ -21,6 +21,7 @@ public:
 	const float holo_zdist = 2.0f;
 
 	//eastl::vector<cCreatureAnimalPtr> mHolograms = {};
+	//-------------------------------------------------------------
 
 	void Update() override;
 	bool IsHandledObject(cSpatialObjectPtr object) const override;
@@ -28,12 +29,16 @@ public:
 	Vector3 GetObjectPos(cSpatialObjectPtr object) override;
 	float GetObjectMaxRadius(cSpatialObjectPtr object) override;
 
+	void ApplyCombatantEffect(cCombatantPtr combatant, cSpatialObjectPtr object) override;
+	void ResetCombatantEffect(cCombatantPtr combatant) override;
+
+	//-------------------------------------------------------------
+
 	void MakeCreatureHologram(cCreatureAnimalPtr creature, cSpatialObjectPtr projector = nullptr, bool state = true);
 	void SnapToProjector(cCreatureAnimalPtr creature, cSpatialObjectPtr projector);
 
 	bool IsCreatureHologram(cCreatureAnimalPtr creature) const;
 
-	void ApplyCombatantEffect(cCombatantPtr combatant, cSpatialObjectPtr object) override;
-	void ResetCombatantEffect(cCombatantPtr combatant) override;
+	
 
 };

@@ -111,17 +111,17 @@ void Initialize()
 	ep1_captainabilities = new(EP1_CaptainAbilities);
 	WindowManager.GetMainWindow()->AddWinProc(ep1_captainabilities);
 
-	// Manager
+	// Initialize Manager
 	gameplayobjectmanager = new(EP1_GameplayObjectManager);
-	// Submanagers
+	// Initialize Submanagers
 	ep1_gameplayobject_projector = new(EP1_GameplayObject_HoloProjector);
+	ep1_gameplayobject_icecube = new(EP1_GameplayObject_IceCube);
+	// Add to manager
 	gameplayobjectmanager->AddGameplayObjectSubmanager(ep1_gameplayobject_projector);
+	gameplayobjectmanager->AddGameplayObjectSubmanager(ep1_gameplayobject_icecube);
 
 	//ep1_gameplayobject_drivemarker = new(EP1_GameplayObject_DriveMarker);
 	//WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_drivemarker);
-
-	//ep1_gameplayobject_icecube = new(EP1_GameplayObject_IceCube);
-	//MessageManager.AddListener(ep1_gameplayobject_icecube, SimulatorMessages::kMsgSwitchGameMode);
 
 
 	// Managers
@@ -434,11 +434,12 @@ virtual_detour(WalkTo_detour, Simulator::cCreatureAnimal, Simulator::cCreatureBa
 {
 	void detoured(int speedState, const Vector3& dstPos, const Vector3& arg_8, float goalStopDistance = 1.0f, float acceptableStopDistance = 2.0f)
 	{
+		/*
 		for (auto creature : ep1_gameplayobject_projector->mHolograms) {
 			if (object_cast<Simulator::cCreatureAnimal>(this) == creature) {
 				return;
 			}
-		}
+		}*/
 
 		// Check if the creature is in the captain posse playing a scheduled walk. If so, do not interrupt them!
 		auto schedule = ep1_possecommand->GetCreatureSchedule(object_cast<Simulator::cCreatureAnimal>(this));
@@ -466,11 +467,9 @@ member_detour(ScenarioPlayModeUpdateGoals_detour, Simulator::cScenarioPlayMode, 
 	bool detoured()
 	{
 		bool result = original_function(this);
-		if (this->mCurrentActIndex > 0) {
+		//if (this->mCurrentActIndex > 0) {
 			gameplayobjectmanager->PropagateAction(EP1_GameplayObjectManager::UpdateScenarioGoals);
-		}
-		//ep1_gameplayobject_projector->ApplyHologramsToProjectors(true);
-		//ep1_gameplayobject_icecube->ApplyFrozenToIce();
+		//}
 		return result;
 	}
 };

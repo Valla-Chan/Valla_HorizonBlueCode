@@ -67,7 +67,7 @@ cSpatialObjectPtr EP1_GameplayObject::GetClosestHandledObject(cSpatialObjectPtr 
 		// do not allow selecting the same object as the src
 		if (srcobject != object) {
 			float dist = Math::distance(origin, object->GetPosition());
-			if (dist < last_dist && dist < GetObjectMaxRadius(object) && (!mbExcludeAvatar || object != object_cast<cSpatialObject>(Avatar()))) {
+			if (dist < last_dist && dist < GetObjectMaxRadius(object)) {
 				found_object = object;
 				last_dist = dist;
 			}
@@ -88,23 +88,14 @@ cCombatantPtr EP1_GameplayObject::GetClosestCombatant(cSpatialObjectPtr srcobjec
 	// loop thru all creatures
 	auto combatants = GetCombatantData();
 	for (auto combatant : combatants) {
-		auto spatial = object_cast<cSpatialObject>(combatant);
-		if (spatial) {
-			float dist = Math::distance(origin, GetObjectPos(spatial));
-			float dist2 = Math::distance(origin, spatial->GetPosition()); // backup dist check
 
-			if ((!mbExcludeAvatar || combatant != object_cast<cCombatant>(avatar)) && IsValidCombatantType(combatant)) {
-				if (dist < last_dist) {
+		auto spatial = object_cast<cSpatialObject>(combatant);
+		if (spatial && IsValidCombatantType(combatant)) {
+				auto dist = IsObjectInRange(spatial, srcobject);
+				if (dist > -1) {
 					found_combatant = combatant;
 					last_dist = dist;
 				}
-				// backup dist check
-				else if (dist2 < last_dist) {
-					found_combatant = combatant;
-					last_dist = dist2;
-				}
-			}
-
 		}
 	}
 	return found_combatant;
@@ -218,6 +209,9 @@ bool EP1_GameplayObject::IsHandledObject(cSpatialObjectPtr object) {
 }*/
 
 bool EP1_GameplayObject::IsValidCombatantType(cCombatantPtr combatant) {
+	// if set to exclude avatar, and the combatant is the avatar, return invalid.
+	if (mbExcludeAvatar && combatant == object_cast<cCombatant>(Avatar())) { return false; }
+
 	if (mbCombatantCanBeCreature && object_cast<cCreatureAnimal>(combatant)) { return true; }
 	if (mbCombatantCanBeVehicle && object_cast<cVehicle>(combatant)) { return true; }
 	if (mbCombatantCanBeBuilding && object_cast<cBuilding>(combatant)) { return true; }
@@ -233,12 +227,29 @@ Vector3 EP1_GameplayObject::GetObjectPos(cSpatialObjectPtr object) {
 	return object->GetPosition();
 }
 
+float EP1_GameplayObject::IsObjectInRange(cSpatialObjectPtr objectA, cSpatialObjectPtr objectB) {
+	auto origin = objectA->GetPosition();
+	auto radius = GetObjectMaxRadius(objectB);
+
+	float dist = Math::distance(origin, GetObjectPos(objectB)); // dist check from the user defined GetObjectPos() func
+	float dist2 = Math::distance(origin, objectB->GetPosition()); // backup dist check from default pos
+
+	if (dist <= radius) {
+		return dist;
+	}
+	// backup dist check
+	else if (dist2 <= radius) {
+		return dist2;
+	}
+	return -1;
+}
+
 //-----------------------------------------------------------------------------------------------
 // Virtuals - Actions from Manager
 
 void EP1_GameplayObject::OnDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker) {
 	return;
-};
+}
 
 void EP1_GameplayObject::OnEnterRadius(cSpatialObjectPtr object, cCombatantPtr pActivator) {
 	ApplyCombatantEffect(pActivator, object);
@@ -293,13 +304,17 @@ bool EP1_GameplayObject::Drop() {
 }
 
 bool EP1_GameplayObject::Moved() {
-	auto object = GetClosestHandledObject(pHeldObject);
-	if (object) {
-		ApplyCombatantEffect(GetHeldCombatant(), object);
+	// if a combatant is being held
+	if (GetHeldCombatant()) {
+		auto object = GetClosestHandledObject(pHeldObject);
+		if (object) {
+			ApplyCombatantEffect(GetHeldCombatant(), object);
+		}
+		else {
+			ResetCombatantEffect(GetHeldCombatant());
+		}
 	}
-	else {
-		ResetCombatantEffect(GetHeldCombatant());
-	}
+	
 	return false;
 }
 
@@ -321,7 +336,7 @@ using namespace App;
 void EP1_GameplayObject::EnterMode(int mode) {
 	// Playmode
 	if (mode == Mode::PlayMode) {
-		ApplyAllObjectEffects();
+		//ApplyAllObjectEffects();
 	}
 	// Edit / Terrain mode
 	else {
