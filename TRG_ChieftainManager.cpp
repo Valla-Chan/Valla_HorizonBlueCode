@@ -6,6 +6,7 @@
 TRG_ChieftainManager::TRG_ChieftainManager()
 {
 	sInstance = this;
+	MessageManager.AddListener(this, id("TRG_GetTool")); // listen for anim event
 }
 
 
@@ -68,6 +69,7 @@ cCreatureCitizen* TRG_ChieftainManager::GetNearestTribalLeader(Vector3 pos, cons
 	auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
 	for (auto tribe : tribes) {
 		cCreatureCitizen* leader = tribe->GetLeaderCitizen();
+		if (!leader) { return nullptr; }
 		float dist = (leader->GetPosition() - pos).SquaredLength();
 		if (dist < last_distance) {
 			closest_leader = leader;

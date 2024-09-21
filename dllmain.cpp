@@ -24,28 +24,38 @@
 #include "Cheats/CRG_GetPart.h"
 #include "Cheats/CRG_GetSick.h"
 #include "Cheats/CRG_GiveAllParts.h"
+#include "Cheats/SetTimeScale.h"
+#include "Cheats/SetTime.h"
+#include "Cheats/TRG_GetClosestHerd.h"
+#include "Cheats/TRG_SelectMembers.h"
+#include "Cheats/TRG_AddToTribe.h"
+
+// UI
+#include "UI_Timescale.h"
 
 // CRG Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
 #include "CRG_WaterBehavior.h"
 #include "CRG_DiseaseManager.h"
 #include "CRG_AttackBasic.h"
+#include "CRG_ObjectManager.h"
 
 // TRG Ingame Behaviors
 #include "TRG_CreaturePickup.h"
+#include "TRG_ChieftainManager.h"
+#include "TRG_MemberManager.h"
+#include "TRG_IslandEventManager.h"
 
 // EP1 Ingame Behaviors
 #include "EP1_PosseCommand.h"
 #include "EP1_CaptainAbilities.h"
+#include "EP1_GameplayObjectManager.h"
 #include "EP1_GameplayObject_HoloProjector.h"
 #include "EP1_GameplayObject_DriveMarker.h"
 #include "EP1_GameplayObject_IceCube.h"
 
 // Singletons
 #include "CapabilityChecker.h"
-#include "CRG_ObjectManager.h"
-#include "TRG_ChieftainManager.h"
-#include "EP1_GameplayObjectManager.h"
 
 // Scripts
 #include "CRE_ViewerAnims.h"
@@ -57,6 +67,8 @@ CRG_DiseaseManager* diseasemanager;
 TRG_CreaturePickup* trg_creaturepickup;
 EP1_PosseCommand* ep1_possecommand;
 EP1_CaptainAbilities* ep1_captainabilities;
+
+TRG_IslandEventManager* trg_ieventmanager;
 
 // manager
 EP1_GameplayObjectManager* gameplayobjectmanager;
@@ -87,21 +99,28 @@ void Initialize()
 	CheatManager.AddCheat("GetSick", new(CRG_GetSick));
 	CheatManager.AddCheat("GivePart", new(CRG_GetPart));
 	CheatManager.AddCheat("GiveAllParts", new(CRG_GiveAllParts));
+	CheatManager.AddCheat("TimeScale", new(SetTimeScale));
+	CheatManager.AddCheat("SetTime", new(SetTime));
+	CheatManager.AddCheat("GetHerd", new(TRG_GetClosestHerd));
+	CheatManager.AddCheat("SelectUnits", new(TRG_SelectMembers));
+	CheatManager.AddCheat("AddToTribe", new(TRG_AddToTribe));
 
+	// UI
+	UI_Timescale* uitimescale = new(UI_Timescale);
 
 	// CRG
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
 	CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
-
 	CRG_AttackBasic* crg_attackbasic = new(CRG_AttackBasic);
-	WindowManager.GetMainWindow()->AddWinProc(crg_attackbasic);
-	MessageManager.AddListener(crg_attackbasic, id("CRG_AttackGeneric")); // listen for anim event
-	MessageManager.AddListener(crg_attackbasic, id("CRG_AttackGeneric_Done")); // listen for anim event
 	
 
 	// TRG
 	trg_creaturepickup = new(TRG_CreaturePickup);
-	WindowManager.GetMainWindow()->AddWinProc(trg_creaturepickup);
+	chiefmanager = new(TRG_ChieftainManager);
+	// strategies
+	SimulatorSystem.AddStrategy(new TRG_MemberManager(), TRG_MemberManager::NOUN_ID);
+	trg_ieventmanager = new(TRG_IslandEventManager);
+	SimulatorSystem.AddStrategy(trg_ieventmanager, TRG_IslandEventManager::NOUN_ID);
 
 
 	// EP1
@@ -120,14 +139,12 @@ void Initialize()
 	gameplayobjectmanager->AddGameplayObjectSubmanager(ep1_gameplayobject_projector);
 	gameplayobjectmanager->AddGameplayObjectSubmanager(ep1_gameplayobject_icecube);
 
-	//ep1_gameplayobject_drivemarker = new(EP1_GameplayObject_DriveMarker);
-	//WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_drivemarker);
+	ep1_gameplayobject_drivemarker = new(EP1_GameplayObject_DriveMarker);
+	WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_drivemarker);
 
 
 	// Managers
 	obconverter = new(cObjectManager);
-	chiefmanager = new(TRG_ChieftainManager);
-	MessageManager.AddListener(chiefmanager, id("TRG_GetTool")); // listen for anim event
 
 	diseasemanager = new(CRG_DiseaseManager);
 
@@ -253,6 +270,7 @@ member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 		}
 		
 		else if (IsTribeGame()) {
+			// held tribe member
 			if (trg_creaturepickup->held_member) {
 				return original_function(this, 0x03C32077);
 			}
@@ -267,6 +285,12 @@ member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 					}
 				}
 			}
+			// island event item hovered
+			if (trg_ieventmanager->IsEventItemHovered()) {
+				return original_function(this, 0x24C6D844);
+			}
+
+
 		}
 		
 
@@ -280,8 +304,6 @@ member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 // Detour the cursor LOADING func
 member_detour(LoadCursor_detour, UTFWin::cCursorManager, bool(uint32_t, const char16_t*, bool, int, int)) {
 	bool detoured(uint32_t id, const char16_t* fileName, bool loadFromFile = true, int xHotspot = 0, int yHotspot = 0) {
-		App::ConsolePrintF("Loading cursor: %x, %b,  %i %i", id, loadFromFile, xHotspot, yHotspot);
-		App::ConsolePrintF("cursor file: %ls", fileName);
 		return original_function(this, id, fileName, loadFromFile, xHotspot, yHotspot);
 	}
 };
@@ -319,7 +341,7 @@ virtual_detour(SetModel_detour, Simulator::cSpatialObject, Simulator::cSpatialOb
 // Detour the tribe spawning func
 member_detour(TribeSpawn_detour, Simulator::cTribe, void(const Vector3&, int, int, bool)) {
 	void detoured(const Math::Vector3& position, int numMembers, int value, bool boolvalue) {
-		//App::ConsolePrintF("Tribe Spawned");
+		App::ConsolePrintF("Tribe Spawned");
 		original_function(this, position, numMembers, value, boolvalue);
 		return;
 	}
@@ -341,6 +363,11 @@ member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint3
 {
 	int detoured(uint32_t instanceId, uint32_t groupId) //Detouring the function for obtaining effect indexes...
 	{
+		// detect if a cinematic is beginning
+		if (instanceId == id("fade_to_black_1") || instanceId == id("fade_to_black_3") || instanceId == id("fade_to_black_quick")) {
+			MessageManager.MessageSend(id("CinematicBegin"), nullptr);
+		}
+
 		if (IsTribeGame()) {
 			// 0 = reg  1 = fish  2 = seaweed
 			int swapnum = -1;
@@ -360,9 +387,9 @@ member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint3
 			}
 			
 		}
-		//if (instanceId != 0x0) {
-		//	SporeDebugPrint("%x", instanceId);
-		//}
+		// Print FX
+		//if (instanceId != 0x0) { SporeDebugPrint("%x", instanceId); }
+
 		return original_function(this, instanceId, groupId); //And call the original function with the new instance ID.
 	}
 };
@@ -486,6 +513,28 @@ virtual_detour(CombatTakeDamage_detour, Simulator::cCombatant, Simulator::cComba
 	}
 };
 
+// Called when a combatant takes damage
+member_detour(Pause_detour, Simulator::cGameTimeManager, int(TimeManagerPause))
+{
+	int detoured(TimeManagerPause pauseType)
+	{
+		return original_function(this, pauseType);
+	}
+};
+
+// Spui spawning detour
+member_detour(ReadSPUI_detour, UTFWin::UILayout, bool(const ResourceKey&, bool, uint32_t)) {
+	bool detoured(const ResourceKey& name, bool arg_4, uint32_t arg_8) {
+		if (name.instanceID == id("Rollover_TribeHut") && trg_ieventmanager->IsEventItemHovered())
+		{
+			ResourceKey newSpui = ResourceKey(name.instanceID, name.typeID, name.groupID);
+			newSpui.instanceID = id("Rollover_TribeRare");
+			return original_function(this, newSpui, arg_4, arg_8);
+		}
+		return original_function(this, name, arg_4, arg_8);
+	}
+};
+
 void AttachDetours()
 {
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
@@ -504,7 +553,12 @@ void AttachDetours()
 
 	ScenarioPlayModeUpdateGoals_detour::attach(GetAddress(Simulator::cScenarioPlayMode, UpdateGoals));
 
+	// TODO: needs disk spore address!
 	CombatTakeDamage_detour::attach(Address(0x00bfcf10));
+
+	ReadSPUI_detour::attach(GetAddress(UTFWin::UILayout, Load));
+
+	//Pause_detour::attach(GetAddress(Simulator::cGameTimeManager, Pause));
 
 	//CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
 	//CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));

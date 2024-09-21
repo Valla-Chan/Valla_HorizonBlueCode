@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "EP1_GameplayObject_DriveMarker.h"
+#include "CapabilityChecker.h"
 #include <Spore\Input.h>
 
 EP1_GameplayObject_DriveMarker::EP1_GameplayObject_DriveMarker()
@@ -15,9 +16,9 @@ EP1_GameplayObject_DriveMarker::~EP1_GameplayObject_DriveMarker()
 void EP1_GameplayObject_DriveMarker::Update()
 {
 	if (IsPlayingAdventure()) {
-		if (mIsDriving && mCurrentVehicle) {
+		if (mIsDriving && (mCurrentVehicle || mCurrentCreature)) {
 			// Exit vehicle if dead
-			if (mCurrentVehicle->mbDead) {
+			if (mCurrentVehicle && mCurrentVehicle->mbDead) {
 				ExitVehicle();
 			}
 
@@ -57,6 +58,17 @@ cVehiclePtr EP1_GameplayObject_DriveMarker::GetHoveredVehicle() {
 	return nullptr;
 }
 
+// Get the creature mount that is rolled over with the mouse
+cCreatureAnimalPtr EP1_GameplayObject_DriveMarker::GetHoveredCreature() {
+	auto creatures = Simulator::GetDataByCast<Simulator::cCreatureAnimal>();
+	for (auto creature : creatures) {
+		if (creature->IsRolledOver()) {
+			return creature;
+		}
+	}
+	return nullptr;
+}
+
 // If a vehicle is in the drivable list
 bool EP1_GameplayObject_DriveMarker::IsVehicleDrivable(cVehiclePtr vehicle) const {
 	// DEBUG
@@ -78,13 +90,44 @@ float EP1_GameplayObject_DriveMarker::GetCurrentVehicleSpeed() const {
 	return 1.0;
 }
 
+cSpatialObjectPtr EP1_GameplayObject_DriveMarker::GetVehicleSpatial() const {
+	auto vehicleSpatial = object_cast<cSpatialObject>(mCurrentVehicle);
+	if (!vehicleSpatial) {
+		vehicleSpatial = object_cast<cSpatialObject>(mCurrentCreature);
+	}
+	return vehicleSpatial;
+}
+
 //------------------------------------------------------------------------------------------------
 
+// TODO: combine these into 1 func with 2 args (1 will be nullptr)
 void EP1_GameplayObject_DriveMarker::EnterVehicle(cVehiclePtr vehicle) {
 	if (!IsPlayingAdventure() || mDrivingCooldown) { return; }
 	auto avatar = GameNounManager.GetAvatar();
 	if (avatar) {
 		mCurrentVehicle = vehicle;
+		mCurrentCreature = nullptr;
+		mCurrentVehicle->mStandardSpeed *= 2.0f;
+	}
+	Enter();
+}
+
+// Debug Test
+void EP1_GameplayObject_DriveMarker::EnterCreature(cCreatureAnimalPtr creature) {
+	if (!IsPlayingAdventure() || mDrivingCooldown) { return; }
+	auto avatar = GameNounManager.GetAvatar();
+	if (avatar) {
+		mCurrentCreature = creature;
+		mCurrentVehicle = nullptr;
+		mCurrentCreature->mStandardSpeed *= 2.0f;
+		
+	}
+	Enter();
+}
+
+void EP1_GameplayObject_DriveMarker::Enter() {
+	auto avatar = GameNounManager.GetAvatar();
+	if (avatar) {
 		mIsDriving = true;
 		float scale = avatar->GetScale();
 		if (scale != 0.00001f) {
@@ -93,14 +136,13 @@ void EP1_GameplayObject_DriveMarker::EnterVehicle(cVehiclePtr vehicle) {
 		}
 		avatar->mbEnabled = false;
 		avatar->mbFixed = true;
-		mCurrentVehicle->mStandardSpeed *= 2.0f;
-
+		avatar->mbDead = true;
 		StartDrivingCooldown();
 	}
 }
 
 void EP1_GameplayObject_DriveMarker::ExitVehicle() {
-	if (mCurrentVehicle) {
+	if (mCurrentVehicle || mCurrentCreature) {
 		auto avatar = GameNounManager.GetAvatar();
 		if (avatar && IsPlayingAdventure()) {
 			StartDrivingCooldown();
@@ -115,23 +157,32 @@ void EP1_GameplayObject_DriveMarker::ExitVehicle() {
 			}
 			avatar->mbSupported = false;
 			
+			auto vehicleSpatial = GetVehicleSpatial();
 
 			// Put the avatar to the right of the vehicle.
-			auto rightVec = mCurrentVehicle->GetPosition().Normalized().Cross(mCurrentVehicle->GetDirection());
-			auto model = mCurrentVehicle->GetModel();
+			auto rightVec = vehicleSpatial->GetPosition().Normalized().Cross(vehicleSpatial->GetDirection());
+			auto model = vehicleSpatial->GetModel();
 			if (model) {
-				auto v_bbox = mCurrentVehicle->GetModel()->mDefaultBBox; // vehicle bbox
+				auto v_bbox = vehicleSpatial->GetModel()->mDefaultBBox; // vehicle bbox
 				auto c_bbox = avatar->GetModel()->mDefaultBBox; // creature bbox
-				auto newPos = mCurrentVehicle->GetPosition() + (rightVec * (1.3f + abs(v_bbox.lower.x + c_bbox.lower.x)));
+				auto newPos = vehicleSpatial->GetPosition() + (rightVec * (1.3f + abs(v_bbox.lower.x + c_bbox.lower.x)));
 
-				avatar->Teleport(newPos, mCurrentVehicle->GetOrientation());
+				avatar->Teleport(newPos, vehicleSpatial->GetOrientation());
 			}
 		}
-		mCurrentVehicle->mStandardSpeed *= 0.5f;
-		mCurrentVehicle->mTurnRate = Math::PI;
+		
+		if (mCurrentVehicle) {
+			mCurrentVehicle->mTurnRate = Math::PI;
+			mCurrentVehicle->mStandardSpeed *= 0.5f;
+		}
+		else {
+			mCurrentCreature->mStandardSpeed *= 0.5f;
+		}
+		
 	}
 
 	mCurrentVehicle = nullptr;
+	mCurrentCreature = nullptr;
 	mIsMouseHeld = false;
 	mIsDriving = false;
 	auto task = Simulator::ScheduleTask(this, &EP1_GameplayObject_DriveMarker::ExitVehicle_Delayed, 0.2f);
@@ -145,6 +196,7 @@ void EP1_GameplayObject_DriveMarker::ExitVehicle_Delayed() {
 			avatar->mbIsGhost = false;
 			avatar->mbEnabled = true;
 			avatar->mbFixed = false;
+			avatar->mbDead = false;
 		}
 	}
 }
@@ -194,7 +246,7 @@ bool EP1_GameplayObject_DriveMarker::UpdateVecFromKey(int vkey, bool keydown) {
 
 // Set the mDestinationPos from the cursor world pos, if the mouse button is held down.
 void EP1_GameplayObject_DriveMarker::SetDestinationFromCursor() {
-	if (mCurrentVehicle && mIsMouseHeld) {
+	if ((mCurrentVehicle || mCurrentCreature) && mIsMouseHeld) {
 		mDestinationPos = GameViewManager.GetWorldMousePosition();
 	}
 	else {
@@ -204,7 +256,7 @@ void EP1_GameplayObject_DriveMarker::SetDestinationFromCursor() {
 
 // Use mVecInput to determine where the vehicle should drive to
 void EP1_GameplayObject_DriveMarker::SetDestinationFromInput() {
-	if (mCurrentVehicle && mVecInput != Vector2(0, 0)) {
+	if ((mCurrentVehicle || mCurrentCreature) && mVecInput != Vector2(0, 0)) {
 		auto inputDir = mVecInput.Normalized();
 
 		auto pViewer = CameraManager.GetViewer();
@@ -216,15 +268,31 @@ void EP1_GameplayObject_DriveMarker::SetDestinationFromInput() {
 		auto windowArea = WindowManager.GetMainWindow()->GetArea();
 		pViewer->GetCameraToPoint(windowArea.right/2.0f, windowArea.bottom/2.0f, camPos, camDir);
 
+		Vector3 currentVehiclePos;
+		Vector3 currentVehicleDir;
+		Vector3 currentVehicleVelocity;
+		if (mCurrentVehicle) {
+			currentVehiclePos = mCurrentVehicle->GetPosition();
+			currentVehicleDir = mCurrentVehicle->GetDirection();
+			currentVehicleVelocity = mCurrentVehicle->GetVelocity();
+		}
+		else {
+			currentVehiclePos = mCurrentCreature->GetPosition();
+			currentVehicleDir = mCurrentCreature->GetDirection();
+			currentVehicleVelocity = mCurrentCreature->GetVelocity();
+		}
+		
+		
+
 		// create a temp pos from the camera orientation, then get the vehicle direction to that pos.
-		Vector3 tempPos = mCurrentVehicle->mPosition + (camDir * 15.0f);
-		Vector3 dir_to_temp_pos = (tempPos - mCurrentVehicle->GetPosition()).Normalized();
+		Vector3 tempPos = currentVehiclePos + (camDir * 15.0f);
+		Vector3 dir_to_temp_pos = (tempPos - currentVehiclePos).Normalized();
 
 		// find the side dir vector
-		auto rightVec = mCurrentVehicle->GetPosition().Normalized().Cross(mCurrentVehicle->GetDirection());
+		auto rightVec = currentVehiclePos.Normalized().Cross(currentVehicleDir);
 
 		// create destination from input directions
-		mDestinationPos = mCurrentVehicle->mPosition;
+		mDestinationPos = currentVehiclePos;
 		float sign = 1;
 		if (mVecInput.y < 0) {
 			sign = -1;
@@ -234,27 +302,53 @@ void EP1_GameplayObject_DriveMarker::SetDestinationFromInput() {
 		// Modulate turn rate based on input
 		auto turnRate = min(Math::PI * (1.1f + float(mVecInput.y < 1) + 1 - abs(mVecInput.x)), Math::PI * 2);
 		// if there is only side inputs, and the car has significant velocity, drop the turn rate.
-		if (mVecInput.x != 0 && mVecInput.y == 0 && mCurrentVehicle->GetVelocity().Length() > 30.0f) { 
+		if (mVecInput.x != 0 && mVecInput.y == 0 && currentVehicleVelocity.Length() > 30.0f) {
 			turnRate *= 0.95f;
 		}
-		mCurrentVehicle->mTurnRate = turnRate;
+
+		if (mCurrentVehicle) {
+			mCurrentVehicle->mTurnRate = turnRate;
+		}
+		
 	}
 }
 
 // Drive to mDestinationPos.
 void EP1_GameplayObject_DriveMarker::DriveToDestination() {
-	if (mCurrentVehicle && mDestinationPos != Vector3(0, 0, 0)) {
-		mCurrentVehicle->MoveTo(mDestinationPos);
+	if ((mCurrentVehicle || mCurrentCreature) && mDestinationPos != Vector3(0, 0, 0)) {
+		if (mCurrentVehicle) {
+			mCurrentVehicle->MoveTo(mDestinationPos);
+		} else {
+			mCurrentCreature->WalkTo(1, mDestinationPos, mDestinationPos, 1.0f, 1.0f);
+			mCurrentCreature->MoveTo(mDestinationPos);
+		}
+		
 
 		if (mVecInput.y != 1.0f) {
-			auto dir = mDestinationPos - mCurrentVehicle->GetPosition();
-
-			auto velocity = mCurrentVehicle->GetVelocity();
-			if (velocity.Length() > 10.0f) {
-				mCurrentVehicle->SetVelocity(velocity + (dir * 0.01f));
+			Vector3 dir;
+			Vector3 velocity;
+			if (mCurrentVehicle) {
+				dir = mDestinationPos - mCurrentVehicle->GetPosition();
+				velocity = mCurrentVehicle->GetVelocity();
 			}
 			else {
-				mCurrentVehicle->SetVelocity(velocity + (dir * 0.05f));
+				dir = mDestinationPos - mCurrentCreature->GetPosition();
+				velocity = mCurrentCreature->GetVelocity();
+			}
+
+			Vector3 newVelocity = velocity;
+			if (velocity.Length() > 10.0f) {
+				newVelocity = velocity + (dir * 0.01f);
+			}
+			else {
+				newVelocity = velocity + (dir * 0.05f);
+			}
+			// Apply
+			if (mCurrentVehicle) {
+				mCurrentVehicle->SetVelocity(newVelocity);
+			}
+			else {
+				mCurrentCreature->SetVelocity(velocity + (dir * 0.01f));
 			}
 			
 		}
@@ -266,20 +360,31 @@ void EP1_GameplayObject_DriveMarker::DriveToDestination() {
 void EP1_GameplayObject_DriveMarker::TeleportAvatarToVehicle() {
 	auto avatar = GameNounManager.GetAvatar();
 	if (avatar) {
-		avatar->SetScale(0.00001f);
 		avatar->mbIsGhost = true;
 		if (mPrevAvatarHealth > 0.0f) {
 			avatar->mHealthPoints = mPrevAvatarHealth;
 		}
 
+		auto vehicleSpatial = GetVehicleSpatial();
+
 		// Get the vehicle's up vector and bbox
-		Vector3 dirUp = mCurrentVehicle->GetPosition().Normalized();
-		auto bbox = mCurrentVehicle->GetModel()->mDefaultBBox;
+		Vector3 dirUp = vehicleSpatial->GetPosition().Normalized();
+		auto bbox = vehicleSpatial->GetModel()->mDefaultBBox;
 
-		Vector3 newPos = mCurrentVehicle->GetPosition() + (dirUp * bbox.upper.z * mCurrentVehicle->GetScale());
+		Vector3 newPos = vehicleSpatial->GetPosition() + (dirUp * bbox.upper.z * vehicleSpatial->GetScale());
 
-		// Hide avatar inside the vehicle so the camera still follows it
-		avatar->Teleport(newPos, mCurrentVehicle->GetOrientation());
+
+		if (mCurrentCreature) {
+			// attach to creature's back
+			auto partoffset = CapabilityChecker.GetPosFromPartCapability(mCurrentCreature, 0xB00F0FEC); // ModelCapabilityMouth
+			newPos = vehicleSpatial->GetPosition() + partoffset;
+		}
+		else {
+			// Hide avatar inside the vehicle so the camera still follows it
+			avatar->SetScale(0.00001f);
+		}
+		avatar->Teleport(newPos, vehicleSpatial->GetOrientation());
+
 
 	}
 }
@@ -287,12 +392,12 @@ void EP1_GameplayObject_DriveMarker::TeleportAvatarToVehicle() {
 // TODO: only run this when not holding down the right/middle mouse!
 // TODO: this is not working :(
 void EP1_GameplayObject_DriveMarker::OrientVehicleCamera() {
-	if (mCurrentVehicle && mDestinationPos != Vector3(0, 0, 0)) {
+	if ((mCurrentVehicle || mCurrentCreature) && mDestinationPos != Vector3(0, 0, 0)) {
 		// save original transform
 		auto pViewer = CameraManager.GetViewer();
 		auto cameraOldTransform = pViewer->GetViewTransform();
 		// Get the vehicle's up vector
-		Vector3 dirUp = mCurrentVehicle->GetPosition().Normalized();
+		Vector3 dirUp = GetVehicleSpatial()->GetPosition().Normalized();
 		// rotate the camera to face the destination
 		cameraOldTransform.SetRotation(Matrix3::LookAt(cameraOldTransform.GetOffset(), mDestinationPos, dirUp));
 		pViewer->SetCameraTransform(cameraOldTransform);
@@ -303,8 +408,14 @@ void EP1_GameplayObject_DriveMarker::OrientVehicleCamera() {
 
 // If the vehicle should stop, stop it.
 void EP1_GameplayObject_DriveMarker::CheckAndStop() {
-	if (mCurrentVehicle && mDestinationPos == Vector3(0, 0, 0) && mVecInput == Vector2(0,0)) {
-		mCurrentVehicle->StopMovement();
+	if (mDestinationPos == Vector3(0, 0, 0) && mVecInput == Vector2(0,0)) {
+		if (mCurrentVehicle) {
+			mCurrentVehicle->StopMovement();
+		}
+		else if (mCurrentCreature) {
+			mCurrentCreature->StopMovement();
+		}
+		
 	}
 }
 
@@ -337,6 +448,9 @@ bool EP1_GameplayObject_DriveMarker::HandleUIMessage(IWindow* window, const Mess
 				if (mCurrentVehicle && GetHoveredVehicle() == mCurrentVehicle) {
 					ExitVehicle();
 				}
+				else if (mCurrentCreature && GetHoveredCreature() == mCurrentCreature) {
+					ExitVehicle();
+				}
 				else {
 					mIsMouseHeld = true;
 				}
@@ -354,8 +468,13 @@ bool EP1_GameplayObject_DriveMarker::HandleUIMessage(IWindow* window, const Mess
 		if (message.Mouse.IsLeftButton()) {
 			// Clicked on a drivable vehicle, therefore enter it.
 			auto vehicle = GetHoveredVehicle();
+			auto creature = GetHoveredCreature();
 			if (vehicle && IsVehicleDrivable(vehicle)) {
 				EnterVehicle(vehicle);
+				return true;
+			}
+			else if (creature) {
+				EnterCreature(creature);
 				return true;
 			}
 		}

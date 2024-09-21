@@ -4,6 +4,9 @@
 
 CRG_AttackBasic::CRG_AttackBasic()
 {
+	WindowManager.GetMainWindow()->AddWinProc(this);
+	MessageManager.AddListener(this, id("CRG_AttackGeneric")); // listen for anim event
+	MessageManager.AddListener(this, id("CRG_AttackGeneric_Done")); // listen for anim event
 }
 
 

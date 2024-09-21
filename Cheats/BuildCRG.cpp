@@ -75,6 +75,7 @@ void BuildCRG::SetNestModel()
 	nest->SetModelKey(hutmodel);
 }
 
+using namespace Simulator;
 void BuildCRG::ParseLine(const ArgScript::Line& line)
 {
 	mParameter = line.GetArguments(1)[0];
@@ -108,21 +109,16 @@ void BuildCRG::ParseLine(const ArgScript::Line& line)
 		avatar->mHunger -= 5;
 	}
 	else if (CompareStrings(mParameter, "Tribe")) {
-		App::ConsolePrintF("Tribe Spawn now");
-		auto test = GameNounManager.CreateInstance(Simulator::kRock);
-		buildobject = object_cast<Simulator::cSpatialObject>(test);
-		clocktest.SetMode(Clock::Mode::Milliseconds);
-		clocktest.Start();
-		buildobject->SetModelKey(avatar->GetModelKey()); // test because my normal model isnt working
-		buildobject->SetScale(1);
-		buildobject->mbFixed = true;
-		buildobject->mbPickable = true;
-		buildobject->mbKeepPinnedToPlanet = false;
-		buildobject->mbIsTangible = true;
-		buildobject->mbIsGhost = false;
-		buildobject->mbTransformDirty = false;
-		buildobject->Teleport(avatar->GetPosition(), avatar->GetOrientation());
-		//obj->Teleport(mTrans.GetOffset(), Math::Quaternion::FromEuler(rot));
+		if (IsTribeGame()) {
+			auto pos = GameViewManager.GetWorldMousePosition();
+			if (pos == Vector3(0, 0, 0)) { return; }
+			cTribe* tribe = Simulator::SpawnNpcTribe(pos, 3, 1, 1, true, GameNounManager.GetPlayerTribe()->mTribeMembers[0]->mpSpeciesProfile);
+		}
+		else if (IsCreatureGame()) {
+			auto pos = avatar->GetPosition();
+			cTribe* tribe = Simulator::SpawnNpcTribe(pos, 3, 1, 1, true, avatar->mpSpeciesProfile);
+			
+		}
 	}
 	else {
 		SetNestModel();

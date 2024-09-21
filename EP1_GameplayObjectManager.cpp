@@ -96,6 +96,19 @@ bool EP1_GameplayObjectManager::PropagateAction(Actions action) {
 				value = object->DoMoved();
 				if (value) { return true; } break;
 			}
+
+			case MouseClick: {
+				value = object->MouseClick();
+				if (value) { return true; } break;
+			}
+			case MouseRelease: {
+				value = object->MouseRelease();
+				if (value) { return true; } break;
+			}	
+			case MouseDrag: {
+				value = object->MouseDrag();
+				if (value) { return true; } break;
+			}
 			
 
 
@@ -113,31 +126,45 @@ bool EP1_GameplayObjectManager::PropagateAction(Actions action) {
 // NOTE: this func does not detect if an object is selected!
 // Consider making the propagation call a private version of the object->func(), that only calls the user-defined if the selection criteria is met.
 bool EP1_GameplayObjectManager::HandleMouseInput(const Message& message) {
-	if (IsEditingAdventure()) {
+	if (IsScenarioMode()) {
 
 		// Player has released mouse
 		// TODO: check if they released the left mouse... normal methods dont work.
 		if (mbMouseDown && message.IsType(kMsgMouseUp)) {
 			mbMouseDown = false;
-			return PropagateAction(Drop);
+			if (IsEditingAdventure()) {
+				return PropagateAction(Drop);
+			}
+			else {
+				return PropagateAction(MouseRelease);
+			}
+
 		}
 		else if (message.Mouse.IsLeftButton()) {
-			
+
 			// Player has moved the mouse
 			if (mbMouseDown && message.IsType(kMsgMouseMove)) {
-				return PropagateAction(Moved);
+				if (IsEditingAdventure()) {
+					return PropagateAction(Moved);
+				}
+				else {
+					return PropagateAction(MouseDrag);
+				}
 			}
 			// Player has left clicked the mouse
 			else if (!mbMouseDown && message.IsType(kMsgMouseDown)) {
 				mbMouseDown = true;
-				return PropagateAction(Pickup);
+				if (IsEditingAdventure()) {
+					return PropagateAction(Pickup);
+				}
+				else {
+					return PropagateAction(MouseClick);
+				}
 			}
 		}
-		
+
 	}
-	else if (IsPlayingAdventure()) {
-		// TODO: add click / select funcs into this, for stuff like driving cars
-	}
+	
 	
 	return false;
 }

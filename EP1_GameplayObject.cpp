@@ -116,7 +116,7 @@ cCombatantPtr EP1_GameplayObject::GetRolledCombatant() {
 	auto objects = GetCombatantData();
 	for (auto object : objects) {
 		auto spatial = object_cast<cSpatialObject>(object);
-		if (spatial && spatial->IsRolledOver()) {
+		if (spatial && spatial->IsRolledOver() && IsValidCombatantType(object)) {
 			return object;
 		}
 	}
@@ -129,6 +129,7 @@ EP1_GameplayObject::GameplayObject EP1_GameplayObject::GetIngameObject(cSpatialO
 			return item;
 		}
 	}
+	return GameplayObject(false);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -146,8 +147,8 @@ void EP1_GameplayObject::CheckRadius() {
 			auto activator = GetClosestCombatant(item.object);
 			// item had an activator, check if it still does
 			if (item.activator && !activator) {
-				item.activator = nullptr;
 				OnExitRadius(item.object, item.activator);
+				item.activator = nullptr;
 			}
 			// item had NO activator, check if it does now
 			else if (!item.activator && activator) {
@@ -159,7 +160,7 @@ void EP1_GameplayObject::CheckRadius() {
 	}
 }
 
-// Input Precursors
+// Input Precursors - Editor
 
 bool EP1_GameplayObject::DoPickup() {
 	bool value = false;
@@ -195,6 +196,13 @@ bool EP1_GameplayObject::DoMoved() {
 void EP1_GameplayObject::DoTakeDamage(cCombatantPtr target, float damage, cCombatantPtr attacker) {
 	if (IsHandledObject(object_cast<cSpatialObject>(target))) {
 		OnDamaged(target, damage, attacker);
+	}
+	else if (IsValidCombatantType(target)) {
+		for (auto item : mpIngameObjects) {
+			if (item.activator == target) {
+				OnActivatorDamaged(target, damage, attacker);
+			}
+		}
 	}
 }
 
@@ -244,10 +252,31 @@ float EP1_GameplayObject::IsObjectInRange(cSpatialObjectPtr objectA, cSpatialObj
 	return -1;
 }
 
+void EP1_GameplayObject::Destroy(cSpatialObjectPtr object) {
+	auto item = GetIngameObject(object);
+	item.clear();
+	// TODO: this currently doesnt work cause the casting is wrong.
+	auto data = object_cast<cGameData>(object);
+	if (data) {
+		//data->mbIsDestroyed = true;
+		GameNounManager.DestroyInstance(data);
+	}
+	// backup, just shrink it down and hide it.
+	// this will not allow it to respawn, though.
+	else {
+		object->SetScale(0.1f);
+		object->Teleport(Vector3(0, 0, 0), object->GetOrientation());
+	}
+}
+
 //-----------------------------------------------------------------------------------------------
 // Virtuals - Actions from Manager
 
 void EP1_GameplayObject::OnDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker) {
+	return;
+}
+
+void EP1_GameplayObject::OnActivatorDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker) {
 	return;
 }
 
@@ -294,11 +323,13 @@ void EP1_GameplayObject::ResetCombatantEffect(cCombatantPtr combatant) {
 
 // Inputs
 bool EP1_GameplayObject::Pickup() {
+	mbHeldObjectApplied = false;
 	Moved();
 	return false;
 }
 
 bool EP1_GameplayObject::Drop() {
+	mbHeldObjectApplied = false;
 	Moved();
 	return false;
 }
@@ -307,11 +338,14 @@ bool EP1_GameplayObject::Moved() {
 	// if a combatant is being held
 	if (GetHeldCombatant()) {
 		auto object = GetClosestHandledObject(pHeldObject);
-		if (object) {
+		// mbHeldObjectApplied makes it so these don't fire over and over
+		if (object && (!mbHeldObjectApplied || mbReapplyEffect)) {
 			ApplyCombatantEffect(GetHeldCombatant(), object);
+			mbHeldObjectApplied = true;
 		}
-		else {
+		else if (!object && (mbHeldObjectApplied || mbReapplyEffect)) {
 			ResetCombatantEffect(GetHeldCombatant());
+			mbHeldObjectApplied = false;
 		}
 	}
 	

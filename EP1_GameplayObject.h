@@ -38,10 +38,16 @@ public:
 		// TODO: add in a way to check if a cSpatialObjectPtr object is active
 		// and create a cooldown for when object is triggered, to turn off active and turn on again after it is over.
 
-		GameplayObject(cSpatialObjectPtr& p_object, cCombatantPtr p_activator, bool p_active = true) {
+		GameplayObject(cSpatialObjectPtr p_object = nullptr, cCombatantPtr p_activator = nullptr, bool p_active = true) {
 			object = p_object;
 			activator = p_activator;
 			active = p_active;
+		}
+
+		void clear() {
+			object = nullptr;
+			activator = nullptr;
+			active = false;
 		}
 	};
 
@@ -56,6 +62,8 @@ public:
 
 	bool mbExcludeAvatar = true;
 	bool mbCheckRadiusPerFrame = false;
+
+	bool mbReapplyEffect = false;
 
 	bool mbCombatantCanBeCreature = true;
 	bool mbCombatantCanBeVehicle = false;
@@ -86,7 +94,7 @@ public:
 	// Helper funcs
 	void InternalUpdate();
 	void CheckRadius();
-	// Input Precursors
+	// Input Precursors - Editor
 	bool DoPickup();
 	bool DoDrop();
 	bool DoMoved();
@@ -114,12 +122,15 @@ public:
 	// if not within range, return -1.
 	virtual float IsObjectInRange(cSpatialObjectPtr objectA, cSpatialObjectPtr objectB);
 
+	void Destroy(cSpatialObjectPtr object);
 
 	//------------------------------------------------------------
 	// Virtuals - External Actions
 
-	// fired when damage is taken
+	// fired when damage is taken on a handled object
 	virtual void OnDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker);
+	// fired when damage is taken on a handled object's activator
+	virtual void OnActivatorDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker);
 
 	// radius refers to the value returned by GetObjectMaxRadius()
 	virtual void OnEnterRadius(cSpatialObjectPtr object, cCombatantPtr pActivator);
@@ -139,10 +150,14 @@ public:
 	virtual void ResetCombatantEffect(cCombatantPtr combatant);
 
 
-	// Inputs
+	// Inputs - Editor
 	virtual bool Pickup();
 	virtual bool Drop();
 	virtual bool Moved();
+	// Inputs - Playmode
+	virtual bool MouseClick() { return false; }
+	virtual bool MouseRelease() { return false; }
+	virtual bool MouseDrag() { return false; }
 
 	// Messages
 	virtual void Update();
@@ -156,5 +171,7 @@ public:
 
 	//------------------------------------------------------------
 	
+private:
+	bool mbHeldObjectApplied = false;
 	
 };

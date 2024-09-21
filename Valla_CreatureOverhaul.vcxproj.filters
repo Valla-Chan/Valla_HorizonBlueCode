@@ -23,6 +23,9 @@
     <Filter Include="Valla_CreatureOverhaul\TRG">
       <UniqueIdentifier>{79da3ef8-3a11-4046-8b9b-37fd3ca7088b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Valla_CreatureOverhaul\UI">
+      <UniqueIdentifier>{f6d0ccf2-48b0-4482-92ff-7cd52411b32c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -154,6 +157,30 @@
     <ClInclude Include="EP1_Detours.h">
       <Filter>Valla_CreatureOverhaul\EP1</Filter>
     </ClInclude>
+    <ClInclude Include="Cheats\SetTime.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\SetTimeScale.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="UI_Timescale.h">
+      <Filter>Valla_CreatureOverhaul\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\TRG_GetClosestHerd.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_MemberManager.h">
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\TRG_SelectMembers.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\TRG_AddToTribe.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_IslandEventManager.h">
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -266,6 +293,30 @@
     </ClCompile>
     <ClCompile Include="EP1_GameplayObject.cpp">
       <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetTime.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetTimeScale.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="UI_Timescale.cpp">
+      <Filter>Valla_CreatureOverhaul\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\TRG_GetClosestHerd.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_MemberManager.cpp">
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\TRG_SelectMembers.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\TRG_AddToTribe.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_IslandEventManager.cpp">
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

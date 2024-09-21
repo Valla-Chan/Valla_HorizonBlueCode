@@ -20,6 +20,8 @@ public:
 	const float max_holo_dist = 2.5f;
 	const float holo_zdist = 2.0f;
 
+	bool mbReapplyEffect = true;
+
 	//eastl::vector<cCreatureAnimalPtr> mHolograms = {};
 	//-------------------------------------------------------------
 
@@ -32,7 +34,13 @@ public:
 	void ApplyCombatantEffect(cCombatantPtr combatant, cSpatialObjectPtr object) override;
 	void ResetCombatantEffect(cCombatantPtr combatant) override;
 
+	//void OnActivatorDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker) override;
+
+	bool MouseClick() override;
+
 	//-------------------------------------------------------------
+
+	//void DeselectRolled();
 
 	void MakeCreatureHologram(cCreatureAnimalPtr creature, cSpatialObjectPtr projector = nullptr, bool state = true);
 	void SnapToProjector(cCreatureAnimalPtr creature, cSpatialObjectPtr projector);

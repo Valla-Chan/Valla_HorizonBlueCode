@@ -32,7 +32,13 @@ void Kill::ParseLine(const ArgScript::Line& line)
 			for (auto member : members) {
 				auto creature = object_cast<Simulator::cCreatureBase>(member);
 				if (member->IsSelected() && creature) {
-					KillTarget(creature);
+					if (creature->GetAnimalTarget()) {
+						KillTarget(creature->GetAnimalTarget());
+					}
+					else {
+						KillTarget(creature);
+					}
+					
 				}
 			}
 		}

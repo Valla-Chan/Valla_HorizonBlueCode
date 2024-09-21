@@ -28,14 +28,11 @@ public:
 	void OnDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker) override;
 
 	//----------------------------------------
+	//const ColorRGB frozenColor = ColorRGB(2.4f, 2.5f, 2.6f);
+	const ColorRGB frozenColor = ColorRGB(1.2f, 1.4f, 1.6f);
 
 	void BreakIce(cSpatialObjectPtr object);
-
 	void SetCreatureFrozen(cCreatureAnimalPtr creature, bool frozen);
 
 
-private:
-	// List of all frozen creatures:
-	eastl::vector<cCreatureAnimalPtr> mFrozenCreatures = {};
-	eastl::vector<Vector3> mFrozenCreaturePositions = {};
 };

@@ -26,7 +26,7 @@ int cCapabilityChecker::GetCapabilityLevel(const cCreatureBasePtr& creature, con
 		if (ResourceManager.GetResource(creature->mSpeciesKey, &res))
 		{
 			auto resource = object_cast<Editors::cEditorResource>(res);
-			// Loop through the creature parts to find this capability
+			// Loop through the creature parts to find the highest capability
 			for (size_t i = 0; i < resource->mBlocks.size(); i++) {
 				Editors::cEditorResourceBlock block = resource->mBlocks[i];
 				PropertyListPtr mpPropList;
@@ -43,6 +43,46 @@ int cCapabilityChecker::GetCapabilityLevel(const cCreatureBasePtr& creature, con
 		}
 	}
 	return caplvl;
+}
+
+// Returns local pos to part. will need to be added to creature pos to make global.
+// return (0,0,0) if not found
+Vector3 cCapabilityChecker::GetPosFromPartCapability(const cCreatureBasePtr& creature, const uint32_t propertyID) const
+{
+	int32_t caplvl = 0;
+	int partidx = -1;
+	Vector3 partpos = Vector3(0, 0, 0);
+	if (creature) {
+		ResourceObjectPtr res;
+		if (ResourceManager.GetResource(creature->mSpeciesKey, &res))
+		{
+			auto resource = object_cast<Editors::cEditorResource>(res);
+			// Loop through the creature parts to find this capability at its highest level
+			for (size_t i = 0; i < resource->mBlocks.size(); i++) {
+				Editors::cEditorResourceBlock block = resource->mBlocks[i];
+				PropertyListPtr mpPropList;
+				if (PropManager.GetPropertyList(block.instanceID, block.groupID, mpPropList))
+				{
+					int cap_dst;
+					App::Property::GetInt32(mpPropList.get(), propertyID, cap_dst);
+					if (cap_dst > caplvl) {
+						caplvl = cap_dst;
+						partidx = i;
+					}
+				}
+			}
+			if (partidx > -1) {
+				// get part with highest capability
+				auto part = resource->mBlocks[partidx];
+				// return pos modified to account for creature rotation
+				auto localoffset = Vector3(-part.position.x, -part.position.y, part.position.z);
+				partpos = creature->GetOrientation().ToMatrix().Transposed() * localoffset * creature->GetScale(); //creature->GetOrientation().ToMatrix() *
+			}
+			
+		}
+	}
+
+	return partpos;
 }
 
 // Open a model resource and find if a property key exists in the file

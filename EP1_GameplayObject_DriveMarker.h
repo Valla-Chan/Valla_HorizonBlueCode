@@ -30,10 +30,14 @@ public:
 
 	static bool IsPlayingAdventure();
 	static cVehiclePtr GetHoveredVehicle();
+	static cCreatureAnimalPtr GetHoveredCreature();
 	bool IsVehicleDrivable(cVehiclePtr vehicle) const;
 	float GetCurrentVehicleSpeed() const;
+	cSpatialObjectPtr GetVehicleSpatial() const;
 
 	void EnterVehicle(cVehiclePtr vehicle);
+	void EnterCreature(cCreatureAnimalPtr creature);
+	void Enter();
 	void ExitVehicle();
 	void ExitVehicle_Delayed();
 	void StartDrivingCooldown();
@@ -56,6 +60,8 @@ private:
 	eastl::vector<cVehiclePtr> mDrivableVehicles = {};
 	// The vehicle we might be driving
 	cVehiclePtr mCurrentVehicle;
+	// The creature we might be riding
+	cCreatureAnimalPtr mCurrentCreature;
 
 	
 	bool mIsDriving; // True if the user is "inside" the vehicle, false otherwise

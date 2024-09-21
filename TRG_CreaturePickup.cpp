@@ -6,6 +6,10 @@ TRG_CreaturePickup::TRG_CreaturePickup()
 {
 	App::AddUpdateFunction(this);
 	CursorManager.Load(0x03C32077, u"cursor-grab_close");
+
+	WindowManager.GetMainWindow()->AddWinProc(this);
+	MessageManager.AddListener(this, SimulatorMessages::kMsgSwitchGameMode);
+	MessageManager.AddListener(this, id("CinematicBegin"));
 }
 
 
@@ -105,13 +109,40 @@ void TRG_CreaturePickup::Moved() {
 	}
 }
 
+//-----------------------------------------------------------------------------------------------
+// fake a click on the creature's posse icon
+void TRG_CreaturePickup::ClickPosseUI(cCreatureBasePtr creature) {
+	// todo: not working.
+	auto window = WindowManager.GetMainWindow();
+	auto posseItem = window->FindWindowByID(0x03D98299);
 
+	Message message;
+	message.source = posseItem;  // Which window generated this event?
+	message.eventType = kMsgMouseDown;  // What type of event is it?
+	// Now we want to set the specific parameters (i.e. the position that was clicked,...).
+	message.Mouse.mouseState = kMouseLeftButtonDown;
+	message.Mouse.mouseX = posseItem->GetArea().GetWidth() / 2.0f;
+	message.Mouse.mouseY = posseItem->GetArea().GetHeight() / 2.0f;
+	
+
+	temp_deny_pickup = true;
+	// Now just send the message
+	window->SendMsg(message);
+}
 
 //-----------------------------------------------------------------------------------------------
 
-// This method returns a combinations of values in UTFWin::EventFlags.
-// The combination determines what types of events (messages) this window procedure receives.
-// By default, it receives mouse/keyboard input and advanced messages.
+bool TRG_CreaturePickup::HandleMessage(uint32_t messageID, void* msg)
+{
+	if (!IsTribeGame()) { return nullptr; }
+
+	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("CinematicBegin"))
+	{
+		Drop();
+	}
+	return false;
+}
+
 int TRG_CreaturePickup::GetEventFlags() const
 {
 	return kEventFlagBasicInput;
@@ -120,6 +151,8 @@ int TRG_CreaturePickup::GetEventFlags() const
 // The method that receives the message.
 bool TRG_CreaturePickup::HandleUIMessage(IWindow* window, const Message& message)
 {
+	if (temp_deny_pickup) { temp_deny_pickup = false; return false; }
+
 	if (!IsTribeGame()) { return false; }
 
 	// Drop creature
@@ -140,7 +173,11 @@ bool TRG_CreaturePickup::HandleUIMessage(IWindow* window, const Message& message
 				// store this creature
 				possible_member = object_cast<cCreatureCitizen>(member);
 				possible_member->SetIsSelected(true);
-				possible_member->mSelectionGroup = 0;
+				possible_member->mSelectionGroup = 1;
+
+				// TODO: Spoof an unclick after this, so that the box select is not activated.
+				ClickPosseUI(nullptr);
+
 				return true;
 			}
 		}

@@ -14,7 +14,7 @@ SetChieftainColor::~SetChieftainColor()
 void SetChieftainColor::ParseLine(const ArgScript::Line& line)
 {
 	cTribePtr tribe = Simulator::GetDataByCast<Simulator::cTribe>()[0];
-	tribe->mIDColorID = Simulator::IdentityColors::Yellow;
+	tribe->mIDColorID = (int)Simulator::IdentityColors::Yellow;
 	//tribe->GetLeaderCitizen()->SetIdentityColor(ColorRGB(1.0f, 0.8f, 0.0f));
 	tribe->AssignNames(tribe->GetLeaderCitizen()->mCreatureName);
 }

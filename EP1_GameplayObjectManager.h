@@ -42,9 +42,15 @@ public:
 		UserUIMessage,
 		UserGameMessage,
 		
+		//Editor
 		Pickup,
 		Drop,
 		Moved,
+
+		// Ingame
+		MouseClick,
+		MouseRelease,
+		MouseDrag,
 	};
 
 	EP1_GameplayObject* AddGameplayObjectSubmanager(EP1_GameplayObject* object);

@@ -135,11 +135,31 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="Cheats\SetGlideSpeed.h" />
+    <ClInclude Include="Cheats\SetTime.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="Cheats\SetTimeScale.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Cheats\TRG_AddFood.h">
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="Cheats\TRG_AddToTribe.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="Cheats\TRG_GetClosestHerd.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Cheats\TRG_GetTribeInfo.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="Cheats\TRG_SelectMembers.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -204,6 +224,18 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="TRG_IslandEventManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="TRG_MemberManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="UI_Timescale.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CapabilityChecker.cpp" />
@@ -239,11 +271,31 @@
     </ClCompile>
     <ClCompile Include="Cheats\SetChieftainColor.cpp" />
     <ClCompile Include="Cheats\SetGlideSpeed.cpp" />
+    <ClCompile Include="Cheats\SetTime.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetTimeScale.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="Cheats\TRG_AddFood.cpp">
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="Cheats\TRG_AddToTribe.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="Cheats\TRG_GetClosestHerd.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="Cheats\TRG_GetTribeInfo.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="Cheats\TRG_SelectMembers.cpp">
       <SubType>
       </SubType>
     </ClCompile>
@@ -297,6 +349,18 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="TRG_CreaturePickup.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="TRG_IslandEventManager.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="TRG_MemberManager.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="UI_Timescale.cpp">
       <SubType>
       </SubType>
     </ClCompile>

@@ -27,6 +27,8 @@ public:
 	int caplvl_energyregen = 0;
 	float energy_to_restore = 0.0f;
 
+	void SyncCreatureHungerEnergy(cCreatureBasePtr creature);
+
 	float CRG_EnergyHungerSync::GetEnergyFloat() const;
 	float CRG_EnergyHungerSync::GetHungerFloat() const;
 

@@ -10,17 +10,61 @@ EP1_GameplayObject_HoloProjector::~EP1_GameplayObject_HoloProjector()
 {
 }
 
-void EP1_GameplayObject_HoloProjector::Update() {
-	if (IsPlayingAdventure()) {
-		for (auto item : mpIngameObjects) {
-			auto creature = object_cast<cCreatureAnimal>(item.activator);
-			if (creature) {
-				//MakeCreatureHologram(creature);
-				creature->mbStealthed = true;
-				creature->field_B7C = 0.4f;
+
+float EP1_GameplayObject_HoloProjector::GetObjectMaxRadius(cSpatialObjectPtr object) {
+	return max_holo_dist * object->GetScale();
+}
+
+
+void EP1_GameplayObject_HoloProjector::MakeCreatureHologram(cCreatureAnimalPtr creature, cSpatialObjectPtr projector, bool state) {
+	if (state) {
+		if (creature) {
+			creature->mbStealthed = true;
+			creature->mStealthOpacity = 0.4f;
+			if (projector) {
+				auto color = CapabilityChecker.GetModelColorRGBValue(projector->GetModelKey(), id("modelHologramColor"));
+				creature->SetIdentityColor(color);
 			}
+			creature->StopMovement();
 		}
 	}
+	else {
+		if (creature) {
+			creature->mbStealthed = false;
+			creature->mStealthOpacity = 1.0f;
+			creature->SetIdentityColor(ColorRGB(1.0f, 1.0f, 1.0f));
+		}
+	}
+}
+
+void EP1_GameplayObject_HoloProjector::SnapToProjector(cCreatureAnimalPtr creature, cSpatialObjectPtr projector) {
+	Vector3 newpos = GetObjectPos(projector);
+	creature->mbSupported = true;
+	creature->Teleport(newpos, creature->GetOrientation());
+	creature->mbSupported = true;
+}
+
+
+bool EP1_GameplayObject_HoloProjector::IsCreatureHologram(cCreatureAnimalPtr creature) const {
+	if (creature->GetIdentityColor() == ColorRGB(1, 1, 1) || creature->mStealthOpacity == 1.0f) { return false; }
+	for (auto item : mpIngameObjects) {
+		if (item.activator == creature) {
+			return true;
+		}
+	}
+	return false;
+}
+
+//-----------------------------------------------------------------------------------------------
+
+void EP1_GameplayObject_HoloProjector::Update() {
+	/*
+	for (auto item : mpIngameObjects) {
+		auto creature = object_cast<cCreatureAnimal>(item.activator);
+		if (creature) {
+			creature->mbIsSelected = false;
+		}
+	}*/
 }
 
 bool EP1_GameplayObject_HoloProjector::IsHandledObject(cSpatialObjectPtr object) const {
@@ -38,51 +82,6 @@ Vector3 EP1_GameplayObject_HoloProjector::GetObjectPos(cSpatialObjectPtr object)
 	return pos + (vec_up * holo_zdist * object->GetScale());
 }
 
-float EP1_GameplayObject_HoloProjector::GetObjectMaxRadius(cSpatialObjectPtr object) {
-	return max_holo_dist * object->GetScale();
-}
-
-
-void EP1_GameplayObject_HoloProjector::MakeCreatureHologram(cCreatureAnimalPtr creature, cSpatialObjectPtr projector, bool state) {
-	if (state) {
-		if (creature) {
-			creature->mbStealthed = true;
-			creature->field_B7C = 0.4f;
-			if (projector) {
-				auto color = CapabilityChecker.GetModelColorRGBValue(projector->GetModelKey(), id("modelHologramColor"));
-				creature->SetIdentityColor(color);
-			}
-			creature->StopMovement();
-		}
-	}
-	else {
-		if (creature) {
-			creature->mbStealthed = false;
-			creature->field_B7C = 1.0f;
-			creature->SetIdentityColor(ColorRGB(1.0f, 1.0f, 1.0f));
-		}
-	}
-}
-
-void EP1_GameplayObject_HoloProjector::SnapToProjector(cCreatureAnimalPtr creature, cSpatialObjectPtr projector) {
-	Vector3 newpos = GetObjectPos(projector);
-	creature->mbSupported = true;
-	creature->Teleport(newpos, creature->GetOrientation());
-	creature->mbSupported = true;
-}
-
-//-----------------------------------------------------------------------------------------------
-
-bool EP1_GameplayObject_HoloProjector::IsCreatureHologram(cCreatureAnimalPtr creature) const {
-	if (creature->GetIdentityColor() == ColorRGB(1, 1, 1) || creature->field_B7C == 1.0f) { return false; }
-	for (auto item : mpIngameObjects) {
-		if (item.activator == creature) {
-			return true;
-		}
-	}
-	return false;
-}
-
 void EP1_GameplayObject_HoloProjector::ApplyCombatantEffect(cCombatantPtr combatant, cSpatialObjectPtr object) {
 	auto creature = object_cast<cCreatureAnimal>(combatant);
 	if (creature) {
@@ -94,8 +93,7 @@ void EP1_GameplayObject_HoloProjector::ApplyCombatantEffect(cCombatantPtr combat
 			creature->mStandardSpeed = 0.0f;
 			creature->mTurnRate = 0.0f;
 			creature->mbFixed = true;
-			creature->mbEnabled = false;
-			//mHolograms.push_back(creature);
+			//creature->mbEnabled = false;
 		}
 	}
 }
@@ -104,6 +102,28 @@ void EP1_GameplayObject_HoloProjector::ResetCombatantEffect(cCombatantPtr combat
 	auto creature = object_cast<cCreatureAnimal>(combatant);
 	MakeCreatureHologram(creature, nullptr, false);
 }
+
+//void EP1_GameplayObject_HoloProjector::OnActivatorDamaged(cCombatantPtr object, float damage, cCombatantPtr pAttacker) {
+//	ApplyCombatantEffect(object, nullptr);
+//}
+
+
+bool EP1_GameplayObject_HoloProjector::MouseClick() {
+	auto rolled = object_cast<cCreatureAnimal>(GetRolledCombatant());
+	if (rolled && CursorManager.GetActiveCursor() != 0x8054dea) { // do not select the creature unless the mouse cursor is a talk to icon
+		return true;
+	}
+	return false;
+}
+
+/*
+void EP1_GameplayObject_HoloProjector::DeselectRolled() {
+	auto rolled = object_cast<cCreatureAnimal>(GetRolledCombatant());
+	if (rolled) {
+		Avatar()->SetTarget(nullptr);
+		rolled->SetIsSelected(false);
+	}
+}*/
 
 //-----------------------------------------------------------------------------------------------
 

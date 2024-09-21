@@ -14,9 +14,6 @@ EP1_GameplayObject_IceCube::~EP1_GameplayObject_IceCube()
 
 void EP1_GameplayObject_IceCube::Update()
 {
-	for (auto item : mpIngameObjects) {
-		SetCreatureFrozen(item.activator, true);
-	}
 }
 
 //------------------------------------------------------------------------------------------------
@@ -32,12 +29,6 @@ void EP1_GameplayObject_IceCube::ApplyCombatantEffect(cCombatantPtr combatant, c
 	auto creature = object_cast<cCreatureAnimal>(combatant);
 	if (creature) {
 		SetCreatureFrozen(creature, true);
-		/*
-		// commented out because this probably messes up movement after the ice breaks.
-		if (IsPlayingAdventure()) {
-			creature->mStandardSpeed = 0.0f;
-			creature->mTurnRate = 0.0f;
-		}*/
 	}
 }
 
@@ -53,15 +44,22 @@ void EP1_GameplayObject_IceCube::OnDamaged(cCombatantPtr object, float damage, c
 //------------------------------------------------------------------------------------------------
 
 void EP1_GameplayObject_IceCube::BreakIce(cSpatialObjectPtr object) {
-	auto combatant = object_cast<cCreatureAnimal>(GetIngameObject(object).activator);
-	if (combatant) {
-		SetCreatureFrozen(combatant, false);
+	auto item = GetIngameObject(object);
+	auto creature = object_cast<cCreatureAnimal>(item.activator);
+	if (creature) {
+		SetCreatureFrozen(creature, false);
+		auto effect1 = creature->CreateAndStartEffectForPool1(id("EP1_shaman_freeze_react_b"));
+		auto effect2 = creature->CreateAndStartEffectForPool1(0x7BB9D4A5); // poof white
+
+		auto effectscale = effect1->GetSourceTransform().GetScale();
+		effectscale = effectscale * creature->GetScale();
+
+		effect1->SetSourceTransform(effect1->GetSourceTransform().SetScale(effectscale));
+		effect2->SetSourceTransform(effect2->GetSourceTransform().SetScale(effectscale));
 	}
-	// debug test
-	object->SetScale(0.01);
+	Destroy(object);
 }
 
-const auto frozenColor = ColorRGB(2.4f, 2.5f, 2.6f);
 void EP1_GameplayObject_IceCube::SetCreatureFrozen(cCreatureAnimalPtr creature, bool frozen) {
 	if (creature && creature->GetModel()) {
 		if (frozen) {
@@ -70,27 +68,19 @@ void EP1_GameplayObject_IceCube::SetCreatureFrozen(cCreatureAnimalPtr creature, 
 			creature->mbFixed = true;
 			creature->SetIdentityColor(frozenColor);
 			creature->PlayAnimation(0xD9D38CD2); // "ep1_icecube_freeze"
-
-			// store position to hold
-			//mFrozenCreaturePositions.push_back(creature->GetPosition());
-			//for (size_t i = 0; 1 < mFrozenCreatures.size(); i++) {
-			//	if (mFrozenCreatures[i] == creature) {
-			//		creature->Teleport(mFrozenCreaturePositions[i], creature->GetOrientation());
-			//	}
-			//}
-			
 		}
-		else {
-			if (creature->GetIdentityColor() == frozenColor) {
-				creature->mbDead = false;
-				creature->mbEnabled = true;
-				creature->mbFixed = false;
-				creature->SetIdentityColor(ColorRGB(1.0f, 1.0f, 1.0f));
-				creature->PlayAnimation(0xE70F735E); // "CRG_epicstomp_react"
-			}
+		else if (!creature->mbEnabled) {
+			creature->mbDead = false;
+			creature->mbEnabled = true;
+			creature->mbFixed = false;
+			creature->SetIdentityColor(ColorRGB(1.0f, 1.0f, 1.0f));
+			creature->PlayAnimation(0xE70F735E); // "CRG_epicstomp_react"
+			//creature->PlayAnimation(0x07AD2BF7); // "EP1_react_freeze_CrTr_alive"
 		}
 	}
 }
+
+
 
 //------------------------------------------------------------------------------------------------
 
