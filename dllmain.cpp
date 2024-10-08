@@ -7,6 +7,7 @@
 // Cheats
 #include "Cheats/BuildCRG.h"
 #include "Cheats/Kill.h"
+#include "Cheats/Hurtme.h"
 #include "Cheats/CRG_Starve.h"
 #include "Cheats/CRG_BrainBoost.h"
 #include "Cheats/CRG_BrainDrain.h"
@@ -29,6 +30,11 @@
 #include "Cheats/TRG_GetClosestHerd.h"
 #include "Cheats/TRG_SelectMembers.h"
 #include "Cheats/TRG_AddToTribe.h"
+#include "Cheats/SetVehicleTool.h"
+#include "Cheats/MarkInteractives.h"
+#include "Cheats/SendMessage.h"
+#include "Cheats/TRG_AddTribeSlot.h"
+//#include "ListenAllMessages.h"
 
 // UI
 #include "UI_Timescale.h"
@@ -39,12 +45,16 @@
 #include "CRG_DiseaseManager.h"
 #include "CRG_AttackBasic.h"
 #include "CRG_ObjectManager.h"
+#include "CRG_Inventory.h"
+#include "CRG_NestManager.h"
+#include "CRG_GameplayAbilities.h"
 
 // TRG Ingame Behaviors
 #include "TRG_CreaturePickup.h"
 #include "TRG_ChieftainManager.h"
 #include "TRG_MemberManager.h"
 #include "TRG_IslandEventManager.h"
+#include "TRG_TribePlanManager.h"
 
 // EP1 Ingame Behaviors
 #include "EP1_PosseCommand.h"
@@ -53,6 +63,7 @@
 #include "EP1_GameplayObject_HoloProjector.h"
 #include "EP1_GameplayObject_DriveMarker.h"
 #include "EP1_GameplayObject_IceCube.h"
+#include "EP1_BehaviorManager.h"
 
 // Singletons
 #include "CapabilityChecker.h"
@@ -62,26 +73,32 @@
 #include "CR_JetHover.h"
 
 cObjectManager* obconverter;
-TRG_ChieftainManager* chiefmanager;
+
 CRG_DiseaseManager* diseasemanager;
+CRG_Inventory* crg_inventory;
+
+TRG_ChieftainManager* chiefmanager;
 TRG_CreaturePickup* trg_creaturepickup;
+TRG_IslandEventManager* trg_ieventmanager;
+TRG_TribePlanManager* trg_tribeplanmanager;
+
+
 EP1_PosseCommand* ep1_possecommand;
 EP1_CaptainAbilities* ep1_captainabilities;
-
-TRG_IslandEventManager* trg_ieventmanager;
-
 // manager
 EP1_GameplayObjectManager* gameplayobjectmanager;
 // submanagers
 EP1_GameplayObject_HoloProjector* ep1_gameplayobject_projector;
 EP1_GameplayObject_DriveMarker* ep1_gameplayobject_drivemarker;
 EP1_GameplayObject_IceCube* ep1_gameplayobject_icecube;
+EP1_BehaviorManager* ep1_behaviormanager;
 
 void Initialize()
 {
 	// This method is executed when the game starts, before the user interface is shown
 	CheatManager.AddCheat("Build", new(BuildCRG));
 	CheatManager.AddCheat("Kill", new(Kill));
+	CheatManager.AddCheat("HurtMe", new(HurtMe));
 	CheatManager.AddCheat("Starve", new(CRG_Starve));
 	CheatManager.AddCheat("BrainBoost", new(CRG_BrainBoost));
 	CheatManager.AddCheat("BrainDrain", new(CRG_BrainDrain));
@@ -100,23 +117,33 @@ void Initialize()
 	CheatManager.AddCheat("GivePart", new(CRG_GetPart));
 	CheatManager.AddCheat("GiveAllParts", new(CRG_GiveAllParts));
 	CheatManager.AddCheat("TimeScale", new(SetTimeScale));
-	CheatManager.AddCheat("SetTime", new(SetTime));
+	CheatManager.AddCheat("TimeSet", new(SetTime));
 	CheatManager.AddCheat("GetHerd", new(TRG_GetClosestHerd));
 	CheatManager.AddCheat("SelectUnits", new(TRG_SelectMembers));
 	CheatManager.AddCheat("AddToTribe", new(TRG_AddToTribe));
+	CheatManager.AddCheat("SetVehicleTool", new(SetVehicleTool));
+	CheatManager.AddCheat("MarkInteractives", new(MarkInteractives));
+	CheatManager.AddCheat("SendMessage", new(SendMessageCheat));
+	CheatManager.AddCheat("AddTribeSlot", new(TRG_AddTribeSlot));
+	//CheatManager.AddCheat("ListenAllMessages", new(ListenAllMessages));
 
 	// UI
 	UI_Timescale* uitimescale = new(UI_Timescale);
 
 	// CRG
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
-	CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
+	//CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
+	CRG_GameplayAbilities* crg_gameplayabilities = new(CRG_GameplayAbilities);
+	//CRG_NestManager* crg_nestmanager = new(CRG_NestManager);
+
 	CRG_AttackBasic* crg_attackbasic = new(CRG_AttackBasic);
-	
+	crg_inventory = new(CRG_Inventory);
+	SimulatorSystem.AddStrategy(crg_inventory, CRG_Inventory::NOUN_ID);
 
 	// TRG
 	trg_creaturepickup = new(TRG_CreaturePickup);
 	chiefmanager = new(TRG_ChieftainManager);
+	trg_tribeplanmanager = new(TRG_TribePlanManager);
 	// strategies
 	SimulatorSystem.AddStrategy(new TRG_MemberManager(), TRG_MemberManager::NOUN_ID);
 	trg_ieventmanager = new(TRG_IslandEventManager);
@@ -142,6 +169,8 @@ void Initialize()
 	ep1_gameplayobject_drivemarker = new(EP1_GameplayObject_DriveMarker);
 	WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_drivemarker);
 
+	ep1_behaviormanager = new(EP1_BehaviorManager);
+
 
 	// Managers
 	obconverter = new(cObjectManager);
@@ -161,6 +190,9 @@ void Dispose()
 	chiefmanager = nullptr;
 	diseasemanager = nullptr;
 	trg_creaturepickup = nullptr;
+	trg_tribeplanmanager = nullptr;
+
+	crg_inventory = nullptr;
 
 	ep1_possecommand = nullptr;
 	ep1_captainabilities = nullptr;
@@ -169,6 +201,7 @@ void Dispose()
 	ep1_gameplayobject_projector = nullptr;
 	ep1_gameplayobject_drivemarker = nullptr;
 	ep1_gameplayobject_icecube = nullptr;
+	ep1_behaviormanager = nullptr;
 }
 
 cCreatureAnimal* GetAnimCreatureOwner(const AnimatedCreaturePtr& animcreature) {
@@ -229,18 +262,28 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 		// CRG
 		if (IsCreatureGame()) {
 			cCreatureAnimal* avatar = GameNounManager.GetAvatar();
-			if (avatar && animID == 0x03DF6DFF) { //gen_dig_hands
+
+			//gen_dig_hands
+			if (avatar && animID == 0x03DF6DFF) { 
 
 				cInteractiveOrnament* object = ObjectManager.FindInteractedObject();
 				obconverter->SetInteractedObject(object);
 
-				ResourceKey animkey = obconverter->GetModelInteractAnim(avatar, object->GetModelKey(), animID);
+				auto newAnimID = obconverter->ChooseModelInteractSuccessFailureAnim(avatar, object->GetModelKey(), animID);
 
-				if (animkey.instanceID != 0x0) {
+				if (newAnimID != 0x0) {
 					obconverter->StartWaitingForNoun();
-					return original_function(this, animkey.instanceID, pChoice);
+					animID = newAnimID;
+					//return original_function(this, animkey.instanceID, pChoice);
 				}
 				
+			}
+			// check eating anims to store food
+			else if (avatar == GetAnimCreatureOwner(this) && crg_inventory->ShouldStoreFood()) {
+				auto foodanim = crg_inventory->GetFoodStoreAnim(animID);
+				if (foodanim != animID) {
+					return original_function(this, foodanim, pChoice);
+				}
 			}
 		}
 		// Sporepedia viewer
@@ -289,6 +332,10 @@ member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 			if (trg_ieventmanager->IsEventItemHovered()) {
 				return original_function(this, 0x24C6D844);
 			}
+			// construction plot hovered
+			if (trg_tribeplanmanager->IsConstructionPlotHovered() && id == 0x525ff0f) {
+				return original_function(this, 0xFA09CD25);
+			}
 
 
 		}
@@ -321,6 +368,18 @@ virtual_detour(SetModel_detour, Simulator::cSpatialObject, Simulator::cSpatialOb
 		if (modelKey.instanceID == id("cr_feature_meteorite_a")) {
 			App::ConsolePrintF("cr_feature_meteorite_a");
 		}
+
+		if (IsTribeGame()) {
+			auto tribetool = object_cast<cTribeTool>(this);
+			if (tribetool && trg_tribeplanmanager->IsToolInProgress(tribetool)) {
+				//original_function(this, trg_tribeplanmanager->plot_model01);
+				auto model = trg_tribeplanmanager->GetPlotModel(tribetool);
+				//SporeDebugPrint("SETTING THE TRIBE PLOT MODEL!!!!");
+				original_function(this, model);
+				return;
+			}
+		}
+		
 
 		// if this is a nest, check its herd type
 		cNestPtr nest = object_cast<Simulator::cNest>(this);
@@ -363,9 +422,14 @@ member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint3
 {
 	int detoured(uint32_t instanceId, uint32_t groupId) //Detouring the function for obtaining effect indexes...
 	{
-		// detect if a cinematic is beginning
+		// detect if a cinematic is beginning and emit a message
 		if (instanceId == id("fade_to_black_1") || instanceId == id("fade_to_black_3") || instanceId == id("fade_to_black_quick")) {
 			MessageManager.MessageSend(id("CinematicBegin"), nullptr);
+		}
+
+		// detect if a baby is growing up and send a message
+		if (instanceId == 0x3A616FEE) {
+			MessageManager.MessageSend(id("BabyGrowUp"), nullptr);
 		}
 
 		if (IsTribeGame()) {
@@ -506,31 +570,51 @@ virtual_detour(CombatTakeDamage_detour, Simulator::cCombatant, Simulator::cComba
 {
 	int detoured(float damage, uint32_t attackerPoliticalID, int integer, const Vector3& vector, cCombatant* pAttacker)
 	{
-		// TODO: send the message of this to the gameplayobjectmanager, including the attacker and object
-		// and have that class propogate it to the rest of the submanagers to check for if the object can be handled, then call OnDamaged
+		// send the message of this to the gameplayobjectmanager, including the attacker and object
+		// and have that class propogate it to the rest of the submanagers to check for if the object can be handled, then call OnDamaged on each
 		gameplayobjectmanager->DoTakeDamage(this, damage, pAttacker);
 		return original_function(this, damage, attackerPoliticalID, integer, vector, pAttacker);
-	}
-};
-
-// Called when a combatant takes damage
-member_detour(Pause_detour, Simulator::cGameTimeManager, int(TimeManagerPause))
-{
-	int detoured(TimeManagerPause pauseType)
-	{
-		return original_function(this, pauseType);
 	}
 };
 
 // Spui spawning detour
 member_detour(ReadSPUI_detour, UTFWin::UILayout, bool(const ResourceKey&, bool, uint32_t)) {
 	bool detoured(const ResourceKey& name, bool arg_4, uint32_t arg_8) {
-		if (name.instanceID == id("Rollover_TribeHut") && trg_ieventmanager->IsEventItemHovered())
-		{
-			ResourceKey newSpui = ResourceKey(name.instanceID, name.typeID, name.groupID);
-			newSpui.instanceID = id("Rollover_TribeRare");
-			return original_function(this, newSpui, arg_4, arg_8);
+		if (IsTribeGame()) {
+
+			bool updateTribePopUI = false;
+			// update the population UI if a tribe hut is hovered
+			if (name.instanceID == id("Rollover_TribeHut") || name.instanceID == id("Rollover_Tribe_Minimap")) {
+				//trg_tribeplanmanager->UpdateTribePopulationUI();
+				Simulator::ScheduleTask(trg_tribeplanmanager, &TRG_TribePlanManager::UpdateTribePopulationUI, 0.000000001f);
+			}
+
+			if (name.instanceID == id("Rollover_TribeHut") && trg_ieventmanager->IsEventItemHovered())
+			{
+				ResourceKey newSpui = ResourceKey(id("Rollover_TribeRare"), name.typeID, name.groupID);
+				return original_function(this, newSpui, arg_4, arg_8);
+			}
+			if (name.instanceID == id("Rollover_TribeTool") && trg_tribeplanmanager->IsConstructionPlotHovered()) {
+				ResourceKey newSpui = ResourceKey(id("Rollover_TribeTool_Construction"), name.typeID, name.groupID);
+				return original_function(this, newSpui, arg_4, arg_8);
+			}
+			
+
 		}
+		else if (IsScenarioMode()) {
+			if (name.instanceID == 0x5B3E66CC) { //id("ScenarioEditModeBehaviorChatter")
+				bool ScenarioSpuiSpawned = original_function(this, name, arg_4, arg_8);
+				if (ScenarioSpuiSpawned) {
+					// spawn the vehicle specific spui to add to this
+					// TODO: use a new class to handle this code
+					ep1_behaviormanager->ApplyVehicleBehaviorUIs();
+
+				}
+				// do this last
+				return ScenarioSpuiSpawned;
+			}
+		}
+		
 		return original_function(this, name, arg_4, arg_8);
 	}
 };
@@ -545,7 +629,7 @@ void AttachDetours()
 	//TribeSpawn_detour::attach(Address(ModAPI::ChooseAddress(0xC92860, 0xC932F0)));
 	HerdSpawn_detour::attach(GetAddress(Simulator::cGameNounManager, CreateHerd));
 
-	CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
+	//CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
 	AvatarScaling_detour::attach(GetAddress(Simulator::cCreatureGameData, CalculateAvatarNormalizingScale));
 
 	WalkTo_detour::attach(GetAddress(Simulator::cCreatureBase, WalkTo));
@@ -557,8 +641,6 @@ void AttachDetours()
 	CombatTakeDamage_detour::attach(Address(0x00bfcf10));
 
 	ReadSPUI_detour::attach(GetAddress(UTFWin::UILayout, Load));
-
-	//Pause_detour::attach(GetAddress(Simulator::cGameTimeManager, Pause));
 
 	//CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
 	//CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));

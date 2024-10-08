@@ -114,7 +114,7 @@ void BuildCRG::ParseLine(const ArgScript::Line& line)
 			if (pos == Vector3(0, 0, 0)) { return; }
 			cTribe* tribe = Simulator::SpawnNpcTribe(pos, 3, 1, 1, true, GameNounManager.GetPlayerTribe()->mTribeMembers[0]->mpSpeciesProfile);
 		}
-		else if (IsCreatureGame()) {
+		else if (IsCreatureGame() || IsScenarioMode()) {
 			auto pos = avatar->GetPosition();
 			cTribe* tribe = Simulator::SpawnNpcTribe(pos, 3, 1, 1, true, avatar->mpSpeciesProfile);
 			

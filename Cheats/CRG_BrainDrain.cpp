@@ -20,7 +20,7 @@ void CRG_BrainDrain::ParseLine(const ArgScript::Line& line)
 			if (Simulator::cCreatureGameData::GetEvolutionPoints() < 100) {
 				points = Simulator::cCreatureGameData::GetEvolutionPoints();
 			}
-			Simulator::cCreatureGameData::AddEvolutionPoints(-1.0*points);
+			Simulator::cCreatureGameData::AddEvolutionPoints(-1.0f*points);
 		}
 		
 		Simulator::cCreatureGameData::AddEvolutionPoints(Simulator::cCreatureGameData::GetEvoPointsToNextBrainLevel());

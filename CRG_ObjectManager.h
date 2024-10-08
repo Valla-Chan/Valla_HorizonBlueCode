@@ -36,7 +36,7 @@ public:
 	cInteractiveOrnamentPtr last_object;
 	ResourceKey last_object_model;
 
-	void ChieftainDied(const cCreatureBasePtr& creature);
+	//void ChieftainDied(const cCreatureBasePtr& creature);
 
 	cInteractiveOrnament* GetHoveredObject() const;
 	cInteractiveOrnament* GetNearestObject() const;
@@ -49,20 +49,21 @@ public:
 	void StartWaitingForNoun();
 	void TestInteractableForDestruction();
 
-	void ApplyModelRewards(const cCreatureBasePtr& creature, const ResourceKey& modelKey);
-	bool DoesCreatureSucceedModel(const cCreatureBasePtr& creature, const ResourceKey& modelKey) const;
-	bool MatchesProperty(const uint32_t property, const cCreatureBasePtr& creature, const ResourceKey& modelKey) const;
+	static void ApplyModelRewards(const cCreatureBasePtr& creature, const ResourceKey& modelKey, bool success);
+	static bool DoesCreatureSucceedModel(const cCreatureBasePtr& creature, const ResourceKey& modelKey);
+	static bool MatchesProperty(const uint32_t property, const cCreatureBasePtr& creature, const ResourceKey& modelKey);
 
-	ResourceKey GetModelInteractAnim(const cCreatureBasePtr& creature, const ResourceKey& modelKey, const uint32_t default_animID);
-	ResourceKey GetModelSuccessAnim(const ResourceKey& modelKey) const;
-	ResourceKey GetModelFailureAnim(const ResourceKey& modelKey) const;
+	uint32_t ChooseModelInteractSuccessFailureAnim(const cCreatureBasePtr& creature, const ResourceKey& modelKey, const uint32_t default_animID);
+	static uint32_t GetModelInteractAnim(const ResourceKey& modelKey, const uint32_t default_animID, bool success);
+	static uint32_t GetModelSuccessAnim(const ResourceKey& modelKey);
+	static uint32_t GetModelFailureAnim(const ResourceKey& modelKey);
 
-	uint32_t GetModelCursorID(const ResourceKey& modelKey, const uint32_t default_ID) const;
-	float GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const;
-	bool GetModelBoolValue(const ResourceKey& modelKey, const uint32_t property) const;
-	Vector2* GetModelVector2sValue(const ResourceKey& modelKey, const uint32_t property) const;
+	static uint32_t GetModelCursorID(const ResourceKey& modelKey, const uint32_t default_ID);
+	static float GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property);
+	static bool GetModelBoolValue(const ResourceKey& modelKey, const uint32_t property);
+	static Vector2* GetModelVector2sValue(const ResourceKey& modelKey, const uint32_t property);
 
-	ResourceKey GetHerdNestModel(const uint32_t herdID) const;
+	static ResourceKey GetHerdNestModel(const uint32_t herdID);
 
 	int AddRef() override;
 	int Release() override;

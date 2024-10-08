@@ -39,7 +39,7 @@ bool TRG_ChieftainManager::HandleMessage(uint32_t messageID, void* msg)
 		cCreatureCitizen* creature = GetAnimCreatureOwner(newMsg->pCreature);
 		if (creature && IsCreatureTribeLeader(creature)) {
 			AddChiefToQueue(creature);
-			App::ConsolePrintF(" - Chieftain has grabbed or put away tool.");
+			//SporeDebugPrint(" - Chieftain has grabbed or put away tool.");
 		}
 	}
 	return false;
@@ -95,6 +95,7 @@ int TRG_ChieftainManager::GetChiefDietValue(cCreatureCitizenPtr chief) {
 	last_tribe_count = tribe_count;
 	auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
 	tribe_count = tribes.size();
+	if (tribe_count == 0) { return 0; }
 	// if no chief, get the one from the most recently spawned tribe
 	if (!chief) {
 		// a new tribe has spawned since last time
@@ -106,7 +107,11 @@ int TRG_ChieftainManager::GetChiefDietValue(cCreatureCitizenPtr chief) {
 			chief = GetNearestTribalLeader(GameViewManager.GetWorldMousePosition(),4096);
 			// fall back to last tribe if this is null.
 			if (!chief) {
-				chief = tribes[tribe_count - 1]->GetLeaderCitizen();
+				auto tribe = tribes[tribe_count - 1];
+				if (tribe) {
+					chief = tribe->GetLeaderCitizen();
+				}
+				
 			}
 		}
 	}
@@ -140,7 +145,7 @@ int TRG_ChieftainManager::NextQueueItem() {
 
 uint32_t TRG_ChieftainManager::GetStaffID(int diet, int attachment) const {
 	if (attachment > -1) {
-		//App::ConsolePrintF(" - Accessing Chieftain diet value:  %x", dietvalue);
+		//SporeDebugPrint(" - Accessing Chieftain diet value:  %x", dietvalue);
 
 		//TODO: make this work with the savegames, fix edge cases, fix crashes when re-entering simulator etc
 		switch (attachment) {

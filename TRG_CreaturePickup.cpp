@@ -76,6 +76,7 @@ void TRG_CreaturePickup::Pickup(cCreatureCitizenPtr creature) {
 
 	DeselectMembers();
 	held_member->mbDead = true; // dead means they cannot be attacked and cannot perform most actions
+	//held_member->PlayAnimation(0x03A74A0B); // "mot_item_droppanic"
 	held_member->PlayAnimation(0x074D1B28); // "EP1_lifted_CrTr_loop"
 
 	held_member->mbPickable = false;
@@ -124,6 +125,26 @@ void TRG_CreaturePickup::ClickPosseUI(cCreatureBasePtr creature) {
 	message.Mouse.mouseX = posseItem->GetArea().GetWidth() / 2.0f;
 	message.Mouse.mouseY = posseItem->GetArea().GetHeight() / 2.0f;
 	
+
+	temp_deny_pickup = true;
+	// Now just send the message
+	window->SendMsg(message);
+}
+
+void TRG_CreaturePickup::UnclickMB1() {
+	auto window = WindowManager.GetMainWindow();
+
+	Message message;
+	message.source = window;  // Which window generated this event?
+	message.eventType = kMsgMouseDown;  // What type of event is it?
+	// Now we want to set the specific parameters (i.e. the position that was clicked,...).
+	message.Mouse.mouseState = kMouseLeftButtonDown;
+
+	
+
+	//message.Mouse.mouseX = Cursor
+	//message.Mouse.mouseY = posseItem->GetArea().GetHeight() / 2.0f;
+
 
 	temp_deny_pickup = true;
 	// Now just send the message

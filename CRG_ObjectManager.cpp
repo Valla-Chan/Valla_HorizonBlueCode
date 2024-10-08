@@ -99,13 +99,14 @@ void cObjectManager::SetInteractedObject(cInteractiveOrnament* object) {
 
 void cObjectManager::ClearInteractedObject() {
 	last_object = nullptr;
-	last_object_model = { 0,0,0 };
+	last_object_model = ResourceKey();
 	waiting_for_noun = false;
 	interaction_success = false;
 }
 
 bool cObjectManager::HasModelChanged() const {
-	return (last_object->GetModelKey() != last_object_model);
+	// return if model has changed or fade has started
+	return (last_object->GetModelKey() != last_object_model) || last_object->mFadeTimer > 1;
 }
 
 void cObjectManager::StartWaitingForNoun() {
@@ -118,15 +119,15 @@ void cObjectManager::StartWaitingForNoun() {
 void cObjectManager::TestInteractableForDestruction() {
 	if (last_object && HasModelChanged()) {
 		cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
-		ApplyModelRewards(avatar, last_object_model);
+		ApplyModelRewards(avatar, last_object_model, interaction_success);
 
 		ClearInteractedObject();
 	}
 }
 
 // Apply rewards/penalties from the model onto a creature
-void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const ResourceKey& modelKey) {
-	if (interaction_success) {
+void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const ResourceKey& modelKey, bool success) {
+	if (success) {
 
 		// Read Reward values
 		float health = GetModelFloatValue(modelKey, id("modelHealthReward"));
@@ -172,9 +173,9 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 			}
 		}
 
-		ResourceKey animkey = GetModelSuccessAnim(modelKey);
-		if (animkey.instanceID != 0x0) {
-			creature->mpAnimatedCreature->PlayAnimation(animkey.instanceID);
+		auto animID = GetModelSuccessAnim(modelKey);
+		if (animID != 0x0) {
+			creature->mpAnimatedCreature->PlayAnimation(animID);
 		}
 	}
 	// Failure
@@ -191,9 +192,9 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 		if (dna != 0.0f) { Simulator::cCreatureGameData::AddEvolutionPoints(-1*dna); }
 		if (disease) { creature->mbIsDiseased = true; }
 
-		ResourceKey animkey = GetModelFailureAnim(modelKey);
-		if (animkey.instanceID != 0x0) {
-			creature->mpAnimatedCreature->PlayAnimation(animkey.instanceID);
+		auto animID = GetModelFailureAnim(modelKey);
+		if (animID != 0x0) {
+			creature->mpAnimatedCreature->PlayAnimation(animID);
 		}
 	}
 	
@@ -205,7 +206,7 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 //------------------------------
 
 // Return if the creature matches/surpasses ALL the object's criteria.
-bool cObjectManager::DoesCreatureSucceedModel(const cCreatureBasePtr& creature, const ResourceKey& modelKey) const {
+bool cObjectManager::DoesCreatureSucceedModel(const cCreatureBasePtr& creature, const ResourceKey& modelKey) {
 	int value = 0;
 	value += !MatchesProperty(0x022E7847, creature, modelKey); // carn
 	value += !MatchesProperty(0x022E785C, creature, modelKey); // herb
@@ -214,59 +215,63 @@ bool cObjectManager::DoesCreatureSucceedModel(const cCreatureBasePtr& creature, 
 }
 
 // Return if the creature matches or surpassed the object in one property criteria.
-bool cObjectManager::MatchesProperty(const uint32_t property, const cCreatureBasePtr& creature, const ResourceKey& modelKey) const {
+bool cObjectManager::MatchesProperty(const uint32_t property, const cCreatureBasePtr& creature, const ResourceKey& modelKey) {
 	return CapabilityChecker.GetCapabilityLevel(creature, property) >= CapabilityChecker.GetModelIntValue(modelKey, property);
 }
 
 
 // Open a model resource and get a float value from a property
-float cObjectManager::GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) const {
+float cObjectManager::GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) {
 	return CapabilityChecker.GetModelFloatValue(modelKey, property);
 }
 
 // Open a model resource and get a bool value from a property
-bool cObjectManager::GetModelBoolValue(const ResourceKey& modelKey, const uint32_t property) const {
+bool cObjectManager::GetModelBoolValue(const ResourceKey& modelKey, const uint32_t property) {
 	return CapabilityChecker.GetModelBoolValue(modelKey, property);
 }
 
 // Open a model resource and get an array of vector2 values of a property
-Vector2* cObjectManager::GetModelVector2sValue(const ResourceKey& modelKey, const uint32_t property) const {
+Vector2* cObjectManager::GetModelVector2sValue(const ResourceKey& modelKey, const uint32_t property) {
 	return CapabilityChecker.GetModelVector2sValue(modelKey, property);
 }
 
-// Open a model resource and find what anim it wants the avatar to use when first interacting
-// Also aalculate success var.
-ResourceKey cObjectManager::GetModelInteractAnim(const cCreatureBasePtr& creature, const ResourceKey& modelKey, const uint32_t default_animID) {
+// NONSTATIC. 
+// Calculate success var and return anim to use.
+uint32_t cObjectManager::ChooseModelInteractSuccessFailureAnim(const cCreatureBasePtr& creature, const ResourceKey& modelKey, const uint32_t default_animID) {
 	interaction_success = DoesCreatureSucceedModel(creature, modelKey);
+	return GetModelInteractAnim(modelKey, default_animID, interaction_success);
+}
 
+// Open a model resource and find what anim it wants the avatar to use when first interacting
+uint32_t cObjectManager::GetModelInteractAnim(const ResourceKey& modelKey, const uint32_t default_animID, bool success) {
 	// Succeeded, or has no failure anim
-	if (interaction_success || !CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
+	if (success || !CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
 		if (CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractAnim"))) {
-			return CapabilityChecker.GetModelKeyValue(modelKey, id("modelInteractAnim"));
+			return CapabilityChecker.GetModelKeyValue(modelKey, id("modelInteractAnim")).instanceID;
 		}
 	}
 	// Failed and has special anim
-	else if (CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
-			return CapabilityChecker.GetModelKeyValue(modelKey, id("modelInteractFailureAnim"));
+	else if (!success && CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
+		return CapabilityChecker.GetModelKeyValue(modelKey, id("modelInteractFailureAnim")).instanceID;
 	}
-	return ResourceKey{ default_animID, 0, 0};
+	return default_animID;
 }
 
-ResourceKey cObjectManager::GetModelSuccessAnim(const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelSuccessAnim"));
+uint32_t cObjectManager::GetModelSuccessAnim(const ResourceKey& modelKey) {
+	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelSuccessAnim")).instanceID;
 }
-ResourceKey cObjectManager::GetModelFailureAnim(const ResourceKey& modelKey) const {
-	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelFailureAnim"));
+uint32_t cObjectManager::GetModelFailureAnim(const ResourceKey& modelKey) {
+	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelFailureAnim")).instanceID;
 }
 
-uint32_t cObjectManager::GetModelCursorID(const ResourceKey& modelKey, const uint32_t default_ID) const {
+uint32_t cObjectManager::GetModelCursorID(const ResourceKey& modelKey, const uint32_t default_ID) {
 	if (CapabilityChecker.HasModelUInt32Value(modelKey, id("modelCursorID"))) {
 		return CapabilityChecker.GetModelUInt32Value(modelKey, id("modelCursorID"));
 	}
 	return default_ID;
 }
 
-ResourceKey cObjectManager::GetHerdNestModel(const uint32_t herdID) const {
+ResourceKey cObjectManager::GetHerdNestModel(const uint32_t herdID) {
 	ResourceKey herd_resource = ResourceKey(herdID, TypeIDs::Names::prop, 0x02f98b67);
 	if (CapabilityChecker.HasModelKeyValue(herd_resource, id("NestModelKey"))) {
 		return CapabilityChecker.GetModelKeyValue(herd_resource, id("NestModelKey"));

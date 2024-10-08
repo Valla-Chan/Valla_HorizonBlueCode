@@ -105,7 +105,7 @@ bool UI_Timescale::HandleUIMessage(IWindow* window, const Message& message)
 
 bool UI_Timescale::HandleMessage(uint32_t messageID, void* msg)
 {
-	if (!(IsTribeGame() || IsCivGame())) { return nullptr; }
+	if (!(IsTribeGame() || IsCivGame())) { return false; }
 
 	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("CinematicBegin"))
 	{

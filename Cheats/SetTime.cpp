@@ -51,7 +51,7 @@ void SetTime::ParseLine(const ArgScript::Line& line)
 		}
 	}
 
-	float timepercent = time * 120.0f;
+	float timepercent = time * 40.0f;
 	TimeOfDay.SetTimeOfDay(timepercent, position);
 	App::ConsolePrintF("Time set to %i:00", int(time));
 }
@@ -62,6 +62,6 @@ const char* SetTime::GetDescription(ArgScript::DescriptionMode mode) const
 		return "Sets the time of the day by hour. Uses 24 hour time.";
 	}
 	else {
-		return "SetTime: Sets the time of the day by hour. Uses 24 hour time.";
+		return "TimeSet: Sets the time of the day by hour. Uses 24 hour time.";
 	}
 }

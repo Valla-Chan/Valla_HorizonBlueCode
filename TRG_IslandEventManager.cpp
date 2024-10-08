@@ -32,6 +32,8 @@ void TRG_IslandEventManager::Initialize() {
 
 	CursorManager.Load(0x24C6D844, u"cursor_unknown");
 	WindowManager.GetMainWindow()->AddWinProc(this);
+
+	eventUIlayout.LoadByID(0xA59316FC);
 }
 
 void TRG_IslandEventManager::Dispose() {
@@ -73,6 +75,8 @@ void TRG_IslandEventManager::SpawnDummyTribe() {
 	auto playerTribe = GameNounManager.GetPlayerTribe();
 	if (!playerTribe) { Simulator::ScheduleTask(this, &TRG_IslandEventManager::SpawnDummyTribe, 4.0f); return; }
 
+
+	mSavedHut = playerTribe->mpHut.get();
 	// find the side of the planet opposite of the player, so it is out of sight
 	Vector3 pos;
 	float tribeDist = Math::distance(Vector3(0, 0, 0), playerTribe->GetPosition());
@@ -85,7 +89,8 @@ void TRG_IslandEventManager::SpawnDummyTribe() {
 
 	// Make tribe appear destroyed, just to psych out the lore-nerds >:)
 	mpDummyTribe->mpHut->mHealthPoints = mpDummyTribe->mpHut->mMaxHealthPoints / 3.0f;
-	auto model = ResourceKey(id("HE_destroyed_hut"), Names::prop, id("hutstyles"));
+	//auto model = ResourceKey(id("HE_destroyed_hut"), Names::prop, id("hutstyles"));
+	auto model = ResourceKey(id("tt_hut_home_dest"), Names::prop, id("TribalTools"));
 	mpDummyTribe->mpHut->SetModelKey(model);
 	mpDummyTribe->mpHut->mDestructModelHi = model;
 	mpDummyTribe->mpHut->mDestructModelMd = model;
@@ -105,22 +110,22 @@ void TRG_IslandEventManager::SpawnDummyTribe() {
 void TRG_IslandEventManager::SpawnEventItem() {
 	SporeDebugPrint("Spawning Event Item...");
 	mbItemHovered = false;
+
 	auto spawnPoint = FindSpawnPoint();
 	if (spawnPoint && mpDummyTribe) {
-		//mpEventItem = simulator_new<Simulator::cInteractiveOrnament>();
+		// pull data from random model file
+		auto modelKey = GetEventItemModelKey();
+		auto name = GetEventItemName(modelKey);
+
 		mpEventItem = simulator_new<Simulator::cTribeHut>();
-
-		auto model = ResourceKey(id("trg_rare_chest"), Names::prop, Models);
-
 		mpEventItem->mpTribe = mpDummyTribe;
-		const char16_t name[] = u"Treasure Chest";
 		mpDummyTribe->SetName(name);
 
-		mpEventItem->mUndamagedModel = model;
-		mpEventItem->SetModelKey(model);
+		mpEventItem->mUndamagedModel = modelKey;
+		mpEventItem->SetModelKey(modelKey);
 		mpEventItem->Teleport(spawnPoint->GetPosition(), spawnPoint->GetOrientation());
 		mpEventItem->mbTransformDirty = false;
-		mpEventItem->SetScale(5.0f);
+		mpEventItem->SetScale(eventItemScale);
 
 
 		mpEventItem->mbFixed = true;
@@ -128,7 +133,7 @@ void TRG_IslandEventManager::SpawnEventItem() {
 		mpEventItem->mbIsTangible = true;
 		mpEventItem->mbIsGhost = false;
 	}
-	if (!mpEventItem) {
+	if (!mpEventItem || mpEventItem->GetModelKey() == ResourceKey()) {
 		SporeDebugPrint("Spawning Failed.");
 	}	
 
@@ -167,9 +172,72 @@ void TRG_IslandEventManager::SelectEventItem() {
 	mpActivators = GetSelectedCitizens();
 }
 
+//---------------------------------
+
+ResourceKey TRG_IslandEventManager::GetEventItemModelKey() {
+	// if the item exists, get its current key
+	if (mpEventItem) {
+		return mpEventItem->GetModelKey();
+	}
+	// if it does not exist, find a new one from the manifest.
+	else {
+		// load the event item manifest
+		PropertyListPtr mpPropList;
+		size_t keycount;
+		uint32_t* keys;
+		if (PropManager.GetPropertyList(mEventManifestKey.instanceID, mEventManifestKey.groupID, mpPropList))
+		{
+			if (App::Property::GetArrayUInt32(mpPropList.get(), id("eventModels"), keycount, keys)) {
+				if (keycount > 0) {
+					int idx = -1;
+					int tries = 20;
+					while (idx == last_object_idx && tries > 0) {
+						tries -= 1;
+						idx = rand(keycount - 1);
+					}
+					last_object_idx = idx;
+					return ResourceKey(keys[idx], Names::prop, Models);
+				}
+			}
+		}
+	}
+	return ResourceKey();
+}
+
+ResourceKey TRG_IslandEventManager::GetEventPrompt(ResourceKey res) const {
+	// load the event item manifest
+	PropertyListPtr mpPropList;
+	size_t keycount;
+	ResourceKey* keys;
+	if (PropManager.GetPropertyList(res.instanceID, res.groupID, mpPropList))
+	{
+		if (App::Property::GetArrayKey(mpPropList.get(), id("resultEvents"), keycount, keys)) {
+			if (keycount > 0) {
+				int idx = rand(keycount - 1);
+				return keys[idx];
+			}
+		}
+	}
+	return ResourceKey();
+}
+
+const char16_t* TRG_IslandEventManager::GetEventItemName(ResourceKey model) const {
+	PropertyListPtr mpPropList;
+	LocalizedString localetext;
+	if (PropManager.GetPropertyList(model.instanceID, model.groupID, mpPropList))
+	{
+		if (App::Property::GetText(mpPropList.get(), 0x8F6FC401, localetext)) { // blockname
+			return localetext.GetText();
+		}
+	}
+	return LocalizedString().GetText();
+}
+
+
+
 //-----------------------------------------------------------------------------------
 
-// TODO
+// TODO: fix offscreen object deletion to work, bump up timers
 void TRG_IslandEventManager::StartItemTimer() {
 	float time;
 	// no item, start timer to spawn one in
@@ -187,7 +255,7 @@ void TRG_IslandEventManager::StartItemTimer() {
 cSpatialObjectPtr TRG_IslandEventManager::FindSpawnPoint() {
 	vector<cSpatialObjectPtr> spawnpoints = {};
 	for (auto item : GetDataByCast<cSpatialObject>()) {
-		if (item->GetModelKey().instanceID == id("cr_flr_coastal_large01")) { //id("TRG_lootmarker_beach")
+		if (item->GetModelKey().instanceID == id("TRG_lootmarker_beach")) { //id("cr_flr_coastal_large01")
 			spawnpoints.push_back(item);
 		}
 	}
@@ -195,11 +263,6 @@ cSpatialObjectPtr TRG_IslandEventManager::FindSpawnPoint() {
 		return spawnpoints[rand(spawnpoints.size() - 1)];
 	}
 	return nullptr;
-}
-
-// TODO
-ResourceKey TRG_IslandEventManager::GetRandResource(uint32_t groupID) const {
-	return ResourceKey();
 }
 
 float TRG_IslandEventManager::GetFloatFromVecRange(Vector2 range) const {
@@ -265,32 +328,191 @@ bool TRG_IslandEventManager::TraceHitEventObject() const {
 
 //-----------------------------------------------------------------------------------
 
+bool TRG_IslandEventManager::ClickedEventItem(int mouseButton, bool clicked) {
+	if (mouseButton == 0) {
+		auto window = WindowManager.GetMainWindow();
+		auto playerTribe = GameNounManager.GetPlayerTribe();
+		if (clicked) {
+			if (mUITask && !mUITask->HasExecuted()) {
+				//Simulator::RemoveScheduledTask(mUITask);
+				return true;
+			}
+			mpEventItem->mpTribe = playerTribe;
+
+			auto itemnamefield = window->FindWindowByID(kItemNameField);
+			if (itemnamefield) {
+				itemnamefield->SetCaption(mpDummyTribe->GetName());
+			}
+		}
+		else {
+			// do this to prevent the window from jumping around
+			if (IsEventItemHovered()) {
+				playerTribe->mpHut = mpEventItem;
+			}
+			if (mUITask && !mUITask->HasExecuted()) {
+				Simulator::RemoveScheduledTask(mUITask);
+			}
+			mUITask = Simulator::ScheduleTask(this, &TRG_IslandEventManager::UnLeftClickedEventItem, 0.0001f);
+			return false;
+		}
+	}
+	return false;
+}
+
+// This is its own func since it needs to be delayed.
+void TRG_IslandEventManager::UnLeftClickedEventItem() {
+	if (mpEventItem) {
+		auto playertribe = GameNounManager.GetPlayerTribe();
+		if (IsEventItemHovered()) {
+			if (mSavedHut) {
+				playertribe->mpHut = mSavedHut;
+			}
+		}
+		
+		mpEventItem->mpTribe = mpDummyTribe;
+	}
+}
+
+
+//-----------------------------------------------------------------------------------
+// Custom UI Funcs
+
+// TODO: use the part model to find a list of prompts to show.
+// Then use the randomly chosen prompt to fill out data in the UI
+void TRG_IslandEventManager::ShowEventUI() {
+	GameTimeManager.Pause(TimeManagerPause::Cinematic);
+
+	eventUIlayout.FindWindowByID(WinMain)->SetVisible(true);
+	eventUIlayout.FindWindowByID(WinShadow)->SetVisible(true);
+
+	FillEventUIData(GetEventPrompt(mpEventItem->GetModelKey()));
+}
+
+void TRG_IslandEventManager::HideEventUI() {
+	eventUIlayout.FindWindowByID(WinMain)->SetVisible(false);
+	eventUIlayout.FindWindowByID(WinShadow)->SetVisible(false);
+	GameTimeManager.Resume(TimeManagerPause::Cinematic);
+}
+
+void TRG_IslandEventManager::EventUIClickButton(bool confirmed) {
+	HideEventUI();
+}
+
+// load the UI data from the event item's prop file, and assign it to the window
+void TRG_IslandEventManager::FillEventUIData(ResourceKey eventPromptKey) {
+	//ResourceKey mEventPromptKey = GetEventPrompt(mpEventItem->GetModelKey());
+
+	// load the properties of the model
+	PropertyListPtr mpPropList;
+	ResourceKey key;
+	if (PropManager.GetPropertyList(eventPromptKey.instanceID, eventPromptKey.groupID, mpPropList))
+	{
+		LocalizedString eventText = LocalizedString();
+		LocalizedString eventTextCancelled = LocalizedString();
+		LocalizedString textConfirm = LocalizedString();
+		LocalizedString textCancel = LocalizedString();
+		ResourceKey eventImageID = ResourceKey();
+
+		App::Property::GetText(mpPropList.get(), id("eventText"), eventText);
+		App::Property::GetText(mpPropList.get(), id("eventTextCancelled"), eventTextCancelled);
+		App::Property::GetText(mpPropList.get(), id("textConfirm"), textConfirm);
+		App::Property::GetText(mpPropList.get(), id("textCancel"), textCancel);
+		App::Property::GetKey(mpPropList.get(), id("eventImageID"), eventImageID);
+
+		auto imagefield = eventUIlayout.FindWindowByID(WinImage);
+		auto textfield = eventUIlayout.FindWindowByID(WinText);
+		auto confirm = eventUIlayout.FindWindowByID(WinConfirm);
+		auto cancel = eventUIlayout.FindWindowByID(WinCancel);
+		auto close = eventUIlayout.FindWindowByID(WinClose);
+
+		textfield->SetCaption(eventText.GetText()); // TODO: swap text variables. make a static func for this.
+		object_cast<UTFWin::IImageDrawable>(imagefield->GetDrawable())->SetImageForWindow(imagefield, eventImageID);
+		//image->(eventText.GetText()); // TODO: swap names
+
+		// show prompt buttons
+		if (!string16(textConfirm.GetText()).empty()) {
+
+			close->SetVisible(false);
+
+			confirm->SetVisible(true);
+			confirm->SetCaption(textConfirm.GetText());
+
+			cancel->SetVisible(true);
+			cancel->SetCaption(textCancel.GetText());
+		}
+		// show close button
+		else {
+			close->SetVisible(true);
+			confirm->SetVisible(false);
+			cancel->SetVisible(false);
+		}
+
+		
+	}
+}
+
+//-----------------------------------------------------------------------------------
 
 int TRG_IslandEventManager::GetEventFlags() const
 {
 	return kEventFlagBasicInput | kEventFlagAdvanced;
 }
 
+// Ingame mouse messages
 bool TRG_IslandEventManager::HandleUIMessage(IWindow* window, const Message& message)
 {
 	if (!IsTribeGame()) { return false; }
-	if (GetSelectedCitizens().size() == 0) { return false; }
+	//if (GetSelectedCitizens().size() == 0) { return false; }
 	if (!mpEventItem) { mbItemHovered = false; return false; }
 
-	if (message.Mouse.IsRightButton()) {
-		// Clicked right mouse btn, start registering the click and items.
-		mbCameraMoved = false;
-		if (message.IsType(kMsgMouseDown) && !mbItemHovered) {
-			if (IsEventItemHovered()) {
-				mbItemHovered = true;
-				return false;
-			}
+	//------------------------------------------------------
+	// Event UI Buttons
+
+	if (message.IsType(kMsgButtonClick)) {
+		auto id = message.source->GetControlID();
+		switch (id) {
+			case WinConfirm: EventUIClickButton(1); return true;
+			case WinCancel: EventUIClickButton(0); return true;
+			case WinClose: HideEventUI(); return true;
 		}
 	}
+
+	//------------------------------------------------------
+	// LEFT
+
+	// Checking if left clicking on event item
+	if ((message.IsType(kMsgMouseDown) && message.Mouse.IsLeftButton() && IsEventItemHovered())) {
+		return ClickedEventItem(0, true);
+	}
+	// left click released on event item
+	else if ( (message.IsType(kMsgMouseMove) && !IsEventItemHovered()) ||
+		(message.IsType(kMsgMouseUp) && message.Mouse.mouseButton == kMouseButtonLeft) ) {
+		
+		return ClickedEventItem(0, false);
+	}
+
+	//------------------------------------------------------
+	// RIGHT
+
+	// Checking if right clicking on event item
+	else if (message.IsType(kMsgMouseDown) && message.Mouse.IsRightButton() && IsEventItemHovered()) {
+		ShowEventUI();
+		return true;
+	}
+
+	return false;
+	//------------------------------
+	// OLD CODE
+
+
 	// Clicked Left mouse btn OR
 	// Moved mouse with button held and item hovered. clear the state.
 	if ( (message.Mouse.IsLeftButton() || message.IsType(kMsgMouseMove)) && mbItemHovered) {
-		mbCameraMoved = true;
+		mpEventItem->mpTribe = GameNounManager.GetPlayerTribe();
+		if (message.IsType(kMsgMouseMove)) {
+			mbCameraMoved = true;
+			
+		}
 		mbItemHovered = false;
 		// do not allow left clicking on this item, to prevent showing of fake tribe.
 		if (message.Mouse.IsLeftButton() && message.IsType(kMsgMouseDown) && IsEventItemHovered()) {
@@ -306,6 +528,11 @@ bool TRG_IslandEventManager::HandleUIMessage(IWindow* window, const Message& mes
 		if (rolled && mbItemHovered && !mbCameraMoved) {
 			SelectEventItem();
 		}
+		// do not allow left click release on this item, to prevent showing of fake tribe.
+		//else if (left && rolled && !mbCameraMoved) {
+		//	mbItemHovered = false;
+		//	return true;
+		//}
 		// If not rolled over the object and not moving the camera, the player is directing the creature to a new task,
 		// so remove these creatures from the activators list.
 		else if (!rolled && !mbCameraMoved) {
@@ -338,6 +565,7 @@ Simulator::Attribute TRG_IslandEventManager::ATTRIBUTES[] = {
 	SimAttribute(TRG_IslandEventManager,mpActivators,0),
 	SimAttribute(TRG_IslandEventManager,mpEventItem,1),
 	SimAttribute(TRG_IslandEventManager,mpDummyTribe,2),
+	SimAttribute(TRG_IslandEventManager,mSavedHut,3),
 	// This one must always be at the end
 	Simulator::Attribute()
 };

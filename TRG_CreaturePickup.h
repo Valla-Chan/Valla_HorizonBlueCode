@@ -34,6 +34,7 @@ public:
 	void Moved();
 
 	void ClickPosseUI(cCreatureBasePtr creature);
+	void UnclickMB1();
 
 	int AddRef() override;
 	int Release() override;

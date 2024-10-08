@@ -181,6 +181,42 @@
     <ClInclude Include="TRG_IslandEventManager.h">
       <Filter>Valla_CreatureOverhaul\TRG</Filter>
     </ClInclude>
+    <ClInclude Include="CRG_Inventory.h">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\HurtMe.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_TribePlanManager.h">
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\SetVehicleTool.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="EP1_BehaviorManager.h">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\MarkInteractives.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_NestManager.h">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\SendMessage.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="ListenAllMessages.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_GameplayAbilities.h">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="AddressCheat.h">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\TRG_AddTribeSlot.h">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -317,6 +353,42 @@
     </ClCompile>
     <ClCompile Include="TRG_IslandEventManager.cpp">
       <Filter>Valla_CreatureOverhaul\TRG</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_Inventory.cpp">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\HurtMe.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_TribePlanManager.cpp">
+      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetVehicleTool.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="EP1_BehaviorManager.cpp">
+      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\MarkInteractives.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_NestManager.cpp">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SendMessage.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="ListenAllMessages.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_GameplayAbilities.cpp">
+      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="AddressCheat.cpp">
+      <Filter>Valla_CreatureOverhaul</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\TRG_AddTribeSlot.cpp">
+      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
