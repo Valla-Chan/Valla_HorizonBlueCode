@@ -16,18 +16,22 @@ void TRG_AddFood::ParseLine(const ArgScript::Line& line)
 {
 	if (Simulator::IsTribeGame())
 	{
-		//TODO: how to add food?
-		cTribePtr tribe = Simulator::GetDataByCast<Simulator::cTribe>()[0];
-		tribe->GetTotalFood();
+		cTribePtr tribe = GameNounManager.GetPlayerTribe();
+		if (tribe) {
+			float amount = 25.0f;
+			auto tribe = GameNounManager.GetPlayerTribe();
+			BundleManager.CreateBundles(amount, tribe, Simulator::kTribeBundleTypeFruit);
+			tribe->UpdateFoodVisuals(amount);
+		}
 	}
 }
 
 const char* TRG_AddFood::GetDescription(ArgScript::DescriptionMode mode) const
 {
 	if (mode == ArgScript::DescriptionMode::Basic) {
-		return "Adds food to the active tribe in tribal stage.";
+		return "Adds 25 food to the active tribe in tribal stage.";
 	}
 	else {
-		return "AddFood: Adds food to the active tribe in tribal stage.";
+		return "AddFood: Adds 25 food to the active tribe in tribal stage.";
 	}
 }

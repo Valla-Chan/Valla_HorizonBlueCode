@@ -8,22 +8,22 @@
     <Filter Include="Internal">
       <UniqueIdentifier>{d62ad12d-69d8-4933-8342-03043c9adc22}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Valla_CreatureOverhaul">
+    <Filter Include="Valla_HorizonBlue">
       <UniqueIdentifier>{3880d018-2395-4502-abfe-4b83e0817aab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Valla_CreatureOverhaul\Cheats">
+    <Filter Include="Valla_HorizonBlue\Cheats">
       <UniqueIdentifier>{86f3ec91-0e86-4bec-bea2-1c4573a64d8f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Valla_CreatureOverhaul\EP1">
+    <Filter Include="Valla_HorizonBlue\EP1">
       <UniqueIdentifier>{4ec34b06-99c9-4a0a-a2a9-c3e7a0662e99}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Valla_CreatureOverhaul\CRG">
+    <Filter Include="Valla_HorizonBlue\CRG">
       <UniqueIdentifier>{0d4177db-35f9-4cef-b40e-10c505c785fc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Valla_CreatureOverhaul\TRG">
+    <Filter Include="Valla_HorizonBlue\TRG">
       <UniqueIdentifier>{79da3ef8-3a11-4046-8b9b-37fd3ca7088b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Valla_CreatureOverhaul\UI">
+    <Filter Include="Valla_HorizonBlue\UI">
       <UniqueIdentifier>{f6d0ccf2-48b0-4482-92ff-7cd52411b32c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -35,187 +35,208 @@
       <Filter>Internal</Filter>
     </ClInclude>
     <ClInclude Include="CapabilityChecker.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_HorizonBlue</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\BuildCRG.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_BrainBoost.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_BrainDrain.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_PosessTarget.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_Recharge.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_ResurrectTarget.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_SpawnPlant.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_SwapCreature.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\Kill.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_Starve.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_GrowUp.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\PrintCursor.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\TRG_AddFood.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\SetCursorCheat.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\TRG_GetTribeInfo.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="SetChieftainColor.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\SetChieftainColor.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\SetGlideSpeed.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_GetSick.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_GetPart.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\CRG_GiveAllParts.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="CRE_ViewerAnims.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_HorizonBlue</Filter>
     </ClInclude>
     <ClInclude Include="CR_JetHover.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_HorizonBlue</Filter>
     </ClInclude>
     <ClInclude Include="Common.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_HorizonBlue</Filter>
     </ClInclude>
     <ClInclude Include="EP1_CaptainAbilities.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="EP1_GameplayObject_DriveMarker.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="EP1_GameplayObject_IceCube.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="EP1_PosseCommand.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="EP1_PosseScheduleItem.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="CRG_AttackBasic.h">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
     <ClInclude Include="CRG_DiseaseManager.h">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
     <ClInclude Include="CRG_EnergyHungerSync.h">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
     <ClInclude Include="CRG_ObjectManager.h">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
     <ClInclude Include="CRG_WaterBehavior.h">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
     <ClInclude Include="TRG_ChieftainManager.h">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
     <ClInclude Include="TRG_CreaturePickup.h">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
     <ClInclude Include="EP1_GameplayObject_HoloProjector.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="EP1_GameplayObjectManager.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="EP1_GameplayObject.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="EP1_Detours.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\SetTime.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\SetTimeScale.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="UI_Timescale.h">
-      <Filter>Valla_CreatureOverhaul\UI</Filter>
+      <Filter>Valla_HorizonBlue\UI</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\TRG_GetClosestHerd.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="TRG_MemberManager.h">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\TRG_SelectMembers.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\TRG_AddToTribe.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="TRG_IslandEventManager.h">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
     <ClInclude Include="CRG_Inventory.h">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\HurtMe.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="TRG_TribePlanManager.h">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\SetVehicleTool.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="EP1_BehaviorManager.h">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\MarkInteractives.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="CRG_NestManager.h">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\SendMessage.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="ListenAllMessages.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="CRG_GameplayAbilities.h">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
     <ClInclude Include="AddressCheat.h">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_HorizonBlue</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\TRG_AddTribeSlot.h">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\GetTribeColors.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseClickRegister.h">
+      <Filter>Valla_HorizonBlue</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_TribeHutManager.h">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_MovementHelper.h">
+      <Filter>Valla_HorizonBlue\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\Teleport.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\SetGravity.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\Rename.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -223,172 +244,193 @@
       <Filter>Internal</Filter>
     </ClCompile>
     <ClCompile Include="CapabilityChecker.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_HorizonBlue</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_HorizonBlue</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\BuildCRG.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_BrainBoost.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_BrainDrain.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_PosessTarget.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_Recharge.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_ResurrectTarget.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_SpawnPlant.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_SwapCreature.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\Kill.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_Starve.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_GrowUp.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\PrintCursor.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\TRG_AddFood.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\TRG_GetTribeInfo.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\SetChieftainColor.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\SetGlideSpeed.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_GetSick.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_GetPart.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\CRG_GiveAllParts.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="EP1_CaptainAbilities.cpp">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
     <ClCompile Include="EP1_GameplayObject_DriveMarker.cpp">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
     <ClCompile Include="EP1_GameplayObject_IceCube.cpp">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
     <ClCompile Include="EP1_PosseCommand.cpp">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
     <ClCompile Include="EP1_PosseScheduleItem.cpp">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
     <ClCompile Include="CRG_AttackBasic.cpp">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
     <ClCompile Include="CRG_DiseaseManager.cpp">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
     <ClCompile Include="CRG_EnergyHungerSync.cpp">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
     <ClCompile Include="CRG_ObjectManager.cpp">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
     <ClCompile Include="CRG_WaterBehavior.cpp">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
     <ClCompile Include="TRG_ChieftainManager.cpp">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClCompile>
     <ClCompile Include="TRG_CreaturePickup.cpp">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClCompile>
     <ClCompile Include="EP1_GameplayObject_HoloProjector.cpp">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
     <ClCompile Include="EP1_GameplayObjectManager.cpp">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
     <ClCompile Include="EP1_GameplayObject.cpp">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\SetTime.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\SetTimeScale.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="UI_Timescale.cpp">
-      <Filter>Valla_CreatureOverhaul\UI</Filter>
+      <Filter>Valla_HorizonBlue\UI</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\TRG_GetClosestHerd.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="TRG_MemberManager.cpp">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\TRG_SelectMembers.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\TRG_AddToTribe.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="TRG_IslandEventManager.cpp">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClCompile>
     <ClCompile Include="CRG_Inventory.cpp">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\HurtMe.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="TRG_TribePlanManager.cpp">
-      <Filter>Valla_CreatureOverhaul\TRG</Filter>
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\SetVehicleTool.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="EP1_BehaviorManager.cpp">
-      <Filter>Valla_CreatureOverhaul\EP1</Filter>
+      <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\MarkInteractives.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="CRG_NestManager.cpp">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\SendMessage.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="ListenAllMessages.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="CRG_GameplayAbilities.cpp">
-      <Filter>Valla_CreatureOverhaul\CRG</Filter>
+      <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
     <ClCompile Include="AddressCheat.cpp">
-      <Filter>Valla_CreatureOverhaul</Filter>
+      <Filter>Valla_HorizonBlue</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\TRG_AddTribeSlot.cpp">
-      <Filter>Valla_CreatureOverhaul\Cheats</Filter>
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\GetTribeColors.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="MouseClickRegister.cpp">
+      <Filter>Valla_HorizonBlue</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_TribeHutManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_MovementHelper.cpp">
+      <Filter>Valla_HorizonBlue\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\Teleport.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetGravity.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\Rename.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,11 +1,13 @@
 #include "stdafx.h"
 #include "TRG_TribePlanManager.h"
+#include <Spore\Editors\Editor.h>
 
 TRG_TribePlanManager::TRG_TribePlanManager()
 {
 	App::AddUpdateFunction(this);
 	WindowManager.GetMainWindow()->AddWinProc(this);
 	CursorManager.Load(0xFA09CD25, u"cursor_construct");
+	//MessageManager.AddListener(this, id("PlannerPopup"));
 }
 
 
@@ -39,7 +41,6 @@ void TRG_TribePlanManager::Update()
 {
 	if (IsTribeGame()) {
 
-		UpdateToolsAmount();
 		UpdateToolsProgress();
 		UpdatePopulation();
 
@@ -49,6 +50,41 @@ void TRG_TribePlanManager::Update()
 		if (textfield) {
 			UpdateTribePopulationUI();
 		}
+
+		//// Handle manual hovered rollover
+		//// This must go last
+		auto hovered = GameViewManager.GetHoveredObject();
+		if (hovered) {
+			// Tool
+			auto tribetool = object_cast<cTribeTool>(hovered);
+			// Only display info for tools from our tribe.
+			if (tribetool && tribetool->mTribe == GameNounManager.GetPlayerTribe()) {
+				SimulatorRollover::ShowRollover(tribetool);
+				return;
+			}
+		}
+		
+	}
+}
+
+//-----------------------------------------
+// GENERAL
+
+void TRG_TribePlanManager::TribeSpawned(cTribePtr tribe) {
+	int archetype = tribe->mTribeArchetype;
+
+	// Set tribe name
+	if (archetype == 15 || archetype == 12) {
+		LocalizedString tribeName = LocalizedString(id("TribeArchetypes"), 0x00000000);
+		tribe->SetName(tribeName.GetText());
+	}
+	else if (archetype == 7) {
+		LocalizedString tribeName = LocalizedString(id("TribeArchetypes"), 0x00000002);
+		tribe->SetName(tribeName.GetText());
+	}
+	else if (archetype == 4) {
+		LocalizedString tribeName = LocalizedString(id("TribeArchetypes"), 0x00000003);
+		tribe->SetName(tribeName.GetText());
 	}
 }
 
@@ -58,8 +94,9 @@ void TRG_TribePlanManager::Update()
 void TRG_TribePlanManager::UpdatePopulation()
 {
 	auto tribe = GameNounManager.GetPlayerTribe();
+	if (!tribe) { return; }
 	// If amount of members has changed, run this func
-	if (tribe->mTribeMembers.size() > mPopulation) {
+	if (int(tribe->mTribeMembers.size()) > mPopulation) {
 		if (tribe->mSelectableMembers.size() == mPopulationSelectable) {
 			AddedBaby();
 		}
@@ -157,13 +194,13 @@ void TRG_TribePlanManager::UpdateTribeBabyUI(cTribePtr tribe, int population, in
 	}
 }
 
-// TODO: this!
+// Add the base population and the house count
 int TRG_TribePlanManager::GetTribeMaxPopulation(cTribePtr tribe) const {
 	int population = basePopulation;
 	// count all the houses
 	for (auto item : tribe->GetTools()) {
 		auto toolType = item->GetToolType();
-		if (toolType == 11) {
+		if (IsToolHome(item) && !IsToolInProgress(item)) {
 			population += populationPerHouse;
 		}
 	}
@@ -175,24 +212,57 @@ int TRG_TribePlanManager::GetTribeMaxPopulation(cTribePtr tribe) const {
 //-----------------------------------------
 // TOOLDATA
 
-cTribeToolData* TRG_TribePlanManager::TribeToolDataFromProp(ResourceKey key) {
+cTribeToolData* TRG_TribePlanManager::TribeToolDataFromProp(ResourceKey key, int typeIDoverride) {
+	cTribeToolData* toolData = new(cTribeToolData);
+	toolData->mFileKey = key;
+	toolData->mMaxNumSlots = 999;
 
+	PropertyListPtr mpPropList;
+	if (PropManager.GetPropertyList(key.instanceID, key.groupID, mpPropList))
+	{
+		App::Property::GetInt32(mpPropList.get(), 0x04294750, toolData->mToolType);
+		App::Property::GetInt32(mpPropList.get(), 0x04294751, toolData->mToolClass);
+		App::Property::GetInt32(mpPropList.get(), 0x02166464, toolData->mPrice);
+		App::Property::GetFloat(mpPropList.get(), 0x03A26420, toolData->mToolHealth);
+
+		App::Property::GetKey(mpPropList.get(), 0x04294752, toolData->mRackModelKey);
+		App::Property::GetKey(mpPropList.get(), 0x492D3895, toolData->mToolDamageHiKey);
+		App::Property::GetKey(mpPropList.get(), 0x492D3896, toolData->mToolDamageMdKey);
+		App::Property::GetKey(mpPropList.get(), 0x492D3897, toolData->mToolDamageLoKey);
+
+		// Ability
+		ResourceKey abilityKey;
+		cCreatureAbility* ability = new(cCreatureAbility);
+		PropertyListPtr mpAbilityPropList;
+		App::Property::GetKey(mpPropList.get(), 0x051CDDBC, abilityKey);
+		if (PropManager.GetPropertyList(abilityKey.instanceID, abilityKey.groupID, mpAbilityPropList))
+		{
+			cCreatureAbility::Parse(ability, mpAbilityPropList.get());
+			if (ability) {
+				toolData->mToolAbility = ability;
+			}
+		}
+		
+		App::Property::GetUInt32(mpPropList.get(), 0x04294753, toolData->mToolIconID);
+		App::Property::GetUInt32(mpPropList.get(), 0x04294754, toolData->mDefaultToolIdleAnim);
+		App::Property::GetUInt32(mpPropList.get(), 0x04294755, toolData->mLookaroundToolIdleAnim);
+		App::Property::GetUInt32(mpPropList.get(), 0x05F09049, toolData->mGrasperOverlay);
+		App::Property::GetUInt32(mpPropList.get(), 0x062ECADE, toolData->mEnRouteAnim);
+
+		App::Property::GetText(mpPropList.get(), 0x8F6FC401, toolData->mName);
+	}
+	//toolData->mToolType = 4;
+	if (typeIDoverride != -1) {
+		toolData->mToolType = typeIDoverride;
+	}
+	toolData->mToolClass = 1;
+
+	return toolData;
 }
 
 //-----------------------------------------
 // TOOLS
 
-void TRG_TribePlanManager::UpdateToolsAmount()
-{
-	if (!IsTribeGame()) { return; }
-
-	auto tools = Simulator::GetData<Simulator::cTribeTool>();
-	// If amount of tools has changed, run this func
-	if (tools.size() > mToolsAmount && !IsToolFirePit(tools[tools.size() - 1])) {
-		AddedTool();
-	}
-	mToolsAmount = tools.size();
-}
 
 //cTribeToolPtr hovered;
 void TRG_TribePlanManager::UpdateToolsProgress() {
@@ -203,7 +273,7 @@ void TRG_TribePlanManager::UpdateToolsProgress() {
 			//if (tool->IsRolledOver()) { hovered = tool; }
 			// health is at max, remove from this list
 			if (tool->mHealthPoints > tool->mMaxHealthPoints - 0.5) {
-				ToolComplete(i);
+				ToolComplete(tool);
 				mpInProgressTools[i] = nullptr;
 				mpPlotHealths[i] = -1;
 
@@ -271,10 +341,15 @@ cTribeToolPtr TRG_TribePlanManager::GetConstructionPlotFromScreenPos(Vector2 pos
 	return nullptr;
 }*/
 
-void TRG_TribePlanManager::AddedTool() {
-	auto tools = Simulator::GetData<Simulator::cTribeTool>();
-	if (tools.size() > 0) {
-		auto tool = tools[tools.size() - 1];
+void TRG_TribePlanManager::AddedTool(cTribeToolPtr tool, cTribePtr tribe) {
+	int toolType = tool->GetToolType();
+	// Campfires should not count
+	if (toolType == 10) {
+		return;
+	}
+
+	// Make tribal huts have to be built
+	if (!mbHutsPrebuilt) {
 		tool->SetHealthPoints(tool->GetMaxHitPoints() * progress_value);
 		tool->SetModelKey(plot_social01);
 
@@ -282,10 +357,27 @@ void TRG_TribePlanManager::AddedTool() {
 		mpInProgressTools.push_back(tool);
 		mpPlotHealths.push_back(tool->mHealthPoints);
 	}
+
+	//---------------------------------------------
+
+	// TODO: Allow home type huts to be added until they hit the upper limit for house count, based on tribe tier
+	// when the last possible one is spawned, we will have to do some other fancy stuff to dynamically swap IDs on existing homes
+	// as you buy and sell them to and from the current limit
+	// and also as the tribe tier changes
+	// OR
+	// Maybe consider just showing or hiding a UI window that grays out the housing slot and says something like
+	// (6/6) you need a higher tier tribe for more homes
+
+	if (toolType == HomePalette) {
+		tool->SetToolType(GetNewHomeID(tribe));
+	}
+
 }
 
-void TRG_TribePlanManager::ToolComplete(int index) {
-
+void TRG_TribePlanManager::ToolComplete(cTribeToolPtr tool) {
+	if (IsToolHome(tool)) {
+		//MessageManager.MessageSend(id("UpdateHomes"), nullptr);
+	}
 }
 
 
@@ -293,13 +385,30 @@ void TRG_TribePlanManager::ToolComplete(int index) {
 bool TRG_TribePlanManager::IsToolFirePit(cTribeToolPtr tool) const {
 	if (!tool) { return false; }
 	switch (tool->GetModelKey().instanceID) {
-		case 0x1AE006AB:
-		case 0x1AE006A8:
-		case 0x1AE006A9:
-			return true;
-			break;
+	case 0x1AE006AB:
+	case 0x1AE006A8:
+	case 0x1AE006A9:
+		return true;
+		break;
 	}
 	return false;
+}
+
+bool TRG_TribePlanManager::IsToolHome(cTribeToolPtr tool) const {
+	auto toolType = tool->GetToolType();
+	return (toolType >= HomeStart && toolType <= HomeEnd);
+}
+
+
+// Get the nearest open slot for 'Home' type huts, from HomeStart to HomeEnd
+int TRG_TribePlanManager::GetNewHomeID(cTribePtr tribe) const {
+	for (int i = HomeStart; i <= HomeEnd; i++) {
+		if (!tribe->GetToolByType(i)) {
+			return i;
+		}
+
+	}
+	return 12;
 }
 
 // get model from tool type and health level
@@ -309,7 +418,7 @@ ResourceKey TRG_TribePlanManager::GetPlotModel(cTribeToolPtr tool) const {
 	if (modelidx) { return plot_social02; }
 	else { return plot_social01; }
 
-	return ResourceKey();
+	return tool->GetModelKey();
 }
 
 cTribeToolPtr TRG_TribePlanManager::GetHoveredConstructionPlot() const {
@@ -360,10 +469,24 @@ bool TRG_TribePlanManager::HandleUIMessage(IWindow* window, const Message& messa
 			mbBabySpawning = true;
 			//debug
 			auto tribe = GameNounManager.GetPlayerTribe();
-			//tribe->func9Ch(0, true);
-			tribe->funcB0h();
 		}
+
 	}
 	// Return true if the message was handled, and therefore no other window procedure should receive it.
 	return false;
 }
+
+/*
+bool TRG_TribePlanManager::HandleMessage(uint32_t messageID, void* msg) {
+	if (messageID == id("PlannerPopup")) {
+		auto editor = GetEditor();
+		if (editor) {
+			//GetEditor()->mpPartsPaletteUI->SetActiveCategory(3);
+			auto palette = editor->mpPartsPaletteUI;
+			editor->mpPartsPaletteUI->mpActiveCategory = editor->mpPartsPaletteUI->mCategories[2];
+			//GetEditor()->mpPartsPaletteUI->mpActiveCategory = 
+		}
+		
+	}
+	return false;
+}*/

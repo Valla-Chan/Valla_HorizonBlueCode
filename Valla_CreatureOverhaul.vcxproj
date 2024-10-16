@@ -15,6 +15,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Valla_CreatureOverhaul</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Valla_HorizonBlue</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -125,6 +126,10 @@
     <ClInclude Include="Cheats\CRG_SpawnPlant.h" />
     <ClInclude Include="Cheats\CRG_Starve.h" />
     <ClInclude Include="Cheats\CRG_SwapCreature.h" />
+    <ClInclude Include="Cheats\GetTribeColors.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Cheats\HurtMe.h">
       <SubType>
       </SubType>
@@ -138,6 +143,10 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="Cheats\Rename.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Cheats\SendMessage.h">
       <SubType>
       </SubType>
@@ -148,6 +157,10 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="Cheats\SetGlideSpeed.h" />
+    <ClInclude Include="Cheats\SetGravity.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Cheats\SetTime.h">
       <SubType>
       </SubType>
@@ -157,6 +170,10 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="Cheats\SetVehicleTool.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="Cheats\Teleport.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -206,6 +223,10 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="CRG_MovementHelper.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="CRG_NestManager.h">
       <SubType>
       </SubType>
@@ -251,6 +272,10 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="MouseClickRegister.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="SetChieftainColor.h">
       <SubType>
       </SubType>
@@ -270,6 +295,10 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="TRG_MemberManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="TRG_TribeHutManager.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -310,6 +339,10 @@
     <ClCompile Include="Cheats\CRG_SpawnPlant.cpp" />
     <ClCompile Include="Cheats\CRG_Starve.cpp" />
     <ClCompile Include="Cheats\CRG_SwapCreature.cpp" />
+    <ClCompile Include="Cheats\GetTribeColors.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="Cheats\HurtMe.cpp">
       <SubType>
       </SubType>
@@ -323,12 +356,20 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="Cheats\Rename.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="Cheats\SendMessage.cpp">
       <SubType>
       </SubType>
     </ClCompile>
     <ClCompile Include="Cheats\SetChieftainColor.cpp" />
     <ClCompile Include="Cheats\SetGlideSpeed.cpp" />
+    <ClCompile Include="Cheats\SetGravity.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="Cheats\SetTime.cpp">
       <SubType>
       </SubType>
@@ -338,6 +379,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="Cheats\SetVehicleTool.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="Cheats\Teleport.cpp">
       <SubType>
       </SubType>
     </ClCompile>
@@ -379,6 +424,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="CRG_Inventory.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="CRG_MovementHelper.cpp">
       <SubType>
       </SubType>
     </ClCompile>
@@ -426,6 +475,10 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="MouseClickRegister.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -443,6 +496,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="TRG_MemberManager.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="TRG_TribeHutManager.cpp">
       <SubType>
       </SubType>
     </ClCompile>

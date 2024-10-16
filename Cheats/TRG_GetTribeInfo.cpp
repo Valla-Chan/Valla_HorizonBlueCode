@@ -16,7 +16,8 @@ void TRG_GetTribeInfo::ParseLine(const ArgScript::Line& line)
 	if (Simulator::IsTribeGame()) {
 		cTribePtr tribe = GameNounManager.GetPlayerTribe();
 		App::ConsolePrintF("--- Tribe info for 0x%x ---", tribe->GetCommunityName());
-		App::ConsolePrintF("Identity Color: %x",tribe->mIDColorID);
+		App::ConsolePrintF("Identity Color ID: %x",tribe->mIDColorID);
+		App::ConsolePrintF("Identity Cached Color: %x",tribe->mCachedColor);
 		App::ConsolePrintF("Tribe Upgrade level: %x",tribe->mUpgradeLevel);
 		App::ConsolePrintF("Population size: %x",tribe->GetPopulationCount());
 		App::ConsolePrintF("Population capacity: %x",tribe->mCommunityMembers.capacity());
@@ -51,7 +52,11 @@ void TRG_GetTribeInfo::ParseLine(const ArgScript::Line& line)
 			toolnum += 1;
 			App::ConsolePrintF("Tool %i data below:", toolnum);
 			App::ConsolePrintF("	ModelKey:  0x%x", tool->GetModelKey().instanceID);
-			App::ConsolePrintF("	mToolType:  0x%x", tool->mToolType); 
+			App::ConsolePrintF("	Health:  %f / %f", tool->mHealthPoints, tool->mMaxHealthPoints);
+			App::ConsolePrintF("	mToolType:  0x%x", tool->mToolType);
+			App::ConsolePrintF("	Tool Type:  %i", tool->GetToolType());
+			App::ConsolePrintF("	Tool Class:  %i", tool->GetToolClass());
+
 			App::ConsolePrintF("	field_1EC:  0x%x", tool->field_1EC);
 			App::ConsolePrintF("	field_1F0:  %i", tool->field_1F0);
 			App::ConsolePrintF("	field_1F4:  %i", tool->field_1F4);

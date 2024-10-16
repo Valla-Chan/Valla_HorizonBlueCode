@@ -13,18 +13,26 @@ SetChieftainColor::~SetChieftainColor()
 
 void SetChieftainColor::ParseLine(const ArgScript::Line& line)
 {
-	cTribePtr tribe = Simulator::GetDataByCast<Simulator::cTribe>()[0];
-	tribe->mIDColorID = (int)Simulator::IdentityColors::Yellow;
-	//tribe->GetLeaderCitizen()->SetIdentityColor(ColorRGB(1.0f, 0.8f, 0.0f));
-	tribe->AssignNames(tribe->GetLeaderCitizen()->mCreatureName);
+	if (Simulator::IsTribeGame()) {
+		for (auto tribe : Simulator::GetDataByCast<Simulator::cTribe>()) {
+			tribe->mIDColorID = (int)Simulator::IdentityColors::Red;
+			auto chieftain = tribe->GetLeaderCitizen();
+			if (chieftain) {
+				bool tribeIsPlayer = tribe == GameNounManager.GetPlayerTribe();
+				chieftain->mbColorIsIdentity = true;
+				chieftain->SetIdentityColor(ColorRGB(1.0f, 0.0f, 0.0f));
+			}
+		}
+	}
+	//tribe->AssignNames(tribe->GetLeaderCitizen()->mCreatureName);
 }
 
 const char* SetChieftainColor::GetDescription(ArgScript::DescriptionMode mode) const
 {
 	if (mode == ArgScript::DescriptionMode::Basic) {
-		return "Sets Chieftain color to Yellow.";
+		return "Sets all Chieftain's colors to Yellow.";
 	}
 	else {
-		return "SetChieftainColor: Sets Chieftain color to Yellow.";
+		return "SetChieftainColor: Sets all Chieftain's colors to Red.";
 	}
 }

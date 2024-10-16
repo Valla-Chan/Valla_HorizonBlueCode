@@ -30,10 +30,14 @@
 #include "Cheats/TRG_GetClosestHerd.h"
 #include "Cheats/TRG_SelectMembers.h"
 #include "Cheats/TRG_AddToTribe.h"
+#include "Cheats/TRG_AddFood.h"
 #include "Cheats/SetVehicleTool.h"
 #include "Cheats/MarkInteractives.h"
 #include "Cheats/SendMessage.h"
 #include "Cheats/TRG_AddTribeSlot.h"
+#include "Cheats/GetTribeColors.h"
+#include "Cheats/Teleport.h"
+#include "Cheats/Rename.h"
 //#include "ListenAllMessages.h"
 
 // UI
@@ -48,6 +52,7 @@
 #include "CRG_Inventory.h"
 #include "CRG_NestManager.h"
 #include "CRG_GameplayAbilities.h"
+#include "CRG_MovementHelper.h"
 
 // TRG Ingame Behaviors
 #include "TRG_CreaturePickup.h"
@@ -55,6 +60,7 @@
 #include "TRG_MemberManager.h"
 #include "TRG_IslandEventManager.h"
 #include "TRG_TribePlanManager.h"
+#include "TRG_TribeHutManager.h"
 
 // EP1 Ingame Behaviors
 #include "EP1_PosseCommand.h"
@@ -81,6 +87,7 @@ TRG_ChieftainManager* chiefmanager;
 TRG_CreaturePickup* trg_creaturepickup;
 TRG_IslandEventManager* trg_ieventmanager;
 TRG_TribePlanManager* trg_tribeplanmanager;
+TRG_TribeHutManager* trg_hutmanager;
 
 
 EP1_PosseCommand* ep1_possecommand;
@@ -121,10 +128,14 @@ void Initialize()
 	CheatManager.AddCheat("GetHerd", new(TRG_GetClosestHerd));
 	CheatManager.AddCheat("SelectUnits", new(TRG_SelectMembers));
 	CheatManager.AddCheat("AddToTribe", new(TRG_AddToTribe));
+	CheatManager.AddCheat("AddFood", new(TRG_AddFood));
 	CheatManager.AddCheat("SetVehicleTool", new(SetVehicleTool));
 	CheatManager.AddCheat("MarkInteractives", new(MarkInteractives));
 	CheatManager.AddCheat("SendMessage", new(SendMessageCheat));
 	CheatManager.AddCheat("AddTribeSlot", new(TRG_AddTribeSlot));
+	CheatManager.AddCheat("GetTribeColors", new(GetTribeColors));
+	CheatManager.AddCheat("Teleport", new(Teleport));
+	CheatManager.AddCheat("Rename", new(Rename));
 	//CheatManager.AddCheat("ListenAllMessages", new(ListenAllMessages));
 
 	// UI
@@ -135,6 +146,7 @@ void Initialize()
 	//CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
 	CRG_GameplayAbilities* crg_gameplayabilities = new(CRG_GameplayAbilities);
 	//CRG_NestManager* crg_nestmanager = new(CRG_NestManager);
+	CRG_MovementHelper* crg_movementhelper = new(CRG_MovementHelper);
 
 	CRG_AttackBasic* crg_attackbasic = new(CRG_AttackBasic);
 	crg_inventory = new(CRG_Inventory);
@@ -148,6 +160,8 @@ void Initialize()
 	SimulatorSystem.AddStrategy(new TRG_MemberManager(), TRG_MemberManager::NOUN_ID);
 	trg_ieventmanager = new(TRG_IslandEventManager);
 	SimulatorSystem.AddStrategy(trg_ieventmanager, TRG_IslandEventManager::NOUN_ID);
+	trg_hutmanager = new(TRG_TribeHutManager);
+	SimulatorSystem.AddStrategy(trg_hutmanager, TRG_TribeHutManager::NOUN_ID);
 
 
 	// EP1
@@ -191,6 +205,7 @@ void Dispose()
 	diseasemanager = nullptr;
 	trg_creaturepickup = nullptr;
 	trg_tribeplanmanager = nullptr;
+	trg_hutmanager = nullptr;
 
 	crg_inventory = nullptr;
 
@@ -347,14 +362,6 @@ member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 	}
 };
 
-
-// Detour the cursor LOADING func
-member_detour(LoadCursor_detour, UTFWin::cCursorManager, bool(uint32_t, const char16_t*, bool, int, int)) {
-	bool detoured(uint32_t id, const char16_t* fileName, bool loadFromFile = true, int xHotspot = 0, int yHotspot = 0) {
-		return original_function(this, id, fileName, loadFromFile, xHotspot, yHotspot);
-	}
-};
-
 // Detour the model setting func
 virtual_detour(SetModel_detour, Simulator::cSpatialObject, Simulator::cSpatialObject, void (const ResourceKey&)) {
 	void detoured(const ResourceKey& modelKey) {
@@ -398,11 +405,12 @@ virtual_detour(SetModel_detour, Simulator::cSpatialObject, Simulator::cSpatialOb
 };
 
 // Detour the tribe spawning func
-member_detour(TribeSpawn_detour, Simulator::cTribe, void(const Vector3&, int, int, bool)) {
-	void detoured(const Math::Vector3& position, int numMembers, int value, bool boolvalue) {
+static_detour(TribeSpawn_detour, cTribe*(const Vector3&, int, int, int, bool, cSpeciesProfile*)) {
+	cTribe* detoured(const Math::Vector3 &position, int tribeArchetype, int numMembers, int foodAmount, bool boolvalue, cSpeciesProfile* species) {
 		App::ConsolePrintF("Tribe Spawned");
-		original_function(this, position, numMembers, value, boolvalue);
-		return;
+		cTribe* tribe = original_function(position, tribeArchetype, numMembers, foodAmount, boolvalue, species);
+		trg_tribeplanmanager->TribeSpawned(tribe);
+		return tribe;
 	}
 };
 
@@ -416,6 +424,68 @@ member_detour(HerdSpawn_detour, Simulator::cHerd, cHerd*(const Vector3&, cSpecie
 	}
 };
 
+//-----------------------------------
+//// TRIBE TOOLS DETOURS
+//
+// Detour GetTribeToolData in cTribeToolData
+static_detour(GetTribeToolData_detour, cTribeToolData*(int)) {
+	cTribeToolData* detoured(int toolType) {
+		// TODO: make this actually dynamic!
+		// Maybe even read and store the files from the folder, like the normal code does.
+		if (toolType > 11) {
+			ResourceKey toolKey = ResourceKey(0x0, Names::prop, 0x04292F52);
+			int typeIDoverride = -1;
+
+			// Home hut
+			// Note: The entire range of Housing objects all return the data from tool 11
+			if (toolType > 11 && toolType <= 22) {
+				toolKey.instanceID = id("homehut");
+				typeIDoverride = toolType;
+			}
+			// WatchTower
+			else {
+				toolKey.instanceID = id("WatchTower");
+			}
+
+			return trg_tribeplanmanager->TribeToolDataFromProp(toolKey, typeIDoverride);
+
+		}
+		
+		return original_function(toolType);
+	}
+};
+
+// Detour GetToolClass in cTribeTool
+member_detour(GetToolClass_detour, Simulator::cTribeTool, int()) {
+	int detoured() {
+		if (this->GetToolType() > 11) {
+			return 1;
+		}
+		return original_function(this);
+	}
+};
+
+// Detour GetRolloverIdForObject in SimulatorRollover
+static_detour(GetRolloverIdForObject_detour, UI::SimulatorRolloverID(Simulator::cGameData*)) {
+	UI::SimulatorRolloverID detoured(Simulator::cGameData* object) {
+		//auto tribetool = object_cast<cTribeTool>(object);
+		auto value = original_function(object);
+		return value;
+	}
+};
+
+// Detour CreateTool in cTribe
+member_detour(CreateTool_detour, Simulator::cTribe, cTribeTool* (int)) {
+	cTribeTool* detoured(int toolType) {
+		auto tool = original_function(this, toolType);
+		trg_tribeplanmanager->AddedTool(tool, this);
+
+		return tool;
+	}
+};
+
+
+//-----------------------------------
 
 // Detour the effect playing func
 member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint32_t))
@@ -577,7 +647,7 @@ virtual_detour(CombatTakeDamage_detour, Simulator::cCombatant, Simulator::cComba
 	}
 };
 
-// Spui spawning detour
+// Spui loading/spawning detour
 member_detour(ReadSPUI_detour, UTFWin::UILayout, bool(const ResourceKey&, bool, uint32_t)) {
 	bool detoured(const ResourceKey& name, bool arg_4, uint32_t arg_8) {
 		if (IsTribeGame()) {
@@ -588,17 +658,17 @@ member_detour(ReadSPUI_detour, UTFWin::UILayout, bool(const ResourceKey&, bool, 
 				//trg_tribeplanmanager->UpdateTribePopulationUI();
 				Simulator::ScheduleTask(trg_tribeplanmanager, &TRG_TribePlanManager::UpdateTribePopulationUI, 0.000000001f);
 			}
-
+			// rolling over a tribe hut that is actually a rare item
 			if (name.instanceID == id("Rollover_TribeHut") && trg_ieventmanager->IsEventItemHovered())
 			{
 				ResourceKey newSpui = ResourceKey(id("Rollover_TribeRare"), name.typeID, name.groupID);
 				return original_function(this, newSpui, arg_4, arg_8);
 			}
-			if (name.instanceID == id("Rollover_TribeTool") && trg_tribeplanmanager->IsConstructionPlotHovered()) {
+			// rolling over a tribe tool
+			else if (name.instanceID == id("Rollover_TribeTool") && trg_tribeplanmanager->IsConstructionPlotHovered()) {
 				ResourceKey newSpui = ResourceKey(id("Rollover_TribeTool_Construction"), name.typeID, name.groupID);
 				return original_function(this, newSpui, arg_4, arg_8);
 			}
-			
 
 		}
 		else if (IsScenarioMode()) {
@@ -614,19 +684,77 @@ member_detour(ReadSPUI_detour, UTFWin::UILayout, bool(const ResourceKey&, bool, 
 				return ScenarioSpuiSpawned;
 			}
 		}
+
+		// planner popup
+		//if (name.instanceID == id("plannerPalette")) {
+		//	MessageManager.MessageSend(id("PlannerPopup"), nullptr);
+		//}
+
 		
 		return original_function(this, name, arg_4, arg_8);
 	}
 };
 
+//-----------------------------------
+//// EDITOR LOADING
+
+using namespace Editors;
+int trg_last_category = 0;
+bool trg_has_set_category = false;
+// Editor parts palette loading func, PaletteUI::Load
+member_detour(PaletteUILoad_detour, Palettes::PaletteUI, void(Palettes::PaletteMain*, UTFWin::IWindow*, bool, Palettes::PaletteInfo*)) {
+	void detoured(Palettes::PaletteMain* pPalette, UTFWin::IWindow* pWindow, bool bool1, Palettes::PaletteInfo* pInfo) {
+		trg_has_set_category = false;
+		original_function(this, pPalette, pWindow, bool1, pInfo);	
+
+		// Add rename UI
+		if (IsTribeGame() && this && !GetEditor()->mpEditorNamePanel) {
+			auto window = WindowManager.GetMainWindow();
+			auto nameslot = window->FindWindowByID(0x272EB68E);
+
+			// remove any existing naming UIs
+			auto nameWindowOld = nameslot->FindWindowByID(0x272EB68E);
+			if (nameWindowOld) {
+				nameslot->DisposeWindowFamily(nameWindowOld);
+			}
+			// create new naming UI
+			auto namepanel = GetEditor()->mpEditorNamePanel;
+			namepanel = new(EditorNamePanel);
+			namepanel->Initialize(GameNounManager.GetPlayerTribe(), nameslot, id("EditorNameDescribe-NoTag"), true, 0x0);
+		}
+	}
+};
+
+// PaletteUI::SetActiveCategory
+member_detour(PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int)) {
+	void detoured(int categoryIndex) {
+		// load normally and store last page
+		if (!IsTribeGame() || trg_has_set_category) {
+			original_function(this, categoryIndex);
+			trg_last_category = categoryIndex;
+		}
+		// load last page
+		else {
+			original_function(this, trg_last_category);
+			Simulator::ScheduleTask(this, &PaletteUISetActiveCategory_detour::EnableHasSetCategory, 0.01f);
+		}
+
+	}
+	void PaletteUISetActiveCategory_detour::EnableHasSetCategory() {
+		trg_has_set_category = true;
+	}
+};
+
+//-----------------------------------
+
+
 void AttachDetours()
 {
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
 	SetCursor_detour::attach(GetAddress(UTFWin::cCursorManager, SetActiveCursor));
-	//LoadCursor_detour::attach(GetAddress(UTFWin::cCursorManager, Load));
 	EffectOverride_detour::attach(GetAddress(Swarm::cEffectsManager, GetDirectoryAndEffectIndex));
 	SetModel_detour::attach(GetAddress(Simulator::cSpatialObject, SetModelKey));  
-	//TribeSpawn_detour::attach(Address(ModAPI::ChooseAddress(0xC92860, 0xC932F0)));
+	TribeSpawn_detour::attach(GetAddress(Simulator, SpawnNpcTribe));
 	HerdSpawn_detour::attach(GetAddress(Simulator::cGameNounManager, CreateHerd));
 
 	//CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
@@ -641,6 +769,14 @@ void AttachDetours()
 	CombatTakeDamage_detour::attach(Address(0x00bfcf10));
 
 	ReadSPUI_detour::attach(GetAddress(UTFWin::UILayout, Load));
+	PaletteUILoad_detour::attach(GetAddress(Palettes::PaletteUI, Load));
+	PaletteUISetActiveCategory_detour::attach(GetAddress(Palettes::PaletteUI, SetActiveCategory));
+
+	// Tribetools
+	GetTribeToolData_detour::attach(GetAddress(Simulator, GetTribeToolData));
+	GetToolClass_detour::attach(GetAddress(Simulator::cTribeTool, GetToolClass));
+	GetRolloverIdForObject_detour::attach(GetAddress(UI::SimulatorRollover, GetRolloverIdForObject));
+	CreateTool_detour::attach(GetAddress(Simulator::cTribe, CreateTool));
 
 	//CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
 	//CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));

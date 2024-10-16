@@ -51,12 +51,16 @@ cInteractiveOrnament* cObjectManager::GetHoveredObject() const {
 	cCreatureAnimal* avatar = GameNounManager.GetAvatar();
 	if (!avatar) { return nullptr; }
 
+	/* LEGACY
 	// loop through all ingame interactables
 	auto interactables = GetData<cInteractiveOrnament>();
 	for (auto object : interactables) {
 		if (object->IsRolledOver()) { return object.get(); }
-	}
-	return nullptr;
+	}*/
+	auto object = GameViewManager.GetHoveredObject();
+	auto interactable = object_cast<cInteractiveOrnament>(object);
+
+	return interactable;
 }
 
 cCreatureCitizen* cObjectManager::GetNearestTribalLeader(cSpatialObject* object, const float within) const {

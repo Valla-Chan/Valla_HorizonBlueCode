@@ -25,7 +25,7 @@ void Kill::ParseLine(const ArgScript::Line& line)
 		}
 	}
 
-	if (Simulator::IsTribeGame()) {
+	else if (Simulator::IsTribeGame()) {
 		auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
 		for (auto tribe : tribes) {
 			eastl::vector<cSpatialObjectPtr>& members = tribe->GetSelectableMembers();

@@ -65,8 +65,20 @@ void TRG_CreaturePickup::Update()
 				CursorManager.SetActiveCursor(BasicCursorIDs::Cursors::GrabOpen);
 			}
 		}
+		//only run if no held creature
+		auto hovered = GameViewManager.GetHoveredObject();
+		if (hovered) {
+			auto citizen = object_cast<cCreatureCitizen>(hovered);
+			// Creature Citizen
+			// Only display info for creatures from our tribe.
+			if (citizen && citizen->mpOwnerTribe == GameNounManager.GetPlayerTribe()) {
+				UI::SimulatorRollover::ShowRollover(citizen);
+			}
+		}
 	}
 	
+	
+
 }
 
 void TRG_CreaturePickup::Pickup(cCreatureCitizenPtr creature) {

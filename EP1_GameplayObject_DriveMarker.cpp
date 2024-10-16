@@ -217,6 +217,7 @@ void EP1_GameplayObject_DriveMarker::EndDrivingCooldown() {
 
 // Map keys to mVecInputRaw values, and update mVecInput
 bool EP1_GameplayObject_DriveMarker::UpdateVecFromKey(int vkey, bool keydown) {
+	if (GameTimeManager.IsPaused()) { return false; };
 	bool validkey = false;
 	if (keydown) {
 		switch (vkey) {

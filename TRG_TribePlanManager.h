@@ -6,11 +6,14 @@
 
 using namespace UTFWin;
 using namespace Simulator;
+using namespace UI;
+using namespace Editors;
 
 class TRG_TribePlanManager 
 	: public IWinProc
 	, public DefaultRefCounted
 	, public App::IUpdatable
+	//, public App::IMessageListener
 {
 public:
 	static const uint32_t TYPE = id("TRG_TribePlanManager");
@@ -23,6 +26,10 @@ public:
 	void* Cast(uint32_t type) const override;
 	void Update() override;
 	
+	// GENERAL
+	//---------------------------------------
+	void TribeSpawned(cTribePtr tribe);
+
 	// POPULATION
 	//---------------------------------------
 	const int basePopulation = 3;
@@ -41,7 +48,19 @@ public:
 
 	// TOOLS
 	//---------------------------------------
-	const float progress_value = 0.67f;
+
+	const float progress_value = 0.67f; // starter health scale for hut construction
+
+	/// For tool types past those in Simulator::TribeToolType
+	enum ToolTypes {
+		HomePalette = 11, // only used in the palette
+		// Allocate 10 slots for tribal homes
+		HomeStart = 12,
+		HomeEnd = 22,
+		//
+		Watchtower = 23,
+	};
+	
 
 	const ResourceKey plot_social01 = ResourceKey(id("tt_construction_social_01"), TypeIDs::Names::prop, id("toolplots"));
 	const ResourceKey plot_social02 = ResourceKey(id("tt_construction_social_02"), TypeIDs::Names::prop, id("toolplots"));
@@ -57,27 +76,36 @@ public:
 	//---------------------------------------
 
 	int mToolsAmount = 0;
+	int mPurchasedTools = 0;
+	bool mbHutsPrebuilt = false;
 	vector<cTribeToolPtr> mpInProgressTools = {};
 	vector<float> mpPlotHealths = {};
 
-	static cTribeToolData* TribeToolDataFromProp(ResourceKey key);
+	//---------------------------------------
 
-	void UpdateToolsAmount(); // check if tool has been added
+	eastl::array<cTribeToolData*, 64> mToolDataArray; // tool data after 11
+
+	static cTribeToolData* TribeToolDataFromProp(ResourceKey key, int typeIDoverride = -1);
+
+	//---------------------------------------
+
 	void UpdateToolsProgress(); // check if under construction tool has been completed
 
-	void AddedTool(); // new tool has just been added
-	void ToolComplete(int index); // tool has finished construction
+	void AddedTool(cTribeToolPtr tool, cTribePtr tribe); // new tool has just been added
+	void ToolComplete(cTribeToolPtr tool); // tool has finished construction
 
 	//cTribeToolPtr GetConstructionPlotFromScreenPos(Vector2 pos) const;
 	bool IsToolFirePit(cTribeToolPtr tool) const;
+	bool IsToolHome(cTribeToolPtr tool) const;
+	int GetNewHomeID(cTribePtr tribe) const;
 	ResourceKey GetPlotModel(cTribeToolPtr tool) const;
 	cTribeToolPtr GetHoveredConstructionPlot() const;
 	bool IsConstructionPlotHovered() const;
 	bool IsToolInProgress(cTribeToolPtr tool) const;
 
-
 	int GetEventFlags() const override;
 	// This is the function you have to implement, called when a window you added this winproc to received an event
 	bool HandleUIMessage(IWindow* pWindow, const Message& message) override;
-	
+	//bool HandleMessage(uint32_t messageID, void* msg) override;
+
 };
