@@ -36,7 +36,8 @@ public:
 	};
 
 	/// Store tribe names
-	vector<string16> mTribeNames = {};
+	bool has_pulled_tribenames = false;
+	vector<string16> mTribeNames = { string16(u"Central Tribe") };
 
 	/// Determines which hut slot to apply the sporepedia visuals to
 	int mHutType = -1;
@@ -45,6 +46,8 @@ public:
 	ResourceKey mHutResMain = {};
 	ResourceKey mHutResHome = {};
 
+	void UpdateNPCTribeNames();
+	void SetTribeName(cTribePtr tribe);
 	void UpdateStoredTribeNames();
 	void UpdateTribeNamesFromStored();
 

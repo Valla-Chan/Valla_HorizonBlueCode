@@ -70,23 +70,6 @@ void TRG_TribePlanManager::Update()
 //-----------------------------------------
 // GENERAL
 
-void TRG_TribePlanManager::TribeSpawned(cTribePtr tribe) {
-	int archetype = tribe->mTribeArchetype;
-
-	// Set tribe name
-	if (archetype == 15 || archetype == 12) {
-		LocalizedString tribeName = LocalizedString(id("TribeArchetypes"), 0x00000000);
-		tribe->SetName(tribeName.GetText());
-	}
-	else if (archetype == 7) {
-		LocalizedString tribeName = LocalizedString(id("TribeArchetypes"), 0x00000002);
-		tribe->SetName(tribeName.GetText());
-	}
-	else if (archetype == 4) {
-		LocalizedString tribeName = LocalizedString(id("TribeArchetypes"), 0x00000003);
-		tribe->SetName(tribeName.GetText());
-	}
-}
 
 //-----------------------------------------
 // POPULATION

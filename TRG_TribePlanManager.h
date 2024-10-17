@@ -28,7 +28,6 @@ public:
 	
 	// GENERAL
 	//---------------------------------------
-	void TribeSpawned(cTribePtr tribe);
 
 	// POPULATION
 	//---------------------------------------

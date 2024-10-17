@@ -23,7 +23,6 @@ const char* TRG_TribeHutManager::GetName() const {
 
 bool TRG_TribeHutManager::Write(Simulator::ISerializerStream* stream)
 {
-	UpdateStoredTribeNames();
 	SporeDebugPrint("TRG_TribeHutManager is writing...");
 	return Simulator::ClassSerializer(this, ATTRIBUTES).Write(stream);
 }
@@ -34,7 +33,6 @@ bool TRG_TribeHutManager::Read(Simulator::ISerializerStream* stream)
 }
 
 void TRG_TribeHutManager::Update(int deltaTime, int deltaGameTime) {
-
 }
 
 //-----------------------------------------------------------------------------------
@@ -44,7 +42,7 @@ void TRG_TribeHutManager::Initialize() {
 	MessageManager.AddListener(this, id("UpdateHomes"));
 	MessageManager.AddListener(this, id("UpdateHut"));
 
-	//MessageManager.AddListener(this, id("TribeNameUpdated")); // Calls UpdateStoredTribeNames()
+	MessageManager.AddListener(this, id("TribeNameUpdated")); // Calls UpdateStoredTribeNames()
 	//MessageManager.AddListener(this, id("UpdateTribeNames")); // Calls UpdateTribeNamesFromStored()
 }
 
@@ -54,24 +52,98 @@ void TRG_TribeHutManager::Dispose() {
 //-------------------------------------------
 // Store and load tribe names manually
 
-void TRG_TribeHutManager::UpdateStoredTribeNames() {
-	mTribeNames.clear();
+// recalculate names of all tribes
+void TRG_TribeHutManager::UpdateNPCTribeNames() {
 	auto tribes = GetDataByCast<cTribe>();
-	for (size_t i = 0; i < tribes.size(); i++ ) {
-		mTribeNames[i] = tribes[i]->GetCommunityName();
-	}
-}
-
-void TRG_TribeHutManager::UpdateTribeNamesFromStored() {
-	auto tribes = GetDataByCast<cTribe>();
-	for (size_t i = 0; i < tribes.size(); i++) {
-		if (mTribeNames.size() > i) {
-			tribes[i]->SetName(mTribeNames[i].c_str());
+	for (auto tribe : tribes) {
+		// do not run on player tribe
+		if (tribe != GameNounManager.GetPlayerTribe()) {
+			SetTribeName(tribe);
 		}
 	}
 }
 
+// Set NPC tribe name
+void TRG_TribeHutManager::SetTribeName(cTribePtr tribe) {
+	int archetype = tribe->mTribeArchetype;
+	LocalizedString tribeName;
+
+	if (archetype > 0) {
+		// Set tribe name from archetype
+		if (archetype == 15 || archetype == 12) {
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000000);
+		}
+		else if (archetype == 7) {
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000002);
+		}
+		else if (archetype == 4) {
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000003);
+		}
+
+
+		auto text = tribeName.GetText();
+		if (text) {
+			// get the species profile from the key
+			cSpeciesProfile* speciesProfile = SpeciesManager.GetSpeciesProfile(tribe->mSpeciesKeys[0]);
+
+			// get the text from the species profile
+			string16 speciesText;
+			speciesProfile->GetSpeciesName(speciesText);
+
+			// combine the species name with the village locale
+			speciesText.append(u" ");
+			speciesText.append(string16(text));
+
+			tribe->SetName(speciesText.c_str());
+		}
+	}
+	
+	
+}
+
+void TRG_TribeHutManager::UpdateStoredTribeNames() {
+	mTribeNames.clear();
+	auto tribes = GetDataByCast<cTribe>();
+	for (size_t i = 0; i < tribes.size(); i++ ) {
+		mTribeNames.push_back(tribes[i]->GetCommunityName());
+	}
+}
+
+void TRG_TribeHutManager::UpdateTribeNamesFromStored() {
+	if (has_pulled_tribenames) { return; }
+
+	SporeDebugPrint("Updating tribe names from stored vars.");
+	UpdateNPCTribeNames();
+	has_pulled_tribenames = true;
+	/*
+	if (mTribeNames.size() > 0) {
+		auto tribes = GetDataByCast<cTribe>();
+		// if no tribes yet, recall this func till there are
+		if (tribes.size() == 0) {
+			Simulator::ScheduleTask(this, &TRG_TribeHutManager::UpdateTribeNamesFromStored, 0.1f);
+			return;
+		}
+
+		for (size_t i = 0; i < tribes.size(); i++) {
+			if (mTribeNames.size() > i) {
+				tribes[i]->SetName(mTribeNames[i].c_str());
+			}
+		}
+		has_pulled_tribenames = true;
+	}*/
+	
+}
+
 //-------------------------------------------
+
+void TRG_TribeHutManager::OnModeEntered(uint32_t previousModeID, uint32_t newModeID) {
+	cStrategy::OnModeEntered(previousModeID, newModeID);
+	// Entered tribe game
+	if (newModeID != previousModeID && newModeID == kGameTribe) {
+		has_pulled_tribenames = false;
+		Simulator::ScheduleTask(this, &TRG_TribeHutManager::UpdateTribeNamesFromStored, 0.01f);
+	}
+}
 
 void TRG_TribeHutManager::OpenHutShopper() {
 	auto request = Sporepedia::ShopperRequest(this);
@@ -98,12 +170,7 @@ void TRG_TribeHutManager::OnShopperAccept(const ResourceKey& selection)
 	mHutType = -1;
 }
 
-void TRG_TribeHutManager::OnModeEntered(uint32_t previousModeID, uint32_t newModeID) {
-	if (newModeID == kGameTribe) {
-		UpdateTribeNamesFromStored();
-		SporeDebugPrint("Updating tribe names from stored vars.");
-	}
-}
+
 
 // TODO: detect when the planner is opened/hut page is loaded, and update the icon.
 
@@ -205,9 +272,17 @@ bool TRG_TribeHutManager::HandleMessage(uint32_t messageID, void* msg)
 
 	if (messageID == id("UpdateHut")) {
 		UpdateHutModels(0);
+		UpdateHutIcon(0);
 	}
-	else if (id("UpdateHomes")) {
+	else if (messageID == id("UpdateHomes")) {
 		UpdateHutModels(1);
+		UpdateHutIcon(1);
+	}
+	//else if (messageID == id("UpdateTribeNames")) {
+	//	UpdateTribeNamesFromStored();
+	//}
+	else if (messageID == id("TribeNameUpdated")) {
+		UpdateStoredTribeNames();
 	}
 	return false;
 }
@@ -253,9 +328,9 @@ bool TRG_TribeHutManager::HandleUIMessage(IWindow* window, const Message& messag
 
 Simulator::Attribute TRG_TribeHutManager::ATTRIBUTES[] = {
 	// Add more attributes here
-	SimAttribute(TRG_TribeHutManager,mHutResMain,0),
-	SimAttribute(TRG_TribeHutManager,mHutResHome,1),
-	SimAttribute(TRG_TribeHutManager,mTribeNames,2),
+	SimAttribute(TRG_TribeHutManager,mHutResMain,1),
+	SimAttribute(TRG_TribeHutManager,mHutResHome,2),
+	//SimAttribute(TRG_TribeHutManager,mTribeNames,3),
 	// This one must always be at the end
 	Simulator::Attribute()
 };

@@ -18,6 +18,7 @@ void TRG_GetTribeInfo::ParseLine(const ArgScript::Line& line)
 		App::ConsolePrintF("--- Tribe info for 0x%x ---", tribe->GetCommunityName());
 		App::ConsolePrintF("Identity Color ID: %x",tribe->mIDColorID);
 		App::ConsolePrintF("Identity Cached Color: %x",tribe->mCachedColor);
+		App::ConsolePrintF("Archetype: %i",tribe->mTribeArchetype);
 		App::ConsolePrintF("Tribe Upgrade level: %x",tribe->mUpgradeLevel);
 		App::ConsolePrintF("Population size: %x",tribe->GetPopulationCount());
 		App::ConsolePrintF("Population capacity: %x",tribe->mCommunityMembers.capacity());

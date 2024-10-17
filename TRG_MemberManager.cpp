@@ -31,7 +31,7 @@ bool TRG_MemberManager::Read(Simulator::ISerializerStream* stream)
 
 Simulator::Attribute TRG_MemberManager::ATTRIBUTES[] = {
 	// Add more attributes here
-	//SimAttribute(TRG_MemberManager, mCreaturePersonalities, 0),
+	//SimAttribute(TRG_MemberManager, mCreaturePersonalities, 1),
 	// This one must always be at the end
 	Simulator::Attribute()
 };

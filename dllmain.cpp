@@ -409,7 +409,7 @@ static_detour(TribeSpawn_detour, cTribe*(const Vector3&, int, int, int, bool, cS
 	cTribe* detoured(const Math::Vector3 &position, int tribeArchetype, int numMembers, int foodAmount, bool boolvalue, cSpeciesProfile* species) {
 		App::ConsolePrintF("Tribe Spawned");
 		cTribe* tribe = original_function(position, tribeArchetype, numMembers, foodAmount, boolvalue, species);
-		trg_tribeplanmanager->TribeSpawned(tribe);
+		trg_hutmanager->SetTribeName(tribe);
 		return tribe;
 	}
 };
@@ -643,6 +643,16 @@ virtual_detour(CombatTakeDamage_detour, Simulator::cCombatant, Simulator::cComba
 		// send the message of this to the gameplayobjectmanager, including the attacker and object
 		// and have that class propogate it to the rest of the submanagers to check for if the object can be handled, then call OnDamaged on each
 		gameplayobjectmanager->DoTakeDamage(this, damage, pAttacker);
+
+		// spread disease through damage
+		// TODO: make this not spread thru charge.
+		auto attackercreature = object_cast<cCreatureBase>(pAttacker);
+		if (attackercreature && attackercreature->mbIsDiseased) {
+			auto thiscreature = object_cast<cCreatureBase>(this);
+			if (thiscreature && !thiscreature->mbIsDiseased) {
+				thiscreature->mbIsDiseased = true;
+			}
+		}
 		return original_function(this, damage, attackerPoliticalID, integer, vector, pAttacker);
 	}
 };
@@ -701,26 +711,33 @@ member_detour(ReadSPUI_detour, UTFWin::UILayout, bool(const ResourceKey&, bool, 
 using namespace Editors;
 int trg_last_category = 0;
 bool trg_has_set_category = false;
+
 // Editor parts palette loading func, PaletteUI::Load
 member_detour(PaletteUILoad_detour, Palettes::PaletteUI, void(Palettes::PaletteMain*, UTFWin::IWindow*, bool, Palettes::PaletteInfo*)) {
 	void detoured(Palettes::PaletteMain* pPalette, UTFWin::IWindow* pWindow, bool bool1, Palettes::PaletteInfo* pInfo) {
 		trg_has_set_category = false;
 		original_function(this, pPalette, pWindow, bool1, pInfo);	
 
-		// Add rename UI
-		if (IsTribeGame() && this && !GetEditor()->mpEditorNamePanel) {
-			auto window = WindowManager.GetMainWindow();
-			auto nameslot = window->FindWindowByID(0x272EB68E);
+		// Tribal
+		if (IsTribeGame()) {
+			// Add rename UI
+			if (this && !GetEditor()->mpEditorNamePanel) {
+				auto window = WindowManager.GetMainWindow();
+				auto nameslot = window->FindWindowByID(0x272EB68E);
 
-			// remove any existing naming UIs
-			auto nameWindowOld = nameslot->FindWindowByID(0x272EB68E);
-			if (nameWindowOld) {
-				nameslot->DisposeWindowFamily(nameWindowOld);
+				// remove any existing naming UIs
+					auto nameWindowOld = nameslot->FindWindowByID(0x272EB68E);
+					if (nameWindowOld) {
+						nameslot->DisposeWindowFamily(nameWindowOld);
+					}
+				// create new naming UI
+				auto namepanel = GetEditor()->mpEditorNamePanel;
+				namepanel = new(EditorNamePanel);
+				namepanel->Initialize(GameNounManager.GetPlayerTribe(), nameslot, id("EditorNameDescribe-NoTag"), true, 0x0);
 			}
-			// create new naming UI
-			auto namepanel = GetEditor()->mpEditorNamePanel;
-			namepanel = new(EditorNamePanel);
-			namepanel->Initialize(GameNounManager.GetPlayerTribe(), nameslot, id("EditorNameDescribe-NoTag"), true, 0x0);
+			else if (!this) {
+				MessageManager.MessageSend(id("TribeNameUpdated"),nullptr);
+			}
 		}
 	}
 };
@@ -736,12 +753,15 @@ member_detour(PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int))
 		// load last page
 		else {
 			original_function(this, trg_last_category);
-			Simulator::ScheduleTask(this, &PaletteUISetActiveCategory_detour::EnableHasSetCategory, 0.01f);
+			Simulator::ScheduleTask(this, &PaletteUISetActiveCategory_detour::EnableHasSetCategory, 0.0001f);
 		}
 
 	}
 	void PaletteUISetActiveCategory_detour::EnableHasSetCategory() {
 		trg_has_set_category = true;
+		MessageManager.MessageSend(id("UpdateHut"), nullptr);
+		MessageManager.MessageSend(id("UpdateHomes"), nullptr);
+		
 	}
 };
 

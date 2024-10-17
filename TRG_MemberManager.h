@@ -73,10 +73,10 @@ public:
 
 		Simulator::Attribute ATTRIBUTES[] = {
 			// Add more attributes here
-			SimAttribute(MemberPersonality, mpCreature, 0),
-			SimAttribute(MemberPersonality, mName, 1),
-			SimAttribute(MemberPersonality, mTraits, 2),
-			SimAttribute(MemberPersonality, mFavColor, 2),
+			SimAttribute(MemberPersonality, mpCreature, 1),
+			SimAttribute(MemberPersonality, mName, 2),
+			SimAttribute(MemberPersonality, mTraits, 3),
+			SimAttribute(MemberPersonality, mFavColor, 4),
 			// This one must always be at the end
 			Simulator::Attribute()
 		};

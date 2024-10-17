@@ -90,7 +90,8 @@ void TRG_IslandEventManager::SpawnDummyTribe() {
 	// Make tribe appear destroyed, just to psych out the lore-nerds >:)
 	mpDummyTribe->mpHut->mHealthPoints = mpDummyTribe->mpHut->mMaxHealthPoints / 3.0f;
 	//auto model = ResourceKey(id("HE_destroyed_hut"), Names::prop, id("hutstyles"));
-	auto model = ResourceKey(id("tt_hut_home_dest"), Names::prop, id("TribalTools"));
+	//auto model = ResourceKey(id("tt_hut_home_dest"), Names::prop, id("TribalTools"));
+	auto model = ResourceKey();
 	mpDummyTribe->mpHut->SetModelKey(model);
 	mpDummyTribe->mpHut->mDestructModelHi = model;
 	mpDummyTribe->mpHut->mDestructModelMd = model;
@@ -562,10 +563,10 @@ bool TRG_IslandEventManager::HandleUIMessage(IWindow* window, const Message& mes
 
 Simulator::Attribute TRG_IslandEventManager::ATTRIBUTES[] = {
 	// Add more attributes here
-	SimAttribute(TRG_IslandEventManager,mpActivators,0),
-	SimAttribute(TRG_IslandEventManager,mpEventItem,1),
-	SimAttribute(TRG_IslandEventManager,mpDummyTribe,2),
-	SimAttribute(TRG_IslandEventManager,mSavedHut,3),
+	SimAttribute(TRG_IslandEventManager,mpActivators,1),
+	SimAttribute(TRG_IslandEventManager,mpEventItem,2),
+	SimAttribute(TRG_IslandEventManager,mpDummyTribe,3),
+	SimAttribute(TRG_IslandEventManager,mSavedHut,4),
 	// This one must always be at the end
 	Simulator::Attribute()
 };
