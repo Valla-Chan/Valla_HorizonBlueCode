@@ -21,6 +21,7 @@ void SetChieftainColor::ParseLine(const ArgScript::Line& line)
 				bool tribeIsPlayer = tribe == GameNounManager.GetPlayerTribe();
 				chieftain->mbColorIsIdentity = true;
 				chieftain->SetIdentityColor(ColorRGB(1.0f, 0.0f, 0.0f));
+				tribe->mIDColorID = 0x053dbcf9;
 			}
 		}
 	}
@@ -30,9 +31,9 @@ void SetChieftainColor::ParseLine(const ArgScript::Line& line)
 const char* SetChieftainColor::GetDescription(ArgScript::DescriptionMode mode) const
 {
 	if (mode == ArgScript::DescriptionMode::Basic) {
-		return "Sets all Chieftain's colors to Yellow.";
+		return "Sets all Chieftain colors to Red.";
 	}
 	else {
-		return "SetChieftainColor: Sets all Chieftain's colors to Red.";
+		return "SetChieftainColor: Sets all Chieftain colors to Red.";
 	}
 }

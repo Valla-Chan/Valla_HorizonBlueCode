@@ -20,6 +20,17 @@ TRG_CreaturePickup::~TRG_CreaturePickup()
 
 //-----------------------------------------------------------------------------------------------
 
+bool TRG_CreaturePickup::IsPlannerOpen() {
+	if (IsTribeGame()) {
+		auto editor = Editors::GetEditor();
+		if (editor && editor->IsActive()) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
 cTribePtr TRG_CreaturePickup::GetPlayerTribe() {
 	return GameNounManager.mpPlayerTribe;
 }
@@ -70,15 +81,24 @@ void TRG_CreaturePickup::Update()
 		if (hovered) {
 			auto citizen = object_cast<cCreatureCitizen>(hovered);
 			// Creature Citizen
-			// Only display info for creatures from our tribe.
-			if (citizen && citizen->mpOwnerTribe == GameNounManager.GetPlayerTribe()) {
-				UI::SimulatorRollover::ShowRollover(citizen);
-			}
+			
+			// If this line is uncommented, Only display info for creatures from our tribe.
+			//if (citizen->mpOwnerTribe == GameNounManager.GetPlayerTribe()) {
+				if (citizen && !IsPlannerOpen()) {
+					UI::SimulatorRollover::ShowRollover(citizen);
+				}
+			//}
+			
 		}
 	}
 	
 	
 
+}
+
+bool TRG_CreaturePickup::CanPickUp(cCreatureCitizenPtr creature) const {
+	// TODO: return false if the creature is an epic/very large
+	return (creature && !IsPlannerOpen());
 }
 
 void TRG_CreaturePickup::Pickup(cCreatureCitizenPtr creature) {
@@ -225,8 +245,11 @@ bool TRG_CreaturePickup::HandleUIMessage(IWindow* window, const Message& message
 		}
 		// pick up new member
 		else if (!held_member && possible_member) {
-			Pickup(possible_member);
-			return true;
+			if (CanPickUp(possible_member)) {
+				Pickup(possible_member);
+				return true;
+			}
+			return false;
 		}
 		
 	}

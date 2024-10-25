@@ -70,8 +70,15 @@ void TRG_GetTribeInfo::ParseLine(const ArgScript::Line& line)
 	if (Simulator::IsCivGame()) {
 		auto civ = GameNounManager.GetPlayerCivilization();
 		cCityPtr city = civ->mCities[0];
+
 		App::ConsolePrintF("--- City info for 0x%x ---", city->GetCommunityName());
 		App::ConsolePrintF("Is Small City: %b", city->mbSmallCity);
+		App::ConsolePrintF("Species Key: 0x%x, 0x%x", city->mSpeciesKey.instanceID, city->mpCivilization->mSpeciesKey);
+		// DEBUG
+		//city->mpCivilization->mSpeciesKey = ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200);
+		//
+		App::ConsolePrintF("Housing Amount: %i", city->mHousingAmount);
+		App::ConsolePrintF("Vehicle Specialty: %i", city->mVehicleSpecialty);
 		App::ConsolePrintF("----------------------------");
 		App::ConsolePrintF("Building Layout: 0x%x", city->mBuildingsLayout);
 		App::ConsolePrintF("----------------------------");

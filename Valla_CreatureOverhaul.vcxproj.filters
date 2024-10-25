@@ -26,6 +26,9 @@
     <Filter Include="Valla_HorizonBlue\UI">
       <UniqueIdentifier>{f6d0ccf2-48b0-4482-92ff-7cd52411b32c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Valla_HorizonBlue\CVG">
+      <UniqueIdentifier>{adabcdbe-7196-4e42-8a4b-447e839d139b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -80,9 +83,6 @@
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\TRG_GetTribeInfo.h">
-      <Filter>Valla_HorizonBlue\Cheats</Filter>
-    </ClInclude>
-    <ClInclude Include="SetChieftainColor.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\SetChieftainColor.h">
@@ -237,6 +237,9 @@
     </ClInclude>
     <ClInclude Include="Cheats\Rename.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="CVG_CreatureManager.h">
+      <Filter>Valla_HorizonBlue\CVG</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -431,6 +434,9 @@
     </ClCompile>
     <ClCompile Include="Cheats\Rename.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="CVG_CreatureManager.cpp">
+      <Filter>Valla_HorizonBlue\CVG</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

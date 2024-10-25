@@ -11,7 +11,6 @@ int type = 0;
 
 BuildCRG::BuildCRG()
 {
-	App::AddUpdateFunction(this);
 	ResourceKey::Parse(hutmodel, u"tt_gather_home_03.prop", 0, id("tribaltools"));
 }
 
@@ -20,43 +19,6 @@ BuildCRG::~BuildCRG()
 {
 }
 
-void BuildCRG::Update()
-{
-	avatar = GameNounManager.GetAvatar();
-
-	//SporeDebugPrint("%b, %i", clocktest.IsRunning(), clocktest.GetElapsedTime());
-	if (clocktest.GetElapsedTime() > 50) {
-		switch (type)
-		{
-			case 0: 
-				clocktest.Reset();
-				//buildobject->Teleport(avatar->GetPosition(), avatar->GetOrientation());
-				SetNestModel();
-			case 1:
-				if (clocktest.GetElapsedTime() > 1000) {
-					clocktest.Reset();
-					//herd->mpHerdMom->SetCurrentBrainLevel(5);
-					for (cCreatureAnimalPtr animal : herd->mHerd) {
-						if (animal) {
-							animal->SetCurrentBrainLevel(5);
-						}
-					}
-					herd->mHerd[0]->SetCurrentBrainLevel(5);
-					herd->mHerd[1]->SetCurrentBrainLevel(5);
-					herd->mHerd[2]->SetCurrentBrainLevel(5);
-					//herd->mHerd[2]->mbIsDiseased = true;
-					herd->mHerd[3]->SetCurrentBrainLevel(5);
-
-					herd->mHerd[3]->mbColorIsIdentity = true;
-					//herd->mHerd[3]->SetIdentityColor(ColorRGB(2.0f, 2.0f, 2.0f));
-
-					//avatar->mbIsDiseased = true;
-				}
-				
-		}
-		
-	}
-}
 
 int BuildCRG::AddRef()
 {
@@ -79,50 +41,63 @@ using namespace Simulator;
 void BuildCRG::ParseLine(const ArgScript::Line& line)
 {
 	mParameter = line.GetArguments(1)[0];
-	//
 	avatar = GameNounManager.GetAvatar();
-	//
+	// Set species profile
+	cSpeciesProfile* speciesProfile;
+	cHerdPtr herdAvatar;
+	Vector3 pos;
+	if (avatar) {
+		speciesProfile = avatar->mpSpeciesProfile;
+		herdAvatar = avatar->mHerd;
+		pos = avatar->GetPosition();
+	}
+	else if (IsTribeGame()) {
+		speciesProfile = GameNounManager.GetPlayerTribe()->mTribeMembers[0]->mpSpeciesProfile;
+		herdAvatar = GameNounManager.GetPlayerTribe()->mpDomesticatedAnimalsHerd;
+		pos = GameViewManager.GetWorldMousePosition();
+	}
+	else {
+		speciesProfile = SpeciesManager.GetSpeciesProfile(GameNounManager.GetPlayerCivilization()->mSpeciesKey);
+		herdAvatar = nullptr;
+		pos = GameViewManager.GetWorldMousePosition();
+	}
+
 	if (CompareStrings(mParameter, "Nest")){
 		//herd = GameNounManager.CreateHerd(avatar->GetPosition(), avatar->mpSpeciesProfile, 4, false, 0, true);
 		// grox test:
-		Simulator::cSpeciesProfile* grox = SpeciesManager.GetSpeciesProfile(ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200));
-		herd = GameNounManager.CreateHerd(avatar->GetPosition(), grox, 4, false, 9, true);
+		//Simulator::cSpeciesProfile* grox = SpeciesManager.GetSpeciesProfile(ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200));
+		herd = GameNounManager.CreateHerd(pos, speciesProfile, 4, false, 9, true);
 
 		type = 1;
 		clocktest.SetMode(Clock::Mode::Milliseconds);
 		clocktest.Start();
 		herd->mHitpointOverride = 0;
-		//herd->mpHerdMom = avatar;
-		//herd->mpEggLayer = avatar;
+		Simulator::ScheduleTask(this, &BuildCRG::SetNestModel, 0.01f);
 	}
 	else if (CompareStrings(mParameter, "Hut")) {
 		//herd = GameNounManager.CreateHerd(avatar->GetPosition(), avatar->mpSpeciesProfile, 2, false, 0, true);
 		//nest = herd->mpNest;
-		nest = GameNounManager.CreateNest(avatar->ToSpatialObject()->GetPosition(), avatar->mHerd.get());
+		nest = GameNounManager.CreateNest(pos, herdAvatar.get());
 		
 		clocktest.SetMode(Clock::Mode::Milliseconds);
 		clocktest.Start();
 		type = 0;
-		avatar->SetCurrentBrainLevel(5);
-		avatar->mMaxEnergy = 2000;
-		avatar->mEnergy = 2000;
-		avatar->mHunger -= 5;
+		if (avatar) {
+			avatar->SetCurrentBrainLevel(5);
+			avatar->mMaxEnergy = 2000;
+			avatar->mEnergy = 2000;
+			avatar->mHunger -= 5;
+		}
 	}
 	else if (CompareStrings(mParameter, "Tribe")) {
-		if (IsTribeGame()) {
-			auto pos = GameViewManager.GetWorldMousePosition();
-			if (pos == Vector3(0, 0, 0)) { return; }
-			cTribe* tribe = Simulator::SpawnNpcTribe(pos, 3, 1, 1, true, GameNounManager.GetPlayerTribe()->mTribeMembers[0]->mpSpeciesProfile);
-		}
-		else if (IsCreatureGame() || IsScenarioMode()) {
-			auto pos = avatar->GetPosition();
-			cTribe* tribe = Simulator::SpawnNpcTribe(pos, 3, 1, 1, true, avatar->mpSpeciesProfile);
-			
-		}
+		cTribe* tribe = Simulator::SpawnNpcTribe(pos, 3, 1, 1, true, speciesProfile);
+	}
+	// TODO
+	else if (CompareStrings(mParameter, "Camp")) {
+		cTribe* tribe = Simulator::SpawnNpcTribe(pos, 3, 1, 1, true, speciesProfile);
 	}
 	else {
 		SetNestModel();
-		//nest->SetModelKey(hutmodel);
 	}
 }
 

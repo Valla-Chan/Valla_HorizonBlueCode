@@ -194,7 +194,7 @@ ResourceKey TRG_IslandEventManager::GetEventItemModelKey() {
 					int tries = 20;
 					while (idx == last_object_idx && tries > 0) {
 						tries -= 1;
-						idx = rand(keycount - 1);
+						idx = rand(keycount);
 					}
 					last_object_idx = idx;
 					return ResourceKey(keys[idx], Names::prop, Models);
@@ -214,7 +214,7 @@ ResourceKey TRG_IslandEventManager::GetEventPrompt(ResourceKey res) const {
 	{
 		if (App::Property::GetArrayKey(mpPropList.get(), id("resultEvents"), keycount, keys)) {
 			if (keycount > 0) {
-				int idx = rand(keycount - 1);
+				int idx = rand(keycount);
 				return keys[idx];
 			}
 		}
@@ -261,7 +261,7 @@ cSpatialObjectPtr TRG_IslandEventManager::FindSpawnPoint() {
 		}
 	}
 	if (spawnpoints.size() > 0) {
-		return spawnpoints[rand(spawnpoints.size() - 1)];
+		return spawnpoints[rand(spawnpoints.size())];
 	}
 	return nullptr;
 }

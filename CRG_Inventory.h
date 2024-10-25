@@ -76,7 +76,7 @@ public:
 	//-------------------------------------------------------
 
 	/// Return true if the food eaten should be stored
-	static bool ShouldStoreFood();
+	bool ShouldStoreFood() const;
 	uint32_t GetFoodStoreAnim(uint32_t animID);
 	void StoreFood(uint32_t foodType);
 

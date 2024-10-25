@@ -27,8 +27,10 @@ public:
 	cCreatureCitizenPtr possible_member;
 	cCreatureCitizenPtr held_member;
 
+	static bool IsPlannerOpen();
 	static cTribePtr GetPlayerTribe();
 	void DeselectMembers();
+	bool CanPickUp(cCreatureCitizenPtr creature) const;
 	void Pickup(cCreatureCitizenPtr creature);
 	void Drop();
 	void Moved();

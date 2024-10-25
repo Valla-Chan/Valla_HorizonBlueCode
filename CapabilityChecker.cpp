@@ -20,26 +20,31 @@ cCapabilityChecker* cCapabilityChecker::Get()
 
 int cCapabilityChecker::GetCapabilityLevel(const cCreatureBasePtr& creature, const uint32_t propertyID) const
 {
-	int32_t caplvl = 0;
 	if (creature) {
-		ResourceObjectPtr res;
-		if (ResourceManager.GetResource(creature->mSpeciesKey, &res))
-		{
-			auto resource = object_cast<Editors::cEditorResource>(res);
-			// Loop through the creature parts to find the highest capability
-			for (size_t i = 0; i < resource->mBlocks.size(); i++) {
-				Editors::cEditorResourceBlock block = resource->mBlocks[i];
-				PropertyListPtr mpPropList;
-				if (PropManager.GetPropertyList(block.instanceID, block.groupID, mpPropList))
-				{
-					int cap_dst;
-					App::Property::GetInt32(mpPropList.get(), propertyID, cap_dst);
-					if (cap_dst > caplvl) {
-						caplvl = cap_dst;
-					}
+		return GetCapabilityLevelFromResource(creature->mSpeciesKey, propertyID);
+	}
+	return 0;
+}
+
+int cCapabilityChecker::GetCapabilityLevelFromResource(const ResourceKey speciesKey, const uint32_t propertyID) const
+{
+	int32_t caplvl = 0;
+
+	ResourceObjectPtr res;
+	if (ResourceManager.GetResource(speciesKey, &res)) {
+		auto resource = object_cast<Editors::cEditorResource>(res);
+		// Loop through the creature parts to find the highest capability
+		for (size_t i = 0; i < resource->mBlocks.size(); i++) {
+			Editors::cEditorResourceBlock block = resource->mBlocks[i];
+			PropertyListPtr mpPropList;
+			if (PropManager.GetPropertyList(block.instanceID, block.groupID, mpPropList))
+			{
+				int cap_dst;
+				App::Property::GetInt32(mpPropList.get(), propertyID, cap_dst);
+				if (cap_dst > caplvl) {
+					caplvl = cap_dst;
 				}
 			}
-
 		}
 	}
 	return caplvl;

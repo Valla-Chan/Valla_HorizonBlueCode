@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{07FC5B61-B575-4207-B464-AFAE6AF3FC19}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Valla_CreatureOverhaul</RootNamespace>
+    <RootNamespace>Valla_HorizonBlue</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>Valla_HorizonBlue</ProjectName>
   </PropertyGroup>
@@ -237,6 +237,10 @@
     </ClInclude>
     <ClInclude Include="CRG_WaterBehavior.h" />
     <ClInclude Include="CR_JetHover.h" />
+    <ClInclude Include="CVG_CreatureManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="EP1_BehaviorManager.h">
       <SubType>
       </SubType>
@@ -273,10 +277,6 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="MouseClickRegister.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
-    <ClInclude Include="SetChieftainColor.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -440,6 +440,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="CRG_WaterBehavior.cpp" />
+    <ClCompile Include="CVG_CreatureManager.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EP1_BehaviorManager.cpp">
       <SubType>

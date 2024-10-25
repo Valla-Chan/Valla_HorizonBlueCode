@@ -45,6 +45,7 @@ Simulator::Attribute CRG_Inventory::ATTRIBUTES[] = {
 void CRG_Inventory::Initialize() {
 	WindowManager.GetMainWindow()->AddWinProc(this);
 	MessageManager.AddListener(this, kMsgRestartAtNest);
+	MessageManager.AddListener(this, kMsgCombatantKilled);
 	MessageManager.AddListener(this, id("BabyGrowUp"));
 }
 
@@ -58,10 +59,17 @@ void CRG_Inventory::Update(int deltaTime, int deltaGameTime) {
 
 //----------------------------------------------------------------------------
 
-bool CRG_Inventory::ShouldStoreFood() {
+bool CRG_Inventory::ShouldStoreFood() const {
 	if (!IsCreatureGame()) { return false; }
 	auto avatar = GameNounManager.GetAvatar();
 	if (!avatar) { return false; }
+
+	auto slotidx = GetOpenSlotIndex();
+	if (slotidx < 0)
+	{
+		return false;
+	}
+
 
 	if ((100.0f - avatar->mHunger < 6.0f) && (avatar->mMaxHealthPoints - avatar->mHealthPoints < 0.8f)) {
 		// creature is full, store the food
@@ -150,7 +158,12 @@ ResourceKey CRG_Inventory::GetItemImage(ResourceKey itemKey) const {
 int CRG_Inventory::GetOpenSlotIndex() const {
 	for (size_t i = 0; i < mInventory.size(); i++) {
 		if (mInventory[i] == 0x0) { // make sure this line is working in debug
-			return i;
+			if (i < 7) {
+				return i;
+			}
+			else {
+				return -1;
+			}
 		}
 	}
 	return mInventory.size();
@@ -223,7 +236,6 @@ void CRG_Inventory::CheckCreatureAge() {
 //----------------------------------------------------------------------------
 
 void CRG_Inventory::ClickInventoryItem(int index) {
-	//SporeDebugPrint("Clicked Inventory Slot %i", index);
 	ConsumeItemAtSlot(index);
 }
 
@@ -235,7 +247,7 @@ void CRG_Inventory::EnableInventory() {
 
 void CRG_Inventory::DisableInventory() {
 	auto window = GetPopupWindow();
-	window->SetEnabled(true);
+	window->SetEnabled(false);
 }
 
 void CRG_Inventory::ClearInventory() {
@@ -295,6 +307,7 @@ bool CRG_Inventory::HandleMessage(uint32_t messageID, void* msg)
 			// if player is killed, clear the inventory
 			if (killMsg->GetCombatant() == avatar) {
 				ClearInventory();
+				DisableInventory();
 			}
 		}
 	}

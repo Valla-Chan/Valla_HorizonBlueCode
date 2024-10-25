@@ -68,7 +68,7 @@ void TRG_TribeHutManager::SetTribeName(cTribePtr tribe) {
 	int archetype = tribe->mTribeArchetype;
 	LocalizedString tribeName;
 
-	if (archetype > 0) {
+	if (!tribe->IsPlayerOwned() && archetype > -1) {
 		// Set tribe name from archetype
 		if (archetype == 15 || archetype == 12) {
 			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000000);
@@ -78,6 +78,9 @@ void TRG_TribeHutManager::SetTribeName(cTribePtr tribe) {
 		}
 		else if (archetype == 4) {
 			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000003);
+		}
+		else {
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000000);
 		}
 
 
@@ -98,22 +101,53 @@ void TRG_TribeHutManager::SetTribeName(cTribePtr tribe) {
 		}
 	}
 	
-	
 }
 
+// Get NPC chieftain name string
+string16 TRG_TribeHutManager::GetChieftainNameString(cCreatureCitizenPtr chieftain) const {
+	int archetype = chieftain->mpOwnerTribe->mTribeArchetype;
+	LocalizedString tribeName;
+	string16 nameText = u"";
+
+	if (archetype > 0) {
+		// Set tribe name from archetype
+		if (archetype == 15 || archetype == 12) {
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A0);
+		}
+		else if (archetype == 7) {
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A2);
+		}
+		else if (archetype == 4) {
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A3);
+		}
+
+		nameText = string16(tribeName.GetText());
+		nameText.append(u" ");
+		nameText.append(chieftain->mCreatureName);
+
+	}
+	return nameText;
+
+}
+
+// store the player tribe's name
 void TRG_TribeHutManager::UpdateStoredTribeNames() {
-	mTribeNames.clear();
-	auto tribes = GetDataByCast<cTribe>();
-	for (size_t i = 0; i < tribes.size(); i++ ) {
-		mTribeNames.push_back(tribes[i]->GetCommunityName());
+	auto tribe = GameNounManager.GetPlayerTribe();
+	if (tribe) {
+		mTribeName = tribe->GetCommunityName();
 	}
 }
 
 void TRG_TribeHutManager::UpdateTribeNamesFromStored() {
 	if (has_pulled_tribenames) { return; }
 
-	SporeDebugPrint("Updating tribe names from stored vars.");
+	//SporeDebugPrint("Updating tribe names from stored vars.");
 	UpdateNPCTribeNames();
+	// update player tribe name
+	auto tribe = GameNounManager.GetPlayerTribe();
+	if (tribe && mTribeName.length() > 0) {
+		tribe->SetName(mTribeName.c_str());
+	}
 	has_pulled_tribenames = true;
 	/*
 	if (mTribeNames.size() > 0) {
@@ -135,6 +169,7 @@ void TRG_TribeHutManager::UpdateTribeNamesFromStored() {
 }
 
 //-------------------------------------------
+// Editor / Sporepedia
 
 void TRG_TribeHutManager::OnModeEntered(uint32_t previousModeID, uint32_t newModeID) {
 	cStrategy::OnModeEntered(previousModeID, newModeID);
@@ -319,6 +354,11 @@ bool TRG_TribeHutManager::HandleUIMessage(IWindow* window, const Message& messag
 				OpenHutShopper();
 			}
 		}
+		// Planner Accept Button
+		else if (id == 0x1036A039) {
+			UpdateStoredTribeNames();
+		}
+
 
 	}
 	return false;
@@ -330,7 +370,7 @@ Simulator::Attribute TRG_TribeHutManager::ATTRIBUTES[] = {
 	// Add more attributes here
 	SimAttribute(TRG_TribeHutManager,mHutResMain,1),
 	SimAttribute(TRG_TribeHutManager,mHutResHome,2),
-	//SimAttribute(TRG_TribeHutManager,mTribeNames,3),
+	SimAttribute(TRG_TribeHutManager,mTribeName,3),
 	// This one must always be at the end
 	Simulator::Attribute()
 };

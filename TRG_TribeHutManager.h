@@ -37,7 +37,8 @@ public:
 
 	/// Store tribe names
 	bool has_pulled_tribenames = false;
-	vector<string16> mTribeNames = { string16(u"Central Tribe") };
+	//vector<string16> mTribeNames = { string16(u"Central Tribe") };
+	string16 mTribeName;
 
 	/// Determines which hut slot to apply the sporepedia visuals to
 	int mHutType = -1;
@@ -48,8 +49,11 @@ public:
 
 	void UpdateNPCTribeNames();
 	void SetTribeName(cTribePtr tribe);
+	string16 GetChieftainNameString(cCreatureCitizenPtr chieftain) const;
 	void UpdateStoredTribeNames();
 	void UpdateTribeNamesFromStored();
+
+	// Editor / Sporepedia
 
 	void OpenHutShopper();
 	void OnShopperAccept(const ResourceKey& selection) override;

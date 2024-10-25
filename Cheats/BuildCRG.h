@@ -4,7 +4,6 @@
 
 class BuildCRG 
 	: public ArgScript::ICommand
-	, public App::IUpdatable
 	, public DefaultRefCounted
 {
 public:
@@ -14,7 +13,6 @@ public:
 	// Called when the cheat is invoked
 	void ParseLine(const ArgScript::Line& line) override;
 	void SetNestModel();
-	void Update() override;
 	virtual int AddRef() override;
 	virtual int Release() override;
 	bool CompareStrings(const char* str1, const char* str2);

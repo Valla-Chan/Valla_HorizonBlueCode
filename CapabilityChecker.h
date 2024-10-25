@@ -19,6 +19,7 @@ public:
 
 
 	int GetCapabilityLevel(const cCreatureBasePtr& creature, const uint32_t propertyID) const;
+	int GetCapabilityLevelFromResource(const ResourceKey speciesKey, const uint32_t propertyID) const;
 	Vector3 GetPosFromPartCapability(const cCreatureBasePtr& creature, const uint32_t propertyID) const;
 	//
 	bool HasModelKeyValue(const ResourceKey& modelKey, const uint32_t property) const;
