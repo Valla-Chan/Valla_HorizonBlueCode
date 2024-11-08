@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Spore\BasicIncludes.h>
+#include "TRG_ToolIDs.h"
 
 #define TRG_IslandEventManagerPtr intrusive_ptr<TRG_IslandEventManager>
 
@@ -97,7 +98,8 @@ public:
 	ResourceKey GetEventItemModelKey();
 	/// Get random prompt from specified resource
 	ResourceKey GetEventPrompt(ResourceKey res) const;
-	const char16_t* GetEventItemName(ResourceKey model) const;
+	const char16_t* GetEventItemNameChar(ResourceKey model) const;
+	LocalizedString GetEventItemName(ResourceKey model) const;
 
 	/// Start timer. If the item exists, timer to despawn. If it does not exist, timer to spawn it.
 	void StartItemTimer();

@@ -222,7 +222,32 @@ ResourceKey TRG_IslandEventManager::GetEventPrompt(ResourceKey res) const {
 	return ResourceKey();
 }
 
-const char16_t* TRG_IslandEventManager::GetEventItemName(ResourceKey model) const {
+LocalizedString TRG_IslandEventManager::GetEventItemName(ResourceKey model) const {
+	PropertyListPtr mpPropList;
+	LocalizedString localetext;
+	if (PropManager.GetPropertyList(model.instanceID, model.groupID, mpPropList))
+	{
+		if (App::Property::GetText(mpPropList.get(), 0x8F6FC401, localetext)) { // blockname
+			return localetext;
+		}
+	}
+	// blank
+	return LocalizedString(0x0, 0x0, u"Mysterious Item");
+}
+
+
+const char16_t* TRG_IslandEventManager::GetEventItemNameChar(ResourceKey model) const {
+	PropertyListPtr mpPropList;
+	LocalizedString localetext;
+	if (PropManager.GetPropertyList(model.instanceID, model.groupID, mpPropList))
+	{
+		if (App::Property::GetText(mpPropList.get(), 0x8F6FC401, localetext)) { // blockname
+			return localetext.GetText();
+		}
+	}
+	return LocalizedString().GetText();
+}
+
 	PropertyListPtr mpPropList;
 	LocalizedString localetext;
 	if (PropManager.GetPropertyList(model.instanceID, model.groupID, mpPropList))
