@@ -10,6 +10,29 @@ Rename::~Rename()
 {
 }
 
+cCreatureCitizenPtr Rename::TraceHitCitizen() const {
+
+	auto pViewer = CameraManager.GetViewer();
+
+	Vector3 camPos = Vector3(0, 0, 0);
+	Vector3 camDir = Vector3(0, 0, 0);
+
+	// Get vector to the center of the screen.
+	auto windowArea = WindowManager.GetMainWindow()->GetArea();
+	pViewer->GetCameraToMouse(camPos, camDir);
+
+	vector<cSpatialObjectPtr> raycastObjects;
+
+	if (GameViewManager.RaycastAll(camPos, camPos + (camDir * 900.0f), raycastObjects, true)) {
+		for (auto object : raycastObjects) {
+			auto citizen = object_cast<cCreatureCitizen>(object);
+			if (citizen && citizen->mpOwnerCity->IsPlayerOwned()) {
+				return citizen;
+			}
+		}
+	}
+	return nullptr;
+}
 
 void Rename::ParseLine(const ArgScript::Line& line)
 {
@@ -19,8 +42,16 @@ void Rename::ParseLine(const ArgScript::Line& line)
 
 	if (hovered) {
 		auto creature = object_cast<cCreatureBase>(hovered);
+		cCreatureCitizenPtr citizen;
+		if (IsCivGame()) {
+			citizen = TraceHitCitizen();
+		}
 		if (creature) {
 			creature->mCreatureName = name;
+			return;
+		}
+		else if (citizen) {
+			citizen->mCreatureName = name;
 			return;
 		}
 		auto hut = object_cast<cTribeHut>(hovered);
@@ -36,6 +67,11 @@ void Rename::ParseLine(const ArgScript::Line& line)
 		auto building = object_cast<cBuilding>(hovered);
 		if (building) {
 			building->GetOwnerCity()->SetName(name.c_str());
+			return;
+		}
+		auto turret = object_cast<cTurret>(hovered);
+		if (turret) {
+			turret->mpCity->SetName(name.c_str());
 			return;
 		}
 	}

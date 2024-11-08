@@ -29,6 +29,9 @@
     <Filter Include="Valla_HorizonBlue\CVG">
       <UniqueIdentifier>{adabcdbe-7196-4e42-8a4b-447e839d139b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Valla_HorizonBlue\CLG">
+      <UniqueIdentifier>{5febacce-0d1d-42f0-9457-2e2ca36bca37}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -241,6 +244,15 @@
     <ClInclude Include="CVG_CreatureManager.h">
       <Filter>Valla_HorizonBlue\CVG</Filter>
     </ClInclude>
+    <ClInclude Include="Cheats\SetTechLevel.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="UI_RenamePlanet.h">
+      <Filter>Valla_HorizonBlue</Filter>
+    </ClInclude>
+    <ClInclude Include="CLG_CellController.h">
+      <Filter>Valla_HorizonBlue\CLG</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -437,6 +449,15 @@
     </ClCompile>
     <ClCompile Include="CVG_CreatureManager.cpp">
       <Filter>Valla_HorizonBlue\CVG</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetTechLevel.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="UI_RenamePlanet.cpp">
+      <Filter>Valla_HorizonBlue</Filter>
+    </ClCompile>
+    <ClCompile Include="CLG_CellController.cpp">
+      <Filter>Valla_HorizonBlue\CLG</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

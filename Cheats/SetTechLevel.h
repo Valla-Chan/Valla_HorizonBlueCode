@@ -2,15 +2,12 @@
 
 #include <Spore\BasicIncludes.h>
 
-using namespace Simulator;
-class Rename 
+class SetTechLevel 
 	: public ArgScript::ICommand
 {
 public:
-	Rename();
-	~Rename();
-
-	cCreatureCitizenPtr TraceHitCitizen() const;
+	SetTechLevel();
+	~SetTechLevel();
 
 	// Called when the cheat is invoked
 	void ParseLine(const ArgScript::Line& line) override;

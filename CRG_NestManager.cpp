@@ -4,6 +4,7 @@
 CRG_NestManager::CRG_NestManager()
 {
 	MessageManager.AddListener(this, kMsgCombatantKilled);
+	App::AddUpdateFunction(this);
 }
 
 
@@ -23,7 +24,36 @@ int CRG_NestManager::Release()
 	return DefaultRefCounted::Release();
 }
 
+
+void CRG_NestManager::Update() {
+	if (IsCreatureGame()) {
+		auto hovered = GameViewManager.GetHoveredObject();
+		// if hovered over a nest, show a rollover spui
+		auto nest = object_cast<cNest>(hovered);
+		if (nest && nest->IsPlayerOwned()) {
+			UI::SimulatorRollover::ShowRollover(nest);
+			auto window = WindowManager.GetMainWindow();
+			auto nameBackground = window->FindWindowByID(0x933103EB);
+
+			/*
+			if (nameBackground) {
+				ResourceObjectPtr res;
+				if (GameNounManager.GetAvatar() && ResourceManager.GetResource(GameNounManager.GetAvatar()->mSpeciesKey, &res)) {
+					auto resource = object_cast<Editors::cEditorResource>(res);
+					auto colorRGB = resource->mProperties.mSkinColor1;
+					nameBackground->SetShadeColor(colorRGB.ToIntColor());
+				}
+			}*/
+			
+		}
+	}
+}
+
+// if the last nest was extincted, make it belong to the player.
 void CRG_NestManager::CheckNestForExtinction() {
+	// TURN THIS OFF FOR NOW
+	return;
+
 	auto avatar = GameNounManager.GetAvatar();
 	if (lastNest->mpHerd->mbExtinction && avatar) {
 		//lastNest->mpHerd = avatar->mHerd;

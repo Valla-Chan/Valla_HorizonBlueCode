@@ -18,6 +18,7 @@ cCapabilityChecker* cCapabilityChecker::Get()
 	return sInstance;
 }
 
+
 int cCapabilityChecker::GetCapabilityLevel(const cCreatureBasePtr& creature, const uint32_t propertyID) const
 {
 	if (creature) {

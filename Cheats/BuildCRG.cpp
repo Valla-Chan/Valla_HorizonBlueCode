@@ -34,7 +34,9 @@ int BuildCRG::Release()
 void BuildCRG::SetNestModel()
 {
 	//pNest->SetModelKey(pModel);
-	nest->SetModelKey(hutmodel);
+	if (nest) {
+		nest->SetModelKey(hutmodel);
+	}
 }
 
 using namespace Simulator;
@@ -71,8 +73,8 @@ void BuildCRG::ParseLine(const ArgScript::Line& line)
 		type = 1;
 		clocktest.SetMode(Clock::Mode::Milliseconds);
 		clocktest.Start();
-		herd->mHitpointOverride = 0;
-		Simulator::ScheduleTask(this, &BuildCRG::SetNestModel, 0.01f);
+		//herd->mHitpointOverride = 0;
+		//Simulator::ScheduleTask(this, &BuildCRG::SetNestModel, 0.1f);
 	}
 	else if (CompareStrings(mParameter, "Hut")) {
 		//herd = GameNounManager.CreateHerd(avatar->GetPosition(), avatar->mpSpeciesProfile, 2, false, 0, true);

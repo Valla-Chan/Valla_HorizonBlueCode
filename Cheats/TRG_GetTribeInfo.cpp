@@ -73,10 +73,23 @@ void TRG_GetTribeInfo::ParseLine(const ArgScript::Line& line)
 
 		App::ConsolePrintF("--- City info for 0x%x ---", city->GetCommunityName());
 		App::ConsolePrintF("Is Small City: %b", city->mbSmallCity);
+		App::ConsolePrintF("Civ Colors:  Cached: (%f, %f, %f)  ID: (0x%x)   Primary Color: (%f, %f, %f)", civ->mCachedColor.r, civ->mCachedColor.g, civ->mCachedColor.b,
+											civ->mIDColorID,
+											civ->mPrimaryColor.r, civ->mPrimaryColor.g, civ->mPrimaryColor.b);
+
 		App::ConsolePrintF("Species Key: 0x%x, 0x%x", city->mSpeciesKey.instanceID, city->mpCivilization->mSpeciesKey);
 		// DEBUG
 		//city->mpCivilization->mSpeciesKey = ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200);
 		//
+		// DEBUG CHANGE COLOR
+		// This seems to change the city wall color and citizen color and vehicle FX color, but not the city UI color?
+		civ->mCachedColor = ColorRGB(1.0f, 0, 0);
+		civ->mPrimaryColor = ColorRGB(1.0f, 0, 0);
+		//city->co
+		
+		MessageManager.MessageSend(Simulator::kMsgCinematicCityChangeChangeWallColor, nullptr);
+		//
+
 		App::ConsolePrintF("Housing Amount: %i", city->mHousingAmount);
 		App::ConsolePrintF("Vehicle Specialty: %i", city->mVehicleSpecialty);
 		App::ConsolePrintF("----------------------------");

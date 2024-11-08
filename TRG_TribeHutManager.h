@@ -34,6 +34,10 @@ public:
 		HomeEnd = 22,
 		//
 	};
+	enum NewTribeColors {
+		Black = 0x053dbca1,
+		LightPink = 0x053dbca2,
+	};
 
 	/// Store tribe names
 	bool has_pulled_tribenames = false;
@@ -49,6 +53,7 @@ public:
 
 	void UpdateNPCTribeNames();
 	void SetTribeName(cTribePtr tribe);
+	void SetTribeColor(cTribePtr tribe);
 	string16 GetChieftainNameString(cCreatureCitizenPtr chieftain) const;
 	void UpdateStoredTribeNames();
 	void UpdateTribeNamesFromStored();

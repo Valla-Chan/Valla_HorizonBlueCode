@@ -38,10 +38,15 @@
 #include "Cheats/GetTribeColors.h"
 #include "Cheats/Teleport.h"
 #include "Cheats/Rename.h"
+#include "Cheats/SetTechLevel.h"
 //#include "ListenAllMessages.h"
 
 // UI
 #include "UI_Timescale.h"
+#include "UI_RenamePlanet.h"
+
+// CLG Ingame Behaviors
+#include "CLG_CellController.h"
 
 // CRG Ingame Behaviors
 #include "CRG_EnergyHungerSync.h"
@@ -80,6 +85,8 @@
 // Scripts
 #include "CRE_ViewerAnims.h"
 #include "CR_JetHover.h"
+
+CLG_CellController* cellcontroller;
 
 cObjectManager* obconverter;
 
@@ -141,16 +148,21 @@ void Initialize()
 	CheatManager.AddCheat("GetTribeColors", new(GetTribeColors));
 	CheatManager.AddCheat("Teleport", new(Teleport));
 	CheatManager.AddCheat("Rename", new(Rename));
+	CheatManager.AddCheat("SetTechLevel", new(SetTechLevel));
 	//CheatManager.AddCheat("ListenAllMessages", new(ListenAllMessages));
 
 	// UI
 	UI_Timescale* uitimescale = new(UI_Timescale);
+	UI_RenamePlanet* uirenameplanet = new(UI_RenamePlanet);
+
+	// CLG
+	cellcontroller = new(CLG_CellController);
 
 	// CRG
 	CRG_EnergyHungerSync* energyhungersync = new(CRG_EnergyHungerSync);
 	//CRG_WaterBehavior* waterbehavior = new(CRG_WaterBehavior);
 	CRG_GameplayAbilities* crg_gameplayabilities = new(CRG_GameplayAbilities);
-	//CRG_NestManager* crg_nestmanager = new(CRG_NestManager);
+	CRG_NestManager* crg_nestmanager = new(CRG_NestManager);
 	CRG_MovementHelper* crg_movementhelper = new(CRG_MovementHelper);
 
 	CRG_AttackBasic* crg_attackbasic = new(CRG_AttackBasic);
@@ -208,6 +220,8 @@ void Initialize()
 // This method is called when the game is closing
 void Dispose()
 {
+	cellcontroller = nullptr;
+
 	obconverter = nullptr;
 	diseasemanager = nullptr;
 	crg_inventory = nullptr;
@@ -428,6 +442,7 @@ static_detour(TribeSpawn_detour, cTribe*(const Vector3&, int, int, int, bool, cS
 		}
 		cTribe* tribe = original_function(position, tribeArchetype, numMembers, foodAmount, boolvalue, species);
 		trg_hutmanager->SetTribeName(tribe);
+		//trg_hutmanager->SetTribeColor(tribe);
 		
 		return tribe;
 	}
@@ -488,6 +503,16 @@ member_detour(GetToolClass_detour, Simulator::cTribeTool, int()) {
 static_detour(GetRolloverIdForObject_detour, UI::SimulatorRolloverID(Simulator::cGameData*)) {
 	UI::SimulatorRolloverID detoured(Simulator::cGameData* object) {
 		//auto tribetool = object_cast<cTribeTool>(object);
+
+		if (IsCreatureGame()) {
+			auto nest = object_cast<cNest>(object);
+			// player owned nest
+			if (nest && nest->IsPlayerOwned()) {
+				return UI::SimulatorRolloverID::FixedObject;
+			}
+		}
+		
+
 		auto value = original_function(object);
 		return value;
 	}
@@ -505,6 +530,20 @@ member_detour(CreateTool_detour, Simulator::cTribe, cTribeTool* (int)) {
 
 
 //-----------------------------------
+
+// Detour GetCachedColorFromId
+// TODO: this is woefully unfinished!!
+static_detour(GetCachedColorFromId_detour, const Math::ColorRGB& (uint32_t)) {
+	const Math::ColorRGB& detoured(uint32_t colorId) {
+		// TODO: make this Good instead of Bad
+		if (colorId == 0x053dbca1) {
+			static ColorRGB color = ColorRGB(0.1f, 0.1f, 0.1f);
+			return color;
+		}
+		return original_function(colorId);
+	}
+};
+
 
 // Detour the UIEventLog ShowEvent func
 member_detour(UIShowEvent_detour, Simulator::cUIEventLog, uint32_t(uint32_t, uint32_t, int, Math::Vector3*, bool, int))
@@ -704,9 +743,36 @@ virtual_detour(CombatTakeDamage_detour, Simulator::cCombatant, Simulator::cComba
 	}
 };
 
+// Whether a cell should attack another cell
+static_detour(CellShouldNotAttack_detour, bool(cCellObjectData*, cCellObjectData*))
+{
+	bool detoured(cCellObjectData* cell1, cCellObjectData* cell2)
+	{
+		if (!cellcontroller->mbStateStealthed) {
+			return original_function(cell1, cell2);
+		}
+		else if (cell2 && cell2 == Simulator::Cell::GetPlayerCell()) {
+			return true;
+		}
+		return original_function(cell1, cell2);
+	}
+};
+
 // Spui loading/spawning detour
 member_detour(ReadSPUI_detour, UTFWin::UILayout, bool(const ResourceKey&, bool, uint32_t)) {
 	bool detoured(const ResourceKey& name, bool arg_4, uint32_t arg_8) {
+		
+
+		if (IsCreatureGame()) {
+			// rolling over a player nest
+			if (name.instanceID == id("Rollover_FixedObject") && GameViewManager.mHoveredObject) {
+				auto nest = object_cast<cNest>(GameViewManager.mHoveredObject);
+				if (nest && nest->IsPlayerOwned()) {
+					ResourceKey newSpui = ResourceKey(id("Rollover_Nest"), name.typeID, name.groupID);
+					return original_function(this, newSpui, arg_4, arg_8);
+				}
+			}
+		}
 		if (IsTribeGame()) {
 
 			bool updateTribePopUI = false;
@@ -842,14 +908,16 @@ member_detour(PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int))
 
 using Fixed32StringType = eastl::fixed_string<char16_t, 32>;
 static_detour(CitizenGetSpecializedName_detour, Fixed32StringType* (Fixed32StringType*, cGameData*)) {
-	Fixed32StringType* detoured(Fixed32StringType * type, cGameData * object) {
+	Fixed32StringType* detoured(Fixed32StringType* type, cGameData * object) {
 
 		auto citizen = object_cast<cCreatureCitizen>(object);
 		// only run on non-player tribe chieftains
 		if (citizen && citizen->mSpecializedTool == 11 && citizen->mpOwnerTribe != GameNounManager.GetPlayerTribe()) {
+			// TODO: this code is causing crashes when mousing over npc creatures!
 
-			*type = (trg_hutmanager->GetChieftainNameString(citizen).c_str());
-			return type;
+			//static string16 s = trg_hutmanager->GetChieftainNameString(citizen);
+			//*type = s.c_str();
+			//return type;
 		}
 
 		return original_function(type, object);;
@@ -878,6 +946,7 @@ member_detour(CitySpawnVehicle_detour, Simulator::cCity, cVehicle* (VehiclePurpo
 
 void AttachDetours()
 {
+	
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
 	SetCursor_detour::attach(GetAddress(UTFWin::cCursorManager, SetActiveCursor));
 	EffectOverride_detour::attach(GetAddress(Swarm::cEffectsManager, GetDirectoryAndEffectIndex));
@@ -896,6 +965,8 @@ void AttachDetours()
 	// TODO: needs disk spore address!
 	CombatTakeDamage_detour::attach(Address(0x00bfcf10));
 
+	CellShouldNotAttack_detour::attach(GetAddress(Simulator::Cell, ShouldNotAttack));
+
 	ReadSPUI_detour::attach(GetAddress(UTFWin::UILayout, Load));
 	PaletteUILoad_detour::attach(GetAddress(Palettes::PaletteUI, Load));
 	PaletteUISetActiveCategory_detour::attach(GetAddress(Palettes::PaletteUI, SetActiveCategory));
@@ -906,10 +977,14 @@ void AttachDetours()
 	GetRolloverIdForObject_detour::attach(GetAddress(UI::SimulatorRollover, GetRolloverIdForObject));
 	CreateTool_detour::attach(GetAddress(Simulator::cTribe, CreateTool));
 
+	//GetCachedColorFromId_detour::attach(GetAddress(Simulator, GetCachedColorFromId));
+
 	UIShowEvent_detour::attach(GetAddress(Simulator::cUIEventLog, ShowEvent));
 
+	
 	// Creature Names
 	CitizenGetSpecializedName_detour::attach(GetAddress(Simulator::cCreatureCitizen, GetSpecializedName));
+	
 
 	CitySpawnVehicle_detour::attach(GetAddress(Simulator::cCity, SpawnVehicle));
 

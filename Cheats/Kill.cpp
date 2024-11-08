@@ -43,6 +43,12 @@ void Kill::ParseLine(const ArgScript::Line& line)
 			}
 		}
 	}
+	else {
+		auto avatarcell = Simulator::Cell::GetPlayerCell();
+		if (avatarcell) {
+			avatarcell->mHealthPoints = 0;
+		}
+	}
 
 
 

@@ -9,6 +9,7 @@ using namespace Simulator;
 class CRG_NestManager 
 	: public App::IMessageListener
 	, public DefaultRefCounted
+	, public App::IUpdatable
 {
 public:
 	static const uint32_t TYPE = id("CRG_NestManager");
@@ -18,6 +19,7 @@ public:
 
 	int AddRef() override;
 	int Release() override;
+	void Update() override;
 	
 	void CheckNestForExtinction();
 

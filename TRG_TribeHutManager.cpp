@@ -103,6 +103,19 @@ void TRG_TribeHutManager::SetTribeName(cTribePtr tribe) {
 	
 }
 
+// Set NPC tribe color to some of the new colors
+// TODO: this is woefully unfinished!!
+void TRG_TribeHutManager::SetTribeColor(cTribePtr tribe) {
+	auto colorID = tribe->mIDColorID;
+
+	// Only change the color if it is not one of the player/neutral colors
+	if (colorID != uint32_t(IdentityColors::Player) && colorID != uint32_t(IdentityColors::Neutral)) {
+		// DEBUG
+		//tribe->mIDColorID = 0x053dbca1;
+	}
+	
+}
+
 // Get NPC chieftain name string
 string16 TRG_TribeHutManager::GetChieftainNameString(cCreatureCitizenPtr chieftain) const {
 	int archetype = chieftain->mpOwnerTribe->mTribeArchetype;
@@ -112,13 +125,16 @@ string16 TRG_TribeHutManager::GetChieftainNameString(cCreatureCitizenPtr chiefta
 	if (archetype > 0) {
 		// Set tribe name from archetype
 		if (archetype == 15 || archetype == 12) {
-			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A0);
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A0); // chieftain
 		}
 		else if (archetype == 7) {
-			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A2);
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A2); // general
 		}
 		else if (archetype == 4) {
-			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A3);
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A3); // warlord
+		}
+		else {
+			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A0); // chieftain
 		}
 
 		nameText = string16(tribeName.GetText());

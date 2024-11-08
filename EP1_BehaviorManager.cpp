@@ -85,8 +85,10 @@ void EP1_BehaviorManager::HideVehicleWeaponButton() {
 	auto button = object_cast<IButton>(mainwindow->FindWindowByID(0x0C1B11A0));
 	auto buttonPopout = mainwindow->FindWindowByID(0x0C1B11A1);
 
-	button->SetButtonStateFlag(4, false);
-	buttonPopout->SetVisible(false);
+	if (button) {
+		button->SetButtonStateFlag(4, false);
+		buttonPopout->SetVisible(false);
+	}
 }
 
 void EP1_BehaviorManager::ClickedVehicleWeaponButton() {
