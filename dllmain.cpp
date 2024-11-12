@@ -241,6 +241,8 @@ void Dispose()
 	ep1_gameplayobject_drivemarker = nullptr;
 	ep1_gameplayobject_icecube = nullptr;
 	ep1_behaviormanager = nullptr;
+
+	last_chieftain = nullptr;
 }
 
 cCreatureAnimal* GetAnimCreatureOwner(const AnimatedCreaturePtr& animcreature) {
@@ -254,9 +256,35 @@ cCreatureAnimal* GetAnimCreatureOwner(const AnimatedCreaturePtr& animcreature) {
 	return nullptr;
 }
 
+cCreatureCitizen* GetAnimCreatureCitizenOwner(const AnimatedCreaturePtr& animcreature) {
+	cCombatantPtr target = nullptr;
+	for (auto creature : Simulator::GetData<Simulator::cCreatureCitizen>()) { //loop through all creatures
+		if (creature->mpAnimatedCreature.get() == animcreature) //if the current creature is the owner of the AnimatedCreature that triggered the event
+		{
+			return creature.get(); //set the crt pointer to the current creature
+		}
+	}
+	return nullptr;
+}
+
 // Detour the animation playing func
 member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*)) {
 	bool detoured(uint32_t animID, int* pChoice) {
+
+		if (IsTribeGame()) {
+
+			
+			if (animID == 0x02C39200) { // get_tool
+				auto creature = object_cast<cCreatureCitizen>(GetAnimCreatureCitizenOwner(this));
+				if (creature && creature->IsSelected() && creature->mpOwnerTribe == GameNounManager.GetPlayerTribe()) {
+					// only suppress if this is a creature that is going towards the event item
+					if (trg_ieventmanager->IsCreatureActivator(creature)) {
+						return original_function(this, 0x0, pChoice);
+					}
+				}
+			}
+
+		}
 
 		if (IsCreatureGame() || IsScenarioMode()) {
 
@@ -464,25 +492,20 @@ member_detour(HerdSpawn_detour, Simulator::cHerd, cHerd*(const Vector3&, cSpecie
 // Detour GetTribeToolData in cTribeToolData
 static_detour(GetTribeToolData_detour, cTribeToolData*(int)) {
 	cTribeToolData* detoured(int toolType) {
-		// TODO: make this actually dynamic!
-		// Maybe even read and store the files from the folder, like the normal code does.
-		if (toolType > 11) {
-			ResourceKey toolKey = ResourceKey(0x0, Names::prop, 0x04292F52);
-			int typeIDoverride = -1;
-
-			// Home hut
-			// Note: The entire range of Housing objects all return the data from tool 11
-			if (toolType > 11 && toolType <= 22) {
-				toolKey.instanceID = id("homehut");
-				typeIDoverride = toolType;
+		
+		auto data = trg_tribeplanmanager->GetTribeToolData(toolType);
+		if (data) {
+			// Exception for tribal rares:
+			// Pull data from random model file
+			if (data->mToolType == TRG_TribePlanManager::ToolTypes::EventRare) {
+				auto model = trg_ieventmanager->GetEventItemModelKey();
+				data->mToolDamageHiKey = model;
+				data->mToolDamageLoKey = model;
+				data->mToolDamageMdKey = model;
+				data->mRackModelKey = model;
+				data->mName = trg_ieventmanager->GetEventItemName(model);
 			}
-			// WatchTower
-			else {
-				toolKey.instanceID = id("WatchTower");
-			}
-
-			return trg_tribeplanmanager->TribeToolDataFromProp(toolKey, typeIDoverride);
-
+			return data;
 		}
 		
 		return original_function(toolType);
@@ -525,6 +548,39 @@ member_detour(CreateTool_detour, Simulator::cTribe, cTribeTool* (int)) {
 		trg_tribeplanmanager->AddedTool(tool, this);
 
 		return tool;
+	}
+};
+
+
+// Detour DoAction in cCreatureCitizen
+member_detour(CitizenDoAction_detour, Simulator::cCreatureCitizen, void (int, cGameData*, App::Property*)) {
+	void detoured(int actionId, cGameData* actionObject, App::Property* property) {
+
+		// try to find the missing action ID names
+		if ( actionId == 6 || (actionId > 15 && actionId < 20) || (actionId > 21 && actionId < 24) || actionId > 27) {
+			SporeDebugPrint("Citizen action %i taken by creature of tribe %ls", actionId, this->mpOwnerTribe->GetCommunityName().c_str());
+		}
+
+		if (this->mpOwnerTribe == GameNounManager.GetPlayerTribe() && actionObject != trg_ieventmanager->mpEventItem.get()) {
+			trg_ieventmanager->RemoveCreatureFromActivators(this);
+		}
+		original_function(this, actionId, actionObject, property);
+
+	}
+};
+
+
+// Detour GetHandheldItemForTool in cCreatureCitizen
+// use this to suppress the repair tool for creatures investigating event items.
+// NOTE: doesnt work for grabbing mallet, suppress the item equipping animation instead
+member_detour(GetHandheldItemForTool_detour, Simulator::cCreatureCitizen, int (int)) {
+	int detoured(int toolType) {
+		if (this->mpOwnerTribe == GameNounManager.GetPlayerTribe() && this->IsSelected()) { // figure out what tool type is the mallet //  && trg_ieventmanager->suppress_repair_tool && toolType
+			// todo: move resetting this var to the actual class, delayed by a small amount of time.
+			//trg_ieventmanager->suppress_repair_tool = false;
+			return kHandheldItemNone;
+		}
+		return original_function(this, toolType);
 	}
 };
 
@@ -907,22 +963,40 @@ member_detour(PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int))
 // Specialized citizen role names
 
 using Fixed32StringType = eastl::fixed_string<char16_t, 32>;
+cCreatureCitizenPtr last_chieftain;
 static_detour(CitizenGetSpecializedName_detour, Fixed32StringType* (Fixed32StringType*, cGameData*)) {
-	Fixed32StringType* detoured(Fixed32StringType* type, cGameData * object) {
+	Fixed32StringType* detoured(Fixed32StringType* type, cGameData* object) {
 
 		auto citizen = object_cast<cCreatureCitizen>(object);
 		// only run on non-player tribe chieftains
 		if (citizen && citizen->mSpecializedTool == 11 && citizen->mpOwnerTribe != GameNounManager.GetPlayerTribe()) {
-			// TODO: this code is causing crashes when mousing over npc creatures!
+			// store the chieftain to use in the text localization
+			last_chieftain = citizen;
 
-			//static string16 s = trg_hutmanager->GetChieftainNameString(citizen);
-			//*type = s.c_str();
+			// NOTE: this code is causing crashes when mousing over npc chieftains!
+			//type->clear();
+			//type->assign(trg_hutmanager->GetChieftainNameString(citizen).c_str());
 			//return type;
 		}
 
 		return original_function(type, object);;
 	}
 };
+
+//detour settext in LocalizedString
+member_detour(LocalStringSetText_detour, LocalizedString, bool(uint32_t, uint32_t, const char16_t*)) {
+	bool detoured(uint32_t tableID, uint32_t instanceID, const char16_t* pPlaceholderText) {
+		// "Chieftain X"
+		if (tableID == 0xF71FA311 && instanceID == 0x04bd540b && last_chieftain) {
+			auto res = trg_hutmanager->GetChieftainNameLocaleResource(last_chieftain);
+			tableID = res.groupID;
+			instanceID = res.instanceID;
+			last_chieftain = nullptr;
+		}
+		return original_function(this, tableID, instanceID, pPlaceholderText);
+	}
+};
+
 
 member_detour(CitySpawnVehicle_detour, Simulator::cCity, cVehicle* (VehiclePurpose speciality, VehicleLocomotion locomotion, struct ResourceKey key, bool isSpaceStage)) {
 	cVehicle* detoured(VehiclePurpose speciality, VehicleLocomotion locomotion, struct ResourceKey key, bool isSpaceStage) {
@@ -976,6 +1050,8 @@ void AttachDetours()
 	GetToolClass_detour::attach(GetAddress(Simulator::cTribeTool, GetToolClass));
 	GetRolloverIdForObject_detour::attach(GetAddress(UI::SimulatorRollover, GetRolloverIdForObject));
 	CreateTool_detour::attach(GetAddress(Simulator::cTribe, CreateTool));
+	CitizenDoAction_detour::attach(GetAddress(Simulator::cCreatureCitizen, DoAction));
+	//GetHandheldItemForTool_detour::attach(GetAddress(Simulator::cCreatureCitizen, GetHandheldItemForTool));
 
 	//GetCachedColorFromId_detour::attach(GetAddress(Simulator, GetCachedColorFromId));
 
@@ -984,6 +1060,7 @@ void AttachDetours()
 	
 	// Creature Names
 	CitizenGetSpecializedName_detour::attach(GetAddress(Simulator::cCreatureCitizen, GetSpecializedName));
+	LocalStringSetText_detour::attach(GetAddress(LocalizedString, SetText));
 	
 
 	CitySpawnVehicle_detour::attach(GetAddress(Simulator::cCity, SpawnVehicle));

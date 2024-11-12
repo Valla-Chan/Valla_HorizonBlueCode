@@ -253,6 +253,9 @@
     <ClInclude Include="CLG_CellController.h">
       <Filter>Valla_HorizonBlue\CLG</Filter>
     </ClInclude>
+    <ClInclude Include="TRG_ToolIDs.h">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

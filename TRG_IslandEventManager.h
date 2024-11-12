@@ -47,6 +47,7 @@ public:
 	const Vector2 timeBetweenSpawns = Vector2(1.0f, 4.0f);
 	const Vector2 timeItemLifetime = Vector2(20.0f, 25.0f);
 	const float eventItemScale = 1.4f;
+	const float eventItemActivationRadius = 8.0f;
 
 	const ResourceKey mEventManifestKey = ResourceKey(id("event_manifest"), Names::prop, Models);
 
@@ -81,6 +82,7 @@ public:
 	const uint32_t kItemNameField = id("ItemName");
 
 	// input bools
+	bool mbItemWasClicked = false;
 	bool mbItemHovered = false; // if this is true, releasing the mouse button while hovering the object will select it.
 	bool mbCameraMoved = false; // if this is true, the camera has moved, and releasing the mouse will not direct a tribe member.
 
@@ -118,6 +120,13 @@ public:
 
 	bool ClickedEventItem(int mouseButton, bool clicked);
 	void UnLeftClickedEventItem();
+
+	cCreatureCitizenPtr GetActivatorWithinItemRange() const;
+	bool IsCreatureActivator(cCreatureCitizenPtr member) const;
+	void AddCreatureToActivators(cCreatureCitizenPtr member);
+	void RemoveCreatureFromActivators(cCreatureCitizenPtr member);
+
+	void GoToEventItem();
 
 	//--------------------------------------------------------------------
 	// Event UI related funcs

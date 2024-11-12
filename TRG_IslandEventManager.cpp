@@ -44,7 +44,12 @@ void TRG_IslandEventManager::Dispose() {
 }
 
 void TRG_IslandEventManager::Update(int deltaTime, int deltaGameTime) {
-
+	if (mbItemWasClicked && mpEventItem && mpActivators.size() > 0) {
+		auto activator = GetActivatorWithinItemRange();
+		if (activator) {
+			ShowEventUI();
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------------
@@ -110,13 +115,16 @@ void TRG_IslandEventManager::SpawnDummyTribe() {
 // Spawn a chest
 void TRG_IslandEventManager::SpawnEventItem() {
 	SporeDebugPrint("Spawning Event Item...");
+
 	mbItemHovered = false;
+	mpActivators.clear();
+	mbItemWasClicked = false;
 
 	auto spawnPoint = FindSpawnPoint();
 	if (spawnPoint && mpDummyTribe) {
 		// pull data from random model file
 		auto modelKey = GetEventItemModelKey();
-		auto name = GetEventItemName(modelKey);
+		auto name = GetEventItemNameChar(modelKey);
 
 		mpEventItem = simulator_new<Simulator::cTribeHut>();
 		mpEventItem->mpTribe = mpDummyTribe;
@@ -146,6 +154,8 @@ void TRG_IslandEventManager::SpawnEventItem() {
 void TRG_IslandEventManager::RemoveEventItem() {
 	SporeDebugPrint("Removing Event Item");
 	mbItemHovered = false;
+	mpActivators.clear();
+	mbItemWasClicked = false;
 	mpEventItem->SetIsSelected(false);
 	GameNounManager.DestroyInstance(mpEventItem.get());
 	mpEventItem = nullptr;
@@ -169,8 +179,8 @@ void TRG_IslandEventManager::TryRemoveEventItem() {
 void TRG_IslandEventManager::SelectEventItem() {
 	mpEventItem->SetIsSelected(true);
 	mpEventItem->SetIsRolledOver(true);
-	mpActivators.clear();
-	mpActivators = GetSelectedCitizens();
+	//mpActivators.clear();
+	//mpActivators = GetSelectedCitizens();
 }
 
 //---------------------------------
@@ -248,18 +258,6 @@ const char16_t* TRG_IslandEventManager::GetEventItemNameChar(ResourceKey model) 
 	return LocalizedString().GetText();
 }
 
-	PropertyListPtr mpPropList;
-	LocalizedString localetext;
-	if (PropManager.GetPropertyList(model.instanceID, model.groupID, mpPropList))
-	{
-		if (App::Property::GetText(mpPropList.get(), 0x8F6FC401, localetext)) { // blockname
-			return localetext.GetText();
-		}
-	}
-	return LocalizedString().GetText();
-}
-
-
 
 //-----------------------------------------------------------------------------------
 
@@ -280,14 +278,33 @@ void TRG_IslandEventManager::StartItemTimer() {
 
 cSpatialObjectPtr TRG_IslandEventManager::FindSpawnPoint() {
 	vector<cSpatialObjectPtr> spawnpoints = {};
-	for (auto item : GetDataByCast<cSpatialObject>()) {
-		if (item->GetModelKey().instanceID == id("TRG_lootmarker_beach")) { //id("cr_flr_coastal_large01")
+	auto spatials = GetDataByCast<cSpatialObject>();
+	for (auto item : spatials) {
+		auto modelID = item->GetModelKey().instanceID;
+		if (modelID == id("TRG_lootmarker_beach")) {
 			spawnpoints.push_back(item);
 		}
 	}
 	if (spawnpoints.size() > 0) {
-		return spawnpoints[rand(spawnpoints.size())];
+		auto item = spawnpoints[rand(spawnpoints.size())];
+		// hide item it will spawn on top of
+		item->SetScale(0.1f);
+		return item;
 	}
+
+	// backup: if no items were found, spawn it over one of the small coast rocks instead.
+	else {
+		for (auto item : spatials) {
+			auto modelID = item->GetModelKey().instanceID;
+			if (modelID == id("cr_planet_rock_small01b") || modelID == id("cr_planet_rock_small02b")) {
+				spawnpoints.push_back(item);
+			}
+		}
+		if (spawnpoints.size() > 0) {
+			return spawnpoints[rand(spawnpoints.size())];
+		}
+	}
+
 	return nullptr;
 }
 
@@ -358,6 +375,7 @@ bool TRG_IslandEventManager::ClickedEventItem(int mouseButton, bool clicked) {
 	if (mouseButton == 0) {
 		auto window = WindowManager.GetMainWindow();
 		auto playerTribe = GameNounManager.GetPlayerTribe();
+
 		if (clicked) {
 			if (mUITask && !mUITask->HasExecuted()) {
 				//Simulator::RemoveScheduledTask(mUITask);
@@ -385,6 +403,15 @@ bool TRG_IslandEventManager::ClickedEventItem(int mouseButton, bool clicked) {
 	return false;
 }
 
+cCreatureCitizenPtr TRG_IslandEventManager::GetActivatorWithinItemRange() const {
+	for (auto member : mpActivators) {
+		if (member && Math::distance(member->GetPosition(), mpEventItem->GetPosition()) <= eventItemActivationRadius) {
+			return member;
+		}
+	}
+	return nullptr;
+}
+
 // This is its own func since it needs to be delayed.
 void TRG_IslandEventManager::UnLeftClickedEventItem() {
 	if (mpEventItem) {
@@ -399,6 +426,60 @@ void TRG_IslandEventManager::UnLeftClickedEventItem() {
 	}
 }
 
+bool TRG_IslandEventManager::IsCreatureActivator(cCreatureCitizenPtr member) const {
+	if (mpActivators.size() == 0) { return false; }
+	bool has_member = false;
+	for (auto item : mpActivators) {
+		if (item == member) {
+			has_member = true;
+		}
+	}
+	return has_member;
+}
+
+void TRG_IslandEventManager::AddCreatureToActivators(cCreatureCitizenPtr member) {
+	if (!IsCreatureActivator(member)) {
+		// find open spot
+		int index = -1;
+		for (size_t i = 0; i < mpActivators.size(); i++) {
+			if (mpActivators[i] == nullptr) {
+				index = i;
+			}
+		}
+		if (index > -1) {
+			mpActivators[index] = member;
+		}
+		else {
+			mpActivators.push_back(member);
+		}
+	}
+}
+
+void TRG_IslandEventManager::RemoveCreatureFromActivators(cCreatureCitizenPtr member) {
+	int index = -1;
+	for (size_t i = 0; i < mpActivators.size(); i++) {
+		if (mpActivators[i] == member) {
+			index = i;
+		}
+	}
+	if (index > -1) {
+		mpActivators[index] = nullptr;
+	}
+}
+
+
+void TRG_IslandEventManager::GoToEventItem() {
+	mbItemWasClicked = true;
+
+	for (auto member : GameNounManager.GetPlayerTribe()->GetTribeMembers()) {
+		if (member->IsSelected()) {
+			AddCreatureToActivators(member);
+			member->DoAction(kCitizenActionRepair, mpEventItem.get());
+		}
+	}
+}
+
+
 
 //-----------------------------------------------------------------------------------
 // Custom UI Funcs
@@ -406,6 +487,7 @@ void TRG_IslandEventManager::UnLeftClickedEventItem() {
 // TODO: use the part model to find a list of prompts to show.
 // Then use the randomly chosen prompt to fill out data in the UI
 void TRG_IslandEventManager::ShowEventUI() {
+	mbItemWasClicked = false;
 	GameTimeManager.Pause(TimeManagerPause::Cinematic);
 
 	eventUIlayout.FindWindowByID(WinMain)->SetVisible(true);
@@ -415,6 +497,11 @@ void TRG_IslandEventManager::ShowEventUI() {
 }
 
 void TRG_IslandEventManager::HideEventUI() {
+	mbItemWasClicked = false;
+	for (auto member : mpActivators) {
+		member->DoAction(kCitizenActionGather, nullptr);
+	}
+	mpActivators.clear();
 	eventUIlayout.FindWindowByID(WinMain)->SetVisible(false);
 	eventUIlayout.FindWindowByID(WinShadow)->SetVisible(false);
 	GameTimeManager.Resume(TimeManagerPause::Cinematic);
@@ -522,7 +609,8 @@ bool TRG_IslandEventManager::HandleUIMessage(IWindow* window, const Message& mes
 
 	// Checking if right clicking on event item
 	else if (message.IsType(kMsgMouseDown) && message.Mouse.IsRightButton() && IsEventItemHovered()) {
-		ShowEventUI();
+		//ShowEventUI();
+		GoToEventItem();
 		return true;
 	}
 
@@ -592,6 +680,8 @@ Simulator::Attribute TRG_IslandEventManager::ATTRIBUTES[] = {
 	SimAttribute(TRG_IslandEventManager,mpEventItem,2),
 	SimAttribute(TRG_IslandEventManager,mpDummyTribe,3),
 	SimAttribute(TRG_IslandEventManager,mSavedHut,4),
+	SimAttribute(TRG_IslandEventManager,mpActivators,5),
+	SimAttribute(TRG_IslandEventManager,mbItemWasClicked,5),
 	// This one must always be at the end
 	Simulator::Attribute()
 };

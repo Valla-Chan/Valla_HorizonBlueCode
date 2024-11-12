@@ -53,8 +53,6 @@ IWindow* UI_RenamePlanet::GetTextDisplay() const {
 //------------------------------------------------
 
 void UI_RenamePlanet::BeginEdit() {
-	GameNounManager.GetAvatar()->func74h(GameNounManager.GetAvatar());
-
 	// make sure we have a planet to edit
 	auto planetRecord = Simulator::GetActivePlanetRecord();
 	if (!planetRecord) { return; }

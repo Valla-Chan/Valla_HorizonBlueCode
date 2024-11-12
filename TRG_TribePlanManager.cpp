@@ -195,6 +195,38 @@ int TRG_TribePlanManager::GetTribeMaxPopulation(cTribePtr tribe) const {
 //-----------------------------------------
 // TOOLDATA
 
+// TODO: Maybe read and store the files from the folder in a vector, like the normal code does.
+cTribeToolData* TRG_TribePlanManager::GetTribeToolData(int toolType) const {
+	using namespace TypeIDs;
+	if (toolType > TRG_TribePlanManager::ToolTypes::HomePalette) {
+		//instantiate
+		ResourceKey toolKey = ResourceKey(0x0, Names::prop, GroupIDs::TribeToolData);
+		int typeIDoverride = -1;
+
+		// Home hut
+		// Note: The entire range of Housing objects all return the data from tool 11
+		if (toolType > TRG_TribePlanManager::ToolTypes::HomePalette && toolType <= TRG_TribePlanManager::ToolTypes::HomeEnd) {
+			toolKey.instanceID = id("homehut");
+			typeIDoverride = toolType;
+		}
+		// Island Event Rare
+		else if (toolType == EventRare) {
+			// TODO: this should maybe do something special that returns the actual model of the rare as well?
+			toolKey.instanceID = id("homehut");
+			typeIDoverride = toolType;
+		}
+		// all else is WatchTower for now.
+		else {
+			toolKey.instanceID = id("WatchTower");
+		}
+
+		// get the actual data from this file
+		return TribeToolDataFromProp(toolKey, typeIDoverride);
+
+	}
+	return nullptr;
+}
+
 cTribeToolData* TRG_TribePlanManager::TribeToolDataFromProp(ResourceKey key, int typeIDoverride) {
 	cTribeToolData* toolData = new(cTribeToolData);
 	toolData->mFileKey = key;

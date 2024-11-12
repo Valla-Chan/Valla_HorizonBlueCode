@@ -116,6 +116,31 @@ void TRG_TribeHutManager::SetTribeColor(cTribePtr tribe) {
 	
 }
 
+// Get NPC chieftain name path
+ResourceKey TRG_TribeHutManager::GetChieftainNameLocaleResource(cCreatureCitizenPtr chieftain) const {
+	int archetype = chieftain->mpOwnerTribe->mTribeArchetype;
+	auto res = ResourceKey(0x000000A0, 0x0, id("TribeArchetypes"));
+
+	if (archetype > 0) {
+		// Set tribe name from archetype
+		if (archetype == 15 || archetype == 12) {
+			res.instanceID = 0x000000A0; // chieftain
+		}
+		else if (archetype == 7) {
+			res.instanceID = 0x000000A2; // general
+		}
+		else if (archetype == 4) {
+			res.instanceID = 0x000000A3; // warlord
+		}
+		else {
+			res.instanceID = 0x000000A0; // chieftain
+		}
+
+		return res;
+	}
+
+}
+
 // Get NPC chieftain name string
 string16 TRG_TribeHutManager::GetChieftainNameString(cCreatureCitizenPtr chieftain) const {
 	int archetype = chieftain->mpOwnerTribe->mTribeArchetype;

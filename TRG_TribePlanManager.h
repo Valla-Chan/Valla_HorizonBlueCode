@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Spore\BasicIncludes.h>
+#include "TRG_ToolIDs.h"
 
 #define TRG_TribePlanManagerPtr intrusive_ptr<TRG_TribePlanManager>
 
@@ -57,7 +58,8 @@ public:
 		HomeStart = 12,
 		HomeEnd = 22,
 		//
-		Watchtower = 23,
+		EventRare = 23,
+		Watchtower = 24,
 	};
 	
 
@@ -84,6 +86,7 @@ public:
 
 	eastl::array<cTribeToolData*, 64> mToolDataArray; // tool data after 11
 
+	cTribeToolData* GetTribeToolData(int toolType) const;
 	static cTribeToolData* TribeToolDataFromProp(ResourceKey key, int typeIDoverride = -1);
 
 	//---------------------------------------

@@ -27,7 +27,7 @@ public:
 	int last_tribe_count = 0;
 	int tribe_count = 0;
 
-	void TRG_ChieftainManager::Reset();
+	void Reset();
 
 	cCreatureCitizen* TRG_ChieftainManager::GetNearestTribalLeader(Vector3 pos, const float within) const;
 	cCreatureCitizen* GetAnimCreatureOwner(const AnimatedCreaturePtr& animcreature);

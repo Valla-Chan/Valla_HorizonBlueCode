@@ -306,6 +306,7 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="TRG_ToolIDs.h" />
     <ClInclude Include="TRG_TribeHutManager.h">
       <SubType>
       </SubType>
