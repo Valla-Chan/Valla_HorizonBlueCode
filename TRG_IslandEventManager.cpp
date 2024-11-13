@@ -285,14 +285,62 @@ cSpatialObjectPtr TRG_IslandEventManager::FindSpawnPoint() {
 			spawnpoints.push_back(item);
 		}
 	}
+
+	// backup: if no items were found, spawn it over one of the small coast rocks instead.
+	if (spawnpoints.size() == 0) {
+		for (auto item : spatials) {
+			auto modelID = item->GetModelKey().instanceID;
+			if (modelID == id("cr_planet_rock_small01b") || modelID == id("cr_planet_rock_small02b")) {
+				spawnpoints.push_back(item);
+			}
+		}
+	}
+
 	if (spawnpoints.size() > 0) {
-		auto item = spawnpoints[rand(spawnpoints.size())];
+		// find 3 random points to choose from
+		//-----------------------------------------------
+		fixed_vector<int, 3> indices;
+		int tries = 20;
+
+		indices.push_back(rand(spawnpoints.size()));
+		indices.push_back(rand(spawnpoints.size()));
+		// if the same, re-randomize
+		while (indices[1] == indices[0] && tries > 0) {
+			indices[1] = rand(spawnpoints.size());
+			tries - 1;
+		}
+		indices.push_back(rand(spawnpoints.size()));
+		tries = 20;
+		// if the same, re-randomize
+		while (indices[2] == indices[1] || indices[2] == indices[0] && tries > 0) {
+			indices[2] = rand(spawnpoints.size());
+			tries - 1;
+		}
+		//-----------------------------------------------
+		// then pick the closest to any player villager
+		float distanceClosest = 4096;
+		int index = -1;
+		for (auto pointidx : indices) {
+			// find closest creature distance
+			for (auto creature : GameNounManager.GetPlayerTribe()->GetTribeMembers()) {
+				float dist = Math::distance(creature->GetPosition(), spawnpoints[pointidx]->GetPosition());
+				if (dist < distanceClosest) {
+					distanceClosest = dist;
+					index = pointidx;
+				}
+			}
+		}
+
+		if (index == -1) { return nullptr; }
+
+		auto item = spawnpoints[index];
+
 		// hide item it will spawn on top of
 		item->SetScale(0.1f);
 		return item;
 	}
 
-	// backup: if no items were found, spawn it over one of the small coast rocks instead.
+	
 	else {
 		for (auto item : spatials) {
 			auto modelID = item->GetModelKey().instanceID;
@@ -487,6 +535,7 @@ void TRG_IslandEventManager::GoToEventItem() {
 // TODO: use the part model to find a list of prompts to show.
 // Then use the randomly chosen prompt to fill out data in the UI
 void TRG_IslandEventManager::ShowEventUI() {
+	MessageManager.MessageSend(id("DropCreature"),nullptr);
 	mbItemWasClicked = false;
 	GameTimeManager.Pause(TimeManagerPause::Cinematic);
 
@@ -681,7 +730,7 @@ Simulator::Attribute TRG_IslandEventManager::ATTRIBUTES[] = {
 	SimAttribute(TRG_IslandEventManager,mpDummyTribe,3),
 	SimAttribute(TRG_IslandEventManager,mSavedHut,4),
 	SimAttribute(TRG_IslandEventManager,mbItemWasClicked,5),
-	SimAttribute(TRG_IslandEventManager,mpActivators,5),
+	SimAttribute(TRG_IslandEventManager,mpActivators,6),
 	// This one must always be at the end
 	Simulator::Attribute()
 };

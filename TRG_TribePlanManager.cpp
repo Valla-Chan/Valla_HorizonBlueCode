@@ -298,6 +298,7 @@ void TRG_TribePlanManager::UpdateToolsProgress() {
 					Transform trans = Transform();
 					Transform().SetOffset(tool->GetPosition());
 					Transform().SetRotation(tool->GetOrientation());
+					Transform().SetScale(1.0f);
 					effectPoof->SetSourceTransform(trans);
 					effectPoof->Start();
 					// todo: not working

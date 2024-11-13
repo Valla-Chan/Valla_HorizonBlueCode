@@ -28,7 +28,9 @@ bool TRG_TribeHutManager::Write(Simulator::ISerializerStream* stream)
 }
 bool TRG_TribeHutManager::Read(Simulator::ISerializerStream* stream)
 {
-	mTribeName.clear();
+	if (!mTribeName.empty()) {
+		mTribeName.clear();
+	}
 	SporeDebugPrint("TRG_TribeHutManager is reading...");
 	return Simulator::ClassSerializer(this, ATTRIBUTES).Read(stream);
 }

@@ -189,7 +189,7 @@ bool TRG_CreaturePickup::HandleMessage(uint32_t messageID, void* msg)
 {
 	if (!IsTribeGame()) { return nullptr; }
 
-	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("CinematicBegin"))
+	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("CinematicBegin") || messageID == id("DropCreature"))
 	{
 		Drop();
 	}
