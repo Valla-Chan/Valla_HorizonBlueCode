@@ -256,7 +256,7 @@ int CVG_CreatureManager::DetermineNeededCityType() const {
 	int cityTypes2 = 0;
 	int cityTypes3 = 0;
 
-	auto cities = GetDataByCast<cCity>();
+	auto cities = GetData<cCity>();
 	for (auto item : cities) {
 		switch (item->mVehicleSpecialty) {
 		case 1: cityTypes1++; break;
@@ -283,7 +283,7 @@ int CVG_CreatureManager::DetermineNeededCityType() const {
 void CVG_CreatureManager::NewCityAppeared() {
 	//SporeDebugPrint("New City Appeared.");
 
-	auto cities = GetDataByCast<cCity>();
+	auto cities = GetData<cCity>();
 	auto city = cities[cities.size()-1];
 
 	// return if not enough cities for city type distribution to matter

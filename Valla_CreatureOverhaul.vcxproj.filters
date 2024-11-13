@@ -256,6 +256,15 @@
     <ClInclude Include="TRG_ToolIDs.h">
       <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
+    <ClInclude Include="TRG_SuppressScavenger.h">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\RepairAll.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="HBdebug.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -461,6 +470,15 @@
     </ClCompile>
     <ClCompile Include="CLG_CellController.cpp">
       <Filter>Valla_HorizonBlue\CLG</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_SuppressScavenger.cpp">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\RepairAll.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="HBdebug.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

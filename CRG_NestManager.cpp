@@ -74,7 +74,7 @@ bool CRG_NestManager::HandleMessage(uint32_t messageID, void* message)
 
 			// if killed by player
 			if (killMsg->GetAttacker() == avatar) {
-				auto nests = GetDataByCast<cNest>();
+				auto nests = GetData<cNest>();
 				auto killedCreature = object_cast<cCreatureAnimal>(killMsg->GetCombatant());
 				if (!killedCreature) { return false; }
 

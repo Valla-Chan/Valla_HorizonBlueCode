@@ -16,7 +16,7 @@ void TRG_AddToTribe::ParseLine(const ArgScript::Line& line)
 	if (!IsTribeGame()) { return; }
 
 	auto playerTribe = GameNounManager.GetPlayerTribe();
-	for (auto creature : GetDataByCast<cCreatureCitizen>()) {
+	for (auto creature : GetData<cCreatureCitizen>()) {
 		if (creature->IsRolledOver()) {
 			AddToTribe(creature, playerTribe);
 		}

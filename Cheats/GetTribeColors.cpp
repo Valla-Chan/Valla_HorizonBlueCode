@@ -14,7 +14,7 @@ GetTribeColors::~GetTribeColors()
 void GetTribeColors::ParseLine(const ArgScript::Line& line)
 {
 	if (Simulator::IsTribeGame()) {
-		for (auto tribe : Simulator::GetDataByCast<Simulator::cTribe>()) {
+		for (auto tribe : Simulator::GetData<Simulator::cTribe>()) {
 			App::ConsolePrintF("--- Tribe info for 0x%x ---", tribe->GetCommunityName());
 			App::ConsolePrintF("Identity Color ID: 0x%x", tribe->mIDColorID);
 			App::ConsolePrintF("Identity Cached Color: %x", tribe->mCachedColor);

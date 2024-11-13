@@ -680,8 +680,8 @@ Simulator::Attribute TRG_IslandEventManager::ATTRIBUTES[] = {
 	SimAttribute(TRG_IslandEventManager,mpEventItem,2),
 	SimAttribute(TRG_IslandEventManager,mpDummyTribe,3),
 	SimAttribute(TRG_IslandEventManager,mSavedHut,4),
-	SimAttribute(TRG_IslandEventManager,mpActivators,5),
 	SimAttribute(TRG_IslandEventManager,mbItemWasClicked,5),
+	SimAttribute(TRG_IslandEventManager,mpActivators,5),
 	// This one must always be at the end
 	Simulator::Attribute()
 };

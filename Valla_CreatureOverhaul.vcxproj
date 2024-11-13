@@ -147,6 +147,10 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="Cheats\RepairAll.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Cheats\SendMessage.h">
       <SubType>
       </SubType>
@@ -280,6 +284,10 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="HBdebug.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="ListenAllMessages.h">
       <SubType>
       </SubType>
@@ -303,6 +311,10 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="TRG_MemberManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="TRG_SuppressScavenger.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -370,6 +382,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="Cheats\Rename.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="Cheats\RepairAll.cpp">
       <SubType>
       </SubType>
     </ClCompile>
@@ -496,6 +512,10 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="HBdebug.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="ListenAllMessages.cpp">
       <SubType>
       </SubType>
@@ -521,6 +541,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="TRG_MemberManager.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="TRG_SuppressScavenger.cpp">
       <SubType>
       </SubType>
     </ClCompile>

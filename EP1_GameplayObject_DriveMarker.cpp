@@ -60,7 +60,7 @@ cVehiclePtr EP1_GameplayObject_DriveMarker::GetHoveredVehicle() {
 
 // Get the creature mount that is rolled over with the mouse
 cCreatureAnimalPtr EP1_GameplayObject_DriveMarker::GetHoveredCreature() {
-	auto creatures = Simulator::GetDataByCast<Simulator::cCreatureAnimal>();
+	auto creatures = Simulator::GetData<Simulator::cCreatureAnimal>();
 	for (auto creature : creatures) {
 		if (creature->IsRolledOver()) {
 			return creature;

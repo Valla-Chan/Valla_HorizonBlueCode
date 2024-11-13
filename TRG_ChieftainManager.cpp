@@ -66,7 +66,7 @@ cCreatureCitizen* TRG_ChieftainManager::GetNearestTribalLeader(Vector3 pos, cons
 	float last_distance = within;
 	cCreatureCitizen* closest_leader = nullptr;
 
-	auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
+	auto tribes = Simulator::GetData<Simulator::cTribe>();
 	for (auto tribe : tribes) {
 		cCreatureCitizen* leader = tribe->GetLeaderCitizen();
 		if (!leader) { return nullptr; }
@@ -80,7 +80,7 @@ cCreatureCitizen* TRG_ChieftainManager::GetNearestTribalLeader(Vector3 pos, cons
 
 bool TRG_ChieftainManager::IsCreatureTribeLeader(const cCreatureCitizenPtr& creature) {
 	// compare citizen to each tribal leaders till we find a match
-	auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
+	auto tribes = Simulator::GetData<Simulator::cTribe>();
 	for (auto tribe : tribes) {
 		if (creature == tribe->GetLeaderCitizen()) {
 			return true;
@@ -93,7 +93,7 @@ int TRG_ChieftainManager::GetChiefDietValue(cCreatureCitizenPtr chief) {
 	int value = 0;
 	if (!IsTribeGame()) { return value; }
 	last_tribe_count = tribe_count;
-	auto tribes = Simulator::GetDataByCast<Simulator::cTribe>();
+	auto tribes = Simulator::GetData<Simulator::cTribe>();
 	tribe_count = tribes.size();
 	if (tribe_count == 0) { return 0; }
 	// if no chief, get the one from the most recently spawned tribe
@@ -139,7 +139,7 @@ int TRG_ChieftainManager::NextQueueItem() {
 	if (value == -1) {
 		value = GetChiefDietValue(nullptr);
 	}
-	tribe_staff_id = -1;
+	//tribe_staff_id = -1;
 	return value;
 }
 

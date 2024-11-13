@@ -28,6 +28,7 @@ bool TRG_TribeHutManager::Write(Simulator::ISerializerStream* stream)
 }
 bool TRG_TribeHutManager::Read(Simulator::ISerializerStream* stream)
 {
+	mTribeName.clear();
 	SporeDebugPrint("TRG_TribeHutManager is reading...");
 	return Simulator::ClassSerializer(this, ATTRIBUTES).Read(stream);
 }
@@ -52,9 +53,34 @@ void TRG_TribeHutManager::Dispose() {
 //-------------------------------------------
 // Store and load tribe names manually
 
+// Add rename UI to planner
+void TRG_TribeHutManager::AddTribeRenameUI(bool paletteLoaded) {
+	if (paletteLoaded && !Editors::GetEditor()->mpEditorNamePanel) {
+		auto window = WindowManager.GetMainWindow();
+		auto nameslot = window->FindWindowByID(0x272EB68E);
+
+		// remove any existing naming UIs
+		auto nameWindowOld = nameslot->FindWindowByID(0x272EB68E);
+		if (nameWindowOld) {
+			nameslot->DisposeWindowFamily(nameWindowOld);
+		}
+		// create new naming UI
+		auto namepanel = Editors::GetEditor()->mpEditorNamePanel;
+		namepanel = new(UI::EditorNamePanel);
+		namepanel->Initialize(GameNounManager.GetPlayerTribe(), nameslot, id("EditorNameDescribe-NoTag"), true, uint32_t(SpaceNamesType::kTribe));
+
+		MessageManager.MessageSend(id("TribeNameUpdated"), nullptr);
+	}
+	else if (!paletteLoaded) {
+		MessageManager.MessageSend(id("TribeNameUpdated"), nullptr);
+	}
+}
+
+
+
 // recalculate names of all tribes
 void TRG_TribeHutManager::UpdateNPCTribeNames() {
-	auto tribes = GetDataByCast<cTribe>();
+	auto tribes = GetData<cTribe>();
 	for (auto tribe : tribes) {
 		// do not run on player tribe
 		if (tribe != GameNounManager.GetPlayerTribe()) {
@@ -123,22 +149,22 @@ ResourceKey TRG_TribeHutManager::GetChieftainNameLocaleResource(cCreatureCitizen
 
 	if (archetype > 0) {
 		// Set tribe name from archetype
-		if (archetype == 15 || archetype == 12) {
+		/*if (archetype == 15 || archetype == 12) {
 			res.instanceID = 0x000000A0; // chieftain
-		}
-		else if (archetype == 7) {
+		}*/
+		if (archetype == 7) {
 			res.instanceID = 0x000000A2; // general
 		}
 		else if (archetype == 4) {
 			res.instanceID = 0x000000A3; // warlord
 		}
 		else {
-			res.instanceID = 0x000000A0; // chieftain
+		// chieftain (base game)
+			res.groupID = 0xF71FA311;
+			res.instanceID = 0x04bd540b;
 		}
-
-		return res;
 	}
-
+	return res;
 }
 
 // Get NPC chieftain name string
@@ -190,22 +216,6 @@ void TRG_TribeHutManager::UpdateTribeNamesFromStored() {
 		tribe->SetName(mTribeName.c_str());
 	}
 	has_pulled_tribenames = true;
-	/*
-	if (mTribeNames.size() > 0) {
-		auto tribes = GetDataByCast<cTribe>();
-		// if no tribes yet, recall this func till there are
-		if (tribes.size() == 0) {
-			Simulator::ScheduleTask(this, &TRG_TribeHutManager::UpdateTribeNamesFromStored, 0.1f);
-			return;
-		}
-
-		for (size_t i = 0; i < tribes.size(); i++) {
-			if (mTribeNames.size() > i) {
-				tribes[i]->SetName(mTribeNames[i].c_str());
-			}
-		}
-		has_pulled_tribenames = true;
-	}*/
 	
 }
 

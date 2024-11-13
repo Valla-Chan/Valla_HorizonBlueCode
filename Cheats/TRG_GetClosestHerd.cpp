@@ -13,7 +13,7 @@ TRG_GetClosestHerd::~TRG_GetClosestHerd()
 
 void TRG_GetClosestHerd::ParseLine(const ArgScript::Line& line)
 {
-	auto creatures = Simulator::GetDataByCast<cCreatureAnimal>();
+	auto creatures = Simulator::GetData<cCreatureAnimal>();
 	// Loop through the creature parts to find this capability at its highest level
 	for (auto creature: creatures) {
 		if (creature->IsRolledOver()) {

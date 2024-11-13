@@ -14,7 +14,7 @@ SetChieftainColor::~SetChieftainColor()
 void SetChieftainColor::ParseLine(const ArgScript::Line& line)
 {
 	if (Simulator::IsTribeGame()) {
-		for (auto tribe : Simulator::GetDataByCast<Simulator::cTribe>()) {
+		for (auto tribe : Simulator::GetData<Simulator::cTribe>()) {
 			tribe->mIDColorID = (int)Simulator::IdentityColors::Red;
 			auto chieftain = tribe->GetLeaderCitizen();
 			if (chieftain) {

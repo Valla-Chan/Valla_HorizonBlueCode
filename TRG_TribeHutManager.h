@@ -51,6 +51,7 @@ public:
 	ResourceKey mHutResMain = {};
 	ResourceKey mHutResHome = {};
 
+	void AddTribeRenameUI(bool paletteLoaded);
 	void UpdateNPCTribeNames();
 	void SetTribeName(cTribePtr tribe);
 	void SetTribeColor(cTribePtr tribe);

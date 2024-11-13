@@ -5,6 +5,7 @@
 #include <Spore\Simulator\cCreatureGameData.h>
 
 // Cheats
+#include "HBdebug.h"
 #include "Cheats/BuildCRG.h"
 #include "Cheats/Kill.h"
 #include "Cheats/Hurtme.h"
@@ -39,6 +40,7 @@
 #include "Cheats/Teleport.h"
 #include "Cheats/Rename.h"
 #include "Cheats/SetTechLevel.h"
+#include "Cheats/RepairAll.h"
 //#include "ListenAllMessages.h"
 
 // UI
@@ -66,6 +68,7 @@
 #include "TRG_IslandEventManager.h"
 #include "TRG_TribePlanManager.h"
 #include "TRG_TribeHutManager.h"
+#include "TRG_SuppressScavenger.h"
 
 // CVG Ingame Behaviors
 #include "CVG_CreatureManager.h"
@@ -98,6 +101,7 @@ TRG_CreaturePickup* trg_creaturepickup;
 TRG_IslandEventManager* trg_ieventmanager;
 TRG_TribePlanManager* trg_tribeplanmanager;
 TRG_TribeHutManager* trg_hutmanager;
+TRG_SuppressScavenger* trg_suppressscavenger;
 
 CVG_CreatureManager* cvg_creaturemanager;
 
@@ -112,8 +116,11 @@ EP1_GameplayObject_DriveMarker* ep1_gameplayobject_drivemarker;
 EP1_GameplayObject_IceCube* ep1_gameplayobject_icecube;
 EP1_BehaviorManager* ep1_behaviormanager;
 
+cCreatureCitizenPtr last_named_chieftain;
+
 void Initialize()
 {
+	
 	// This method is executed when the game starts, before the user interface is shown
 	CheatManager.AddCheat("Build", new(BuildCRG));
 	CheatManager.AddCheat("Kill", new(Kill));
@@ -149,7 +156,14 @@ void Initialize()
 	CheatManager.AddCheat("Teleport", new(Teleport));
 	CheatManager.AddCheat("Rename", new(Rename));
 	CheatManager.AddCheat("SetTechLevel", new(SetTechLevel));
+	CheatManager.AddCheat("RepairAll", new(RepairAll));
 	//CheatManager.AddCheat("ListenAllMessages", new(ListenAllMessages));
+
+#ifdef _DEBUG
+	CheatManager.AddCheat("HBdebug", new(HBdebug));
+# endif
+
+
 
 	// UI
 	UI_Timescale* uitimescale = new(UI_Timescale);
@@ -170,15 +184,20 @@ void Initialize()
 	SimulatorSystem.AddStrategy(crg_inventory, CRG_Inventory::NOUN_ID);
 
 	// TRG
+	
 	trg_creaturepickup = new(TRG_CreaturePickup);
 	chiefmanager = new(TRG_ChieftainManager);
 	trg_tribeplanmanager = new(TRG_TribePlanManager);
+	trg_suppressscavenger = new(TRG_SuppressScavenger);
 	// strategies
+	
 	SimulatorSystem.AddStrategy(new TRG_MemberManager(), TRG_MemberManager::NOUN_ID);
+	// TODO: this is currently causing unknown save and load crashes!
 	trg_ieventmanager = new(TRG_IslandEventManager);
 	SimulatorSystem.AddStrategy(trg_ieventmanager, TRG_IslandEventManager::NOUN_ID);
 	trg_hutmanager = new(TRG_TribeHutManager);
 	SimulatorSystem.AddStrategy(trg_hutmanager, TRG_TribeHutManager::NOUN_ID);
+	
 
 	// CVG
 	cvg_creaturemanager = new(CVG_CreatureManager);
@@ -214,12 +233,13 @@ void Initialize()
 
 	// Singletons
 	cCapabilityChecker* capchecker = new(cCapabilityChecker);
-
+	
 }
 
 // This method is called when the game is closing
 void Dispose()
 {
+	
 	cellcontroller = nullptr;
 
 	obconverter = nullptr;
@@ -230,6 +250,7 @@ void Dispose()
 	trg_creaturepickup = nullptr;
 	trg_tribeplanmanager = nullptr;
 	trg_hutmanager = nullptr;
+	trg_suppressscavenger = nullptr;
 
 	cvg_creaturemanager = nullptr;
 
@@ -242,7 +263,8 @@ void Dispose()
 	ep1_gameplayobject_icecube = nullptr;
 	ep1_behaviormanager = nullptr;
 
-	last_chieftain = nullptr;
+	last_named_chieftain = nullptr;
+	
 }
 
 cCreatureAnimal* GetAnimCreatureOwner(const AnimatedCreaturePtr& animcreature) {
@@ -575,10 +597,9 @@ member_detour(CitizenDoAction_detour, Simulator::cCreatureCitizen, void (int, cG
 // NOTE: doesnt work for grabbing mallet, suppress the item equipping animation instead
 member_detour(GetHandheldItemForTool_detour, Simulator::cCreatureCitizen, int (int)) {
 	int detoured(int toolType) {
-		if (this->mpOwnerTribe == GameNounManager.GetPlayerTribe() && this->IsSelected()) { // figure out what tool type is the mallet //  && trg_ieventmanager->suppress_repair_tool && toolType
-			// todo: move resetting this var to the actual class, delayed by a small amount of time.
-			//trg_ieventmanager->suppress_repair_tool = false;
-			return kHandheldItemNone;
+		// chieftain staff
+		if (toolType == kTribeToolTypeChieftain) {
+			chiefmanager->AddChiefToQueue(this);
 		}
 		return original_function(this, toolType);
 	}
@@ -607,15 +628,27 @@ member_detour(UIShowEvent_detour, Simulator::cUIEventLog, uint32_t(uint32_t, uin
 	uint32_t detoured(uint32_t instanceID, uint32_t groupID, int int1, Math::Vector3* vector3, bool dontAllowDuplicates, int int2)
 	{
 		// If this is a warning notif in tribal stage, do not run the func unless player tribe has a watchtower.
-		if (IsTribeGame() && (
-			instanceID == id("WildAnimalsRaiding") ||
-			instanceID == id("raiderscoming") ||
-			instanceID == id("Foodraiderscoming") )) {
+		if (IsTribeGame()) {
+			/*
+			if (instanceID == id("WildAnimalsRaiding") ||
+				instanceID == id("raiderscoming") ||
+				instanceID == id("Foodraiderscoming")) {
 
-			// if no watchtower, return before sending the warning.
-			if (!GameNounManager.GetPlayerTribe() || !GameNounManager.GetPlayerTribe()->GetToolByType(TRG_TribePlanManager::ToolTypes::Watchtower)) {
-				return 0x0;
+				
+				// if no watchtower, return before sending the warning.
+				if (!GameNounManager.GetPlayerTribe() || !GameNounManager.GetPlayerTribe()->GetToolByType(TRG_TribePlanManager::ToolTypes::Watchtower)) {
+					return 0x0;
+				}
+			}*/
+			
+			if (instanceID == id("WildAnimalsRaiding")) {
+				if (trg_suppressscavenger->SuppressScavenger()) {
+					return 0x0;
+				}
+				auto value = original_function(this, instanceID, groupID, int1, vector3, dontAllowDuplicates, int2);
+				return value;
 			}
+
 		}
 		// fire OG func
 		auto value = original_function(this, instanceID, groupID, int1, vector3, dontAllowDuplicates, int2);
@@ -903,26 +936,8 @@ member_detour(PaletteUILoad_detour, Palettes::PaletteUI, void(Palettes::PaletteM
 
 		// Tribal
 		if (IsTribeGame()) {
-			// Add rename UI
-			if (this && !GetEditor()->mpEditorNamePanel) {
-				auto window = WindowManager.GetMainWindow();
-				auto nameslot = window->FindWindowByID(0x272EB68E);
-
-				// remove any existing naming UIs
-				auto nameWindowOld = nameslot->FindWindowByID(0x272EB68E);
-				if (nameWindowOld) {
-					nameslot->DisposeWindowFamily(nameWindowOld);
-				}
-				// create new naming UI
-				auto namepanel = GetEditor()->mpEditorNamePanel;
-				namepanel = new(EditorNamePanel);
-				namepanel->Initialize(GameNounManager.GetPlayerTribe(), nameslot, id("EditorNameDescribe-NoTag"), true, 0x0);
-
-				MessageManager.MessageSend(id("TribeNameUpdated"), nullptr);
-			}
-			else if (!this) {
-				MessageManager.MessageSend(id("TribeNameUpdated"), nullptr);
-			}
+			// Add rename UI to planner
+			trg_hutmanager->AddTribeRenameUI(bool(this));
 		}
 		else {
 			trg_has_set_category = false;
@@ -963,7 +978,6 @@ member_detour(PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int))
 // Specialized citizen role names
 
 using Fixed32StringType = eastl::fixed_string<char16_t, 32>;
-cCreatureCitizenPtr last_chieftain;
 static_detour(CitizenGetSpecializedName_detour, Fixed32StringType* (Fixed32StringType*, cGameData*)) {
 	Fixed32StringType* detoured(Fixed32StringType* type, cGameData* object) {
 
@@ -971,7 +985,7 @@ static_detour(CitizenGetSpecializedName_detour, Fixed32StringType* (Fixed32Strin
 		// only run on non-player tribe chieftains
 		if (citizen && citizen->mSpecializedTool == 11 && citizen->mpOwnerTribe != GameNounManager.GetPlayerTribe()) {
 			// store the chieftain to use in the text localization
-			last_chieftain = citizen;
+			last_named_chieftain = citizen;
 
 			// NOTE: this code is causing crashes when mousing over npc chieftains!
 			//type->clear();
@@ -987,11 +1001,11 @@ static_detour(CitizenGetSpecializedName_detour, Fixed32StringType* (Fixed32Strin
 member_detour(LocalStringSetText_detour, LocalizedString, bool(uint32_t, uint32_t, const char16_t*)) {
 	bool detoured(uint32_t tableID, uint32_t instanceID, const char16_t* pPlaceholderText) {
 		// "Chieftain X"
-		if (tableID == 0xF71FA311 && instanceID == 0x04bd540b && last_chieftain) {
-			auto res = trg_hutmanager->GetChieftainNameLocaleResource(last_chieftain);
+		if (tableID == 0xF71FA311 && instanceID == 0x04bd540b && last_named_chieftain) {
+			auto res = trg_hutmanager->GetChieftainNameLocaleResource(last_named_chieftain);
 			tableID = res.groupID;
 			instanceID = res.instanceID;
-			last_chieftain = nullptr;
+			last_named_chieftain = nullptr;
 		}
 		return original_function(this, tableID, instanceID, pPlaceholderText);
 	}
@@ -1051,7 +1065,7 @@ void AttachDetours()
 	GetRolloverIdForObject_detour::attach(GetAddress(UI::SimulatorRollover, GetRolloverIdForObject));
 	CreateTool_detour::attach(GetAddress(Simulator::cTribe, CreateTool));
 	CitizenDoAction_detour::attach(GetAddress(Simulator::cCreatureCitizen, DoAction));
-	//GetHandheldItemForTool_detour::attach(GetAddress(Simulator::cCreatureCitizen, GetHandheldItemForTool));
+	GetHandheldItemForTool_detour::attach(GetAddress(Simulator::cCreatureCitizen, GetHandheldItemForTool));
 
 	//GetCachedColorFromId_detour::attach(GetAddress(Simulator, GetCachedColorFromId));
 
@@ -1067,6 +1081,7 @@ void AttachDetours()
 
 	//CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
 	//CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));
+	
 }
 
 // Generally, you don't need to touch any code here

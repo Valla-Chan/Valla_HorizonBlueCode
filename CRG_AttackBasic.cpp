@@ -117,7 +117,7 @@ void CRG_AttackBasic::AffectNearbyCreatures() {
 
 	auto avatar = GameNounManager.GetAvatar();
 	if (!avatar) { return; }
-	auto creatures = Simulator::GetDataByCast<Simulator::cCreatureAnimal>();
+	auto creatures = Simulator::GetData<Simulator::cCreatureAnimal>();
 
 	for (auto creature : creatures) {
 		if (creature && creature.get() != avatar && abs((avatar->GetPosition() - creature->GetPosition()).Length()) <= within) {
