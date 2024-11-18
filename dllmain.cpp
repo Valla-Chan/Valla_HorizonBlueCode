@@ -41,6 +41,7 @@
 #include "Cheats/Rename.h"
 #include "Cheats/SetTechLevel.h"
 #include "Cheats/RepairAll.h"
+#include "Cheats/SetEmpireColor.h"
 //#include "ListenAllMessages.h"
 
 // UI
@@ -98,6 +99,7 @@ CRG_Inventory* crg_inventory;
 
 TRG_ChieftainManager* chiefmanager;
 TRG_CreaturePickup* trg_creaturepickup;
+TRG_MemberManager* trg_membermanager;
 TRG_IslandEventManager* trg_ieventmanager;
 TRG_TribePlanManager* trg_tribeplanmanager;
 TRG_TribeHutManager* trg_hutmanager;
@@ -157,6 +159,7 @@ void Initialize()
 	CheatManager.AddCheat("Rename", new(Rename));
 	CheatManager.AddCheat("SetTechLevel", new(SetTechLevel));
 	CheatManager.AddCheat("RepairAll", new(RepairAll));
+	CheatManager.AddCheat("SetEmpireColor", new(SetEmpireColor));
 	//CheatManager.AddCheat("ListenAllMessages", new(ListenAllMessages));
 
 #ifdef _DEBUG
@@ -191,8 +194,8 @@ void Initialize()
 	trg_suppressscavenger = new(TRG_SuppressScavenger);
 	// strategies
 	
-	SimulatorSystem.AddStrategy(new TRG_MemberManager(), TRG_MemberManager::NOUN_ID);
-	// TODO: this is currently causing unknown save and load crashes!
+	trg_membermanager = new(TRG_MemberManager);
+	SimulatorSystem.AddStrategy(trg_membermanager, TRG_MemberManager::NOUN_ID);
 	trg_ieventmanager = new(TRG_IslandEventManager);
 	SimulatorSystem.AddStrategy(trg_ieventmanager, TRG_IslandEventManager::NOUN_ID);
 	trg_hutmanager = new(TRG_TribeHutManager);
@@ -249,6 +252,8 @@ void Dispose()
 	chiefmanager = nullptr;
 	trg_creaturepickup = nullptr;
 	trg_tribeplanmanager = nullptr;
+	trg_ieventmanager = nullptr;
+	trg_membermanager = nullptr;
 	trg_hutmanager = nullptr;
 	trg_suppressscavenger = nullptr;
 
@@ -392,7 +397,7 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 	bool detoured(uint32_t id) {
 
-
+		// TODO: the model cursor sometimes gets stuck on
 		if (IsCreatureGame()) {
 			cInteractiveOrnament* object = ObjectManager.GetHoveredObject();
 			if (object) {
@@ -486,7 +491,7 @@ virtual_detour(SetModel_detour, Simulator::cSpatialObject, Simulator::cSpatialOb
 // Detour the tribe spawning func
 static_detour(TribeSpawn_detour, cTribe*(const Vector3&, int, int, int, bool, cSpeciesProfile*)) {
 	cTribe* detoured(const Math::Vector3 &position, int tribeArchetype, int numMembers, int foodAmount, bool boolvalue, cSpeciesProfile* species) {
-		App::ConsolePrintF("Tribe Spawned");
+		SporeDebugPrint("Tribe Spawned");
 		if (IsCivGame()) {
 			species = cvg_creaturemanager->GetRandomTribeSpecies(species);
 		}
@@ -495,6 +500,18 @@ static_detour(TribeSpawn_detour, cTribe*(const Vector3&, int, int, int, bool, cS
 		//trg_hutmanager->SetTribeColor(tribe);
 		
 		return tribe;
+	}
+};
+
+// Detour the tribe member spawning func
+member_detour(TribeSpawnMember_detour, Simulator::cTribe, cCreatureCitizen* (int)) {
+	cCreatureCitizen* detoured(int integer) {
+		this->mSpeciesKeys[0] = ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200);
+		cCreatureCitizen* ciziten = original_function(this, integer);
+		ciziten->mbColorIsIdentity = true;
+		trg_membermanager->StoreCurrentBabies();
+
+		return ciziten;
 	}
 };
 
@@ -609,13 +626,13 @@ member_detour(GetHandheldItemForTool_detour, Simulator::cCreatureCitizen, int (i
 //-----------------------------------
 
 // Detour GetCachedColorFromId
-// TODO: this is woefully unfinished!!
 static_detour(GetCachedColorFromId_detour, const Math::ColorRGB& (uint32_t)) {
+	Math::ColorRGB IDColor;
 	const Math::ColorRGB& detoured(uint32_t colorId) {
-		// TODO: make this Good instead of Bad
-		if (colorId == 0x053dbca1) {
-			static ColorRGB color = ColorRGB(0.1f, 0.1f, 0.1f);
-			return color;
+		// If the color ID has only 6 digits, read it as an RGB value.
+		if (colorId <= 0x00FFFFFF) {
+			IDColor = Color(colorId);
+			return IDColor;
 		}
 		return original_function(colorId);
 	}
@@ -647,6 +664,22 @@ member_detour(UIShowEvent_detour, Simulator::cUIEventLog, uint32_t(uint32_t, uin
 				}
 				auto value = original_function(this, instanceID, groupID, int1, vector3, dontAllowDuplicates, int2);
 				return value;
+			}
+			else if (instanceID == id("babygrewup")) {
+				auto tribe = GameNounManager.GetPlayerTribe();
+				if (tribe) {
+					auto member = trg_membermanager->GetGrownBaby();
+					if (member) {
+						// either assign a new personality or apply the old one.
+						auto personality = trg_membermanager->GetPersonality(member);
+						if (!personality.valid) {
+							trg_membermanager->AssignPersonality(member);
+						}
+						else {
+							trg_membermanager->ApplyPersonality(personality);
+						}
+					}
+				}
 			}
 
 		}
@@ -1039,8 +1072,10 @@ void AttachDetours()
 	SetCursor_detour::attach(GetAddress(UTFWin::cCursorManager, SetActiveCursor));
 	EffectOverride_detour::attach(GetAddress(Swarm::cEffectsManager, GetDirectoryAndEffectIndex));
 	SetModel_detour::attach(GetAddress(Simulator::cSpatialObject, SetModelKey));  
+
 	TribeSpawn_detour::attach(GetAddress(Simulator, SpawnNpcTribe));
 	HerdSpawn_detour::attach(GetAddress(Simulator::cGameNounManager, CreateHerd));
+	TribeSpawnMember_detour::attach(GetAddress(Simulator::cTribe, SpawnMember));
 
 	//CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
 	AvatarScaling_detour::attach(GetAddress(Simulator::cCreatureGameData, CalculateAvatarNormalizingScale));
@@ -1067,7 +1102,7 @@ void AttachDetours()
 	CitizenDoAction_detour::attach(GetAddress(Simulator::cCreatureCitizen, DoAction));
 	GetHandheldItemForTool_detour::attach(GetAddress(Simulator::cCreatureCitizen, GetHandheldItemForTool));
 
-	//GetCachedColorFromId_detour::attach(GetAddress(Simulator, GetCachedColorFromId));
+	GetCachedColorFromId_detour::attach(GetAddress(Simulator, GetCachedColorFromId));
 
 	UIShowEvent_detour::attach(GetAddress(Simulator::cUIEventLog, ShowEvent));
 

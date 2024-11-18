@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "HBdebug.h"
-using namespace Simulator;
+#include <Spore\Editors\Editor.h>
+
 
 HBdebug::HBdebug()
 {
@@ -96,12 +97,18 @@ void HBdebug::ParseLine(const ArgScript::Line& line)
 	auto hoveredCombatant = object_cast<cCombatant>(hovered);
 	// ui
 	auto window = WindowManager.GetMainWindow();
+	// editor
+	auto editor = GetEditor();
+	auto editorModel = Editor.GetEditorModel();
+	// planet
+	auto planetRecord = Simulator::GetActivePlanetRecord();
+	auto empire = Simulator::GetPlayerEmpire();
+	auto civilization = GameNounManager.GetPlayerCivilization();
+	auto cities = GetData<cCity>();
+	cCityPtr firstCity; if (!cities.empty()) { firstCity = cities[0]; }
 	//-------------------------------------------
 	// Your code here:
 	//-------------------------------------------
-
-	auto plant = object_cast<cSpatialObject>(hovered);
-
 
 
 	//-------------------------------------------

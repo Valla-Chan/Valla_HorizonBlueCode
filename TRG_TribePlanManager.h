@@ -110,5 +110,7 @@ public:
 	// This is the function you have to implement, called when a window you added this winproc to received an event
 	bool HandleUIMessage(IWindow* pWindow, const Message& message) override;
 	//bool HandleMessage(uint32_t messageID, void* msg) override;
-
+	void ResetBabySpawningVar();
+private:
+	intrusive_ptr<Simulator::ScheduledTaskListener> mBabySpawnTask;
 };

@@ -35,6 +35,7 @@ bool CVG_CreatureManager::Read(Simulator::ISerializerStream* stream)
 Simulator::Attribute CVG_CreatureManager::ATTRIBUTES[] = {
 	// Add more attributes here
 	//SimAttribute(CVG_CreatureManager, mClosestCityCreaturePositions, 1),
+	//SimAttribute(CVG_CreatureManager, mTimeOfDay, 1),
 	// This one must always be at the end
 	Simulator::Attribute()
 };
@@ -193,7 +194,7 @@ cSpeciesProfile* CVG_CreatureManager::GetRandomTribeSpecies(cSpeciesProfile* spe
 		}
 
 		// set key to valid index.
-		if (index < keys.size()) {
+		if (index < int(keys.size())) {
 			key = keys[index];
 		}
 		else {

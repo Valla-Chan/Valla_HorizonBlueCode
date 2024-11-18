@@ -19,9 +19,22 @@ void SetChieftainColor::ParseLine(const ArgScript::Line& line)
 			auto chieftain = tribe->GetLeaderCitizen();
 			if (chieftain) {
 				bool tribeIsPlayer = tribe == GameNounManager.GetPlayerTribe();
+				if (!tribeIsPlayer) {
+					auto flags = chieftain->GetModel()->mFlags;
+					auto model = chieftain->mpAnimatedCreature->GetModel();
+					model->mFlags = 770051;
+					//SporeDebugPrint("NPC FLAGS %x, %i", flags, flags);
+				}
+				if (tribeIsPlayer) {
+					auto flags = chieftain->GetModel()->mFlags;
+					auto model = chieftain->mpAnimatedCreature->GetModel();
+					model->mFlags = 770053;
+					//SporeDebugPrint("PLAYER FLAGS %x, %i, %b", flags, flags, chieftain->mbColorIsIdentity);
+				}
 				chieftain->mbColorIsIdentity = true;
 				chieftain->SetIdentityColor(ColorRGB(1.0f, 0.0f, 0.0f));
-				tribe->mIDColorID = 0x053dbcf9;
+				
+				tribe->mIDColorID = 0xFF5522;
 			}
 		}
 	}

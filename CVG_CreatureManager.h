@@ -33,6 +33,9 @@ public:
 	void Update(int deltaTime, int deltaGameTime) override;
 	//------------------------------------------------
 
+	// Saved vars
+	//float mTimeOfDay;
+
 	cCreatureCitizenPtr TraceHitCitizen() const;
 	
 	bool IsCreatureIndexUsed(int index) const;

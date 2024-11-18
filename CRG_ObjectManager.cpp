@@ -134,6 +134,7 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 	if (success) {
 
 		// Read Reward values
+		//---------------------------------------------------------------------------------
 		float health = GetModelFloatValue(modelKey, id("modelHealthReward"));
 		float food = GetModelFloatValue(modelKey, id("modelFoodReward"));
 		float dna = GetModelFloatValue(modelKey, id("modelDNAReward"));
@@ -150,6 +151,7 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 				numParts = 0;
 			}
 		}
+		//---------------------------------------------------------------------------------
 
 		// Apply values
 		if (health != 0.0f) { creature->SetHealthPoints(creature->mHealthPoints + health); }
@@ -185,10 +187,12 @@ void cObjectManager::ApplyModelRewards(const cCreatureBasePtr& creature, const R
 	// Failure
 	else {
 		// Read Penalty values
+		//---------------------------------------------------------------------------------
 		float health = GetModelFloatValue(modelKey, id("modelHealthPenalty"));
 		float food = GetModelFloatValue(modelKey, id("modelFoodPenalty"));
 		float dna = GetModelFloatValue(modelKey, id("modelDNAPenalty"));
 		float disease = GetModelBoolValue(modelKey, id("modelSicknessPenalty"));
+		//---------------------------------------------------------------------------------
 
 		// Apply values
 		if (health != 0.0f) { creature->SetHealthPoints(creature->mHealthPoints - health); }

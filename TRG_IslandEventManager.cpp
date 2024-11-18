@@ -50,6 +50,9 @@ void TRG_IslandEventManager::Update(int deltaTime, int deltaGameTime) {
 			ShowEventUI();
 		}
 	}
+	if (GameViewManager.GetHoveredObject() == mpEventItem.get()) {
+		UI::SimulatorRollover::ShowRollover(mpEventItem.get());
+	}
 }
 
 //-----------------------------------------------------------------------------------
@@ -61,6 +64,10 @@ void TRG_IslandEventManager::OnModeEntered(uint32_t previousModeID, uint32_t new
 		SporeDebugPrint("Island Event Manager is ready to use in Tribal Stage.");
 		StartItemTimer();
 		SpawnDummyTribe();
+		// Tribe names reset upon load, make sure the dummy tribe restores its name so the event item looks correct.
+		if (mpEventItem) {
+			Simulator::ScheduleTask(this, &TRG_IslandEventManager::RestoreName, 0.01f); return;
+		}
 	}
 	// Exited
 	else {
@@ -68,6 +75,12 @@ void TRG_IslandEventManager::OnModeEntered(uint32_t previousModeID, uint32_t new
 			Simulator::RemoveScheduledTask(mTask);
 			mTask = nullptr;
 		}
+	}
+}
+
+void TRG_IslandEventManager::RestoreName() {
+	if (mpEventItem && mpDummyTribe) {
+		mpDummyTribe->SetName(mEventItemName.c_str());
 	}
 }
 
@@ -129,6 +142,7 @@ void TRG_IslandEventManager::SpawnEventItem() {
 		mpEventItem = simulator_new<Simulator::cTribeHut>();
 		mpEventItem->mpTribe = mpDummyTribe;
 		mpDummyTribe->SetName(name);
+		mEventItemName = name;
 
 		mpEventItem->mUndamagedModel = modelKey;
 		mpEventItem->SetModelKey(modelKey);
@@ -307,14 +321,14 @@ cSpatialObjectPtr TRG_IslandEventManager::FindSpawnPoint() {
 		// if the same, re-randomize
 		while (indices[1] == indices[0] && tries > 0) {
 			indices[1] = rand(spawnpoints.size());
-			tries - 1;
+			tries -= 1;
 		}
 		indices.push_back(rand(spawnpoints.size()));
 		tries = 20;
 		// if the same, re-randomize
 		while (indices[2] == indices[1] || indices[2] == indices[0] && tries > 0) {
 			indices[2] = rand(spawnpoints.size());
-			tries - 1;
+			tries -= 1;
 		}
 		//-----------------------------------------------
 		// then pick the closest to any player villager
@@ -731,6 +745,7 @@ Simulator::Attribute TRG_IslandEventManager::ATTRIBUTES[] = {
 	SimAttribute(TRG_IslandEventManager,mSavedHut,4),
 	SimAttribute(TRG_IslandEventManager,mbItemWasClicked,5),
 	SimAttribute(TRG_IslandEventManager,mpActivators,6),
+	SimAttribute(TRG_IslandEventManager,mEventItemName,7),
 	// This one must always be at the end
 	Simulator::Attribute()
 };

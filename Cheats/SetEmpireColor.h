@@ -2,15 +2,12 @@
 
 #include <Spore\BasicIncludes.h>
 
-using namespace Editors;
-using namespace Simulator;
-using namespace UI;
-class HBdebug 
+class SetEmpireColor 
 	: public ArgScript::ICommand
 {
 public:
-	HBdebug();
-	~HBdebug();
+	SetEmpireColor();
+	~SetEmpireColor();
 
 	// Called when the cheat is invoked
 	void ParseLine(const ArgScript::Line& line) override;

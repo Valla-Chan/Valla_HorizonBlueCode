@@ -30,64 +30,121 @@ public:
 	//--------------------------------------------------------------------------
 	// This file manages all tribe members, and saves the data with the world.
 
+	const ResourceKey IDcolorsKey = ResourceKey(id("MemberColors"), TypeIDs::Names::prop, id("TribeTraits"));
 
-	enum Traits {
-		Stupid,
-		LikesAnimals,
+	vector<ColorRGB> mIDcolors;
+
+	// Traits
+	enum Traits : uint32_t
+	{
+		// Combat related
 		Tough,
 		Aggressive,
+		Hardy,
+		Frail,
+
+		// Social Related
 		Social,
 		Flirty,
 		Emotional,
+
+		// Movement Related
+		Athletic,
+
+		// Resource Related
+		Glutton,
+		Drunkard,
+		Cannibal,
+		
+		// Misc
+		Stupid,
 		Unsanitary,
 		Nocturnal,
-		Hardy,
-		Frail,
+		Religious,
+		Secular,
+		Lucky,
+		AnimalLover,
+
+		// Do not use
+		End,
 	};
+
+	const eastl::hash_map<uint32_t, ColorRGB> mTraitList = {
+		{ Tough, ColorRGB(0xb47c30) },		// tan
+		{ Aggressive, ColorRGB(0x9d0505) },	// scarlet
+		{ Hardy, ColorRGB(0xe03a51) },		// pale maroon
+		{ Frail, ColorRGB(0xd9bf44) },		// pale yellow
+
+		{ Social, ColorRGB(0xd9bf44) },		// leaf green
+		{ Flirty, ColorRGB(0xf27bb1) },		// light pink
+		{ Emotional, ColorRGB(0x44296d) },	// dark purple
+
+		{ Athletic, ColorRGB(0x54e1ea) },	// cyan
+
+		{ Glutton, ColorRGB(0xec7e15) },	// medium orange
+		{ Drunkard, ColorRGB(0x64822a) },	// dark green-yellow
+		{ Cannibal, ColorRGB(0x0) },	// unset
+
+		{ Stupid, ColorRGB(0x737373) },		// gray
+		{ Unsanitary, ColorRGB(0xd1c38a) },	// slight yellow-white, use as tint instead of identity
+		{ Nocturnal, ColorRGB(0x000000) },	// black
+		{ Secular, ColorRGB(0xd5d5d5) },	// offwhite
+		{ Lucky, ColorRGB(0xfbb53e) },		// dandelion
+		{ AnimalLover, ColorRGB(0x0) },		// unset
+	};
+
+	//----------------------------------------------------------------------
 
 	struct MemberPersonality {
 
 		cCreatureCitizenPtr mpCreature;
 
-		// auto set from the creature pointer
-		string16 mName;
-		//int mSkill // firestarter, axes, etc
-		//float mSkillProficiency
-
+		bool valid = false;
 		vector<int> mTraits = {};
-		ColorRGB mFavColor;
+		ColorRGB mIDColor;
 
-		/*
-		bool Write(Simulator::ISerializerStream* stream)
-		{
-			return Simulator::ClassSerializer(this, ATTRIBUTES).Write(stream);
-		}
-		bool Read(Simulator::ISerializerStream* stream)
-		{
-			return Simulator::ClassSerializer(this, ATTRIBUTES).Read(stream);
+		MemberPersonality() {};
+
+		MemberPersonality(cCreatureCitizenPtr creature, ColorRGB color) {
+			valid = true;
+			mpCreature = creature;
+			mIDColor = color;
 		}
 
-		MemberPersonality() {
+		static Simulator::Attribute ATTRIBUTES[];
 
-		}
-
-		Simulator::Attribute ATTRIBUTES[] = {
-			// Add more attributes here
-			SimAttribute(MemberPersonality, mpCreature, 1),
-			SimAttribute(MemberPersonality, mName, 2),
-			SimAttribute(MemberPersonality, mTraits, 3),
-			SimAttribute(MemberPersonality, mFavColor, 4),
-			// This one must always be at the end
-			Simulator::Attribute()
-		};
-		*/
 	};
 
-	vector<MemberPersonality> mCreaturePersonalities = {};
+	//----------------------------------------------------------------------
+
+	eastl::hash_map<uint32_t, MemberPersonality> mCreaturePersonalities; // cCreatureCitizenPtr
+
+	//vector<MemberPersonality> mCreaturePersonalities = {};
+	vector<cCreatureCitizenPtr> mCurrentBabies;
+
+	//-------------------------------------------------------------------
 
 
+	void LoadIDColors();
+
+	void StoreCurrentBabies();
+	cCreatureCitizenPtr GetGrownBaby();
+
+	ColorRGB GetRandColor() const;
+	void AssignColor(cCreatureCitizenPtr creature);
+
+	// Personality
+
+	void AssignPersonality(cCreatureCitizenPtr creature);
+	void ApplyPersonality(MemberPersonality& personality);
+	void ApplyAllPersonalities();
+	MemberPersonality GetPersonality(cCreatureCitizenPtr creature) const;
+
+	//-------------------------------------------------------------------
 	static Simulator::Attribute ATTRIBUTES[];
 
 private:
 
 };
+
+

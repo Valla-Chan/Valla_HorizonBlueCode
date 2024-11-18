@@ -162,6 +162,11 @@ void TRG_TribePlanManager::UpdateTribeBabyUI(cTribePtr tribe, int population, in
 		maxPop = GetTribeMaxPopulation(tribe);
 	}
 	
+	// Note: not sure whether to use this. drop the visible population by this amount if chieftain is dead
+	//if (tribe->GetLeaderCitizen()->mHealthPoints == 0) {
+	//	currentPop-=1;
+	//}
+
 	// find baby button window
 	auto window = WindowManager.GetMainWindow();
 	auto babyButtonWinParent = window->FindWindowByID(0x0625CD5F);
@@ -483,7 +488,11 @@ bool TRG_TribePlanManager::HandleUIMessage(IWindow* window, const Message& messa
 		auto id = message.source->GetControlID();
 		// pressed baby button
 		if (id == 0x0625CD52) {
+			if (mBabySpawnTask) {
+				Simulator::RemoveScheduledTask(mBabySpawnTask);
+			}
 			mbBabySpawning = true;
+			mBabySpawnTask = Simulator::ScheduleTask(this, &TRG_TribePlanManager::ResetBabySpawningVar, 6.0f);
 			//debug
 			auto tribe = GameNounManager.GetPlayerTribe();
 		}
@@ -491,6 +500,11 @@ bool TRG_TribePlanManager::HandleUIMessage(IWindow* window, const Message& messa
 	}
 	// Return true if the message was handled, and therefore no other window procedure should receive it.
 	return false;
+}
+
+// make sure this var doesnt get stuck on
+void TRG_TribePlanManager::ResetBabySpawningVar() {
+	mbBabySpawning = false;
 }
 
 /*

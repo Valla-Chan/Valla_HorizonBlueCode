@@ -20,29 +20,181 @@ bool TRG_MemberManager::Write(Simulator::ISerializerStream* stream)
 }
 bool TRG_MemberManager::Read(Simulator::ISerializerStream* stream)
 {
-	return Simulator::ClassSerializer(this, ATTRIBUTES).Read(stream);
+	auto data = Simulator::ClassSerializer(this, ATTRIBUTES).Read(stream);
+	StoreCurrentBabies();
+	Simulator::ScheduleTask(this, &TRG_MemberManager::ApplyAllPersonalities, 0.001f);
+	//ApplyAllPersonalities();
+	//
+	return data;
 }
-//------------------------------------------------------------------------------------
-
-
-
-
-//------------------------------------------------------------------------------------
-
-Simulator::Attribute TRG_MemberManager::ATTRIBUTES[] = {
-	// Add more attributes here
-	//SimAttribute(TRG_MemberManager, mCreaturePersonalities, 1),
-	// This one must always be at the end
-	Simulator::Attribute()
-};
 
 void TRG_MemberManager::Initialize() {
+	LoadIDColors();
+	StoreCurrentBabies();
 }
 
 void TRG_MemberManager::Dispose() {
-	
+
 }
 
 void TRG_MemberManager::Update(int deltaTime, int deltaGameTime) {
-	
+
 }
+
+//------------------------------------------------------------------------------------
+
+// populate IDcolors
+void TRG_MemberManager::LoadIDColors() {
+	PropertyListPtr mpPropList;
+	if (PropManager.GetPropertyList(IDcolorsKey.instanceID, IDcolorsKey.groupID, mpPropList))
+	{
+		App::Property::GetArrayColorRGB(mpPropList.get(), 0x05515FFD, mIDcolors);
+	}
+}
+
+//------------------------------------------------------------------------------------
+
+void TRG_MemberManager::StoreCurrentBabies() {
+	if (GameNounManager.GetPlayerTribe()) {
+		mCurrentBabies.clear();
+		for (auto member : GameNounManager.GetPlayerTribe()->GetTribeMembers()) {
+			if (member->mAge == 0) {
+				mCurrentBabies.push_back(member);
+			}
+		}
+	}
+}
+
+cCreatureCitizenPtr TRG_MemberManager::GetGrownBaby() {
+	cCreatureCitizenPtr grownMember = nullptr;
+	for (auto member : mCurrentBabies) {
+		if (member->mAge == 1) {
+			grownMember = member;
+			break;
+		}
+	}
+	StoreCurrentBabies();
+	return grownMember;
+}
+
+//------------------------------------------------------------------------------------
+
+// load from file
+ColorRGB TRG_MemberManager::GetRandColor() const {
+	// give slight chance for totally random color
+	if (mIDcolors.size() == 0 || randf() < 0.15) { return ColorRGB(randf(), randf(), randf()); }
+	// initial randomization
+	auto colorIndex = rand(mIDcolors.size());
+	// apply some control to what colors can spawn based on the colors of existing members
+	int tries = 32;
+	bool matchesExisting = false;
+	while (matchesExisting && tries > 0) {
+		for (auto member : GameNounManager.GetPlayerTribe()->GetTribeMembers()) {
+			if (member->mHealthPoints > 0 && mIDcolors[colorIndex] == member->GetIdentityColor()) {
+				matchesExisting = true;
+				colorIndex = rand(mIDcolors.size());
+			}
+			else {
+				matchesExisting = false;
+				break;
+			}
+		}
+		tries++;
+	}
+	return mIDcolors[colorIndex];
+}
+
+void TRG_MemberManager::AssignColor(cCreatureCitizenPtr creature) {
+	creature->SetIdentityColor(GetRandColor());
+}
+
+//---------------------------------------
+// Personality
+
+// Assign the creature a personality struct of color and traits.
+void TRG_MemberManager::AssignPersonality(cCreatureCitizenPtr creature) {
+	auto personality = MemberPersonality(creature, GetRandColor());
+	ApplyPersonality(personality);
+	mCreaturePersonalities[creature->mID] = personality;
+}
+
+// apply the personality color and etc to the specified creature.
+void TRG_MemberManager::ApplyPersonality(MemberPersonality& personality) {
+	if (personality.valid && personality.mpCreature) {
+		personality.mpCreature->mbColorIsIdentity = true;
+		personality.mpCreature->SetIdentityColor(personality.mIDColor);
+		personality.mpCreature->mAge = 1;
+	}
+}
+
+// apply the personality color and etc to all the creatures. Must do this on load game.
+void TRG_MemberManager::ApplyAllPersonalities() {
+	if (!IsTribeGame())  { return; }
+	auto tribe = GameNounManager.GetPlayerTribe();
+	if (!tribe) { return; }
+
+	for (auto member : tribe->GetTribeMembers()) {
+		auto personality = GetPersonality(member);
+		if (personality.valid && personality.mpCreature) {
+			ApplyPersonality(personality);
+			//personality.mpCreature->funcC4h();
+			//personality.mpCreature->funcD4h();
+			personality.mpCreature->func78h();
+			//personality.mpCreature->mAge = 0;
+		}
+	}
+}
+
+TRG_MemberManager::MemberPersonality TRG_MemberManager::GetPersonality(cCreatureCitizenPtr creature) const {
+	auto personalityFind = mCreaturePersonalities.find(creature->mID);
+	// if found
+	if (personalityFind != mCreaturePersonalities.end()) {
+		return personalityFind.get_node()->mValue.second;
+	}
+	// invalid
+	//return nullptr;
+	return MemberPersonality();
+}
+
+
+
+//------------------------------------------------------------------------------------
+
+
+namespace Simulator
+{
+	// Personality
+	template <>
+	struct SerializationTypes::SerializedType<TRG_MemberManager::MemberPersonality>
+	{
+		static bool Read(ISerializerReadStream* stream, TRG_MemberManager::MemberPersonality* dst) {
+			return Simulator::ClassSerializer(dst, TRG_MemberManager::MemberPersonality::ATTRIBUTES).Read(stream);
+		}
+
+		static bool Write(ISerializerWriteStream* stream, TRG_MemberManager::MemberPersonality* src) {
+
+			return Simulator::ClassSerializer(src, TRG_MemberManager::MemberPersonality::ATTRIBUTES).Write(stream);
+		}
+
+		static void ReadText(const eastl::string& str, TRG_MemberManager::MemberPersonality* dst) {}
+
+		static void WriteText(char* buf, TRG_MemberManager::MemberPersonality* src) {}
+	};
+
+};
+
+
+Simulator::Attribute TRG_MemberManager::MemberPersonality::ATTRIBUTES[] = {
+		SimAttribute(MemberPersonality, valid, 1),
+		SimAttribute(MemberPersonality, mTraits, 2),
+		SimAttribute(MemberPersonality, mIDColor, 3),
+		SimAttribute(MemberPersonality, mpCreature, 4),
+		Simulator::Attribute(),
+};
+
+Simulator::Attribute TRG_MemberManager::ATTRIBUTES[] = {
+	// Add more attributes here
+	SimAttribute(TRG_MemberManager, mCreaturePersonalities, 1),
+	// This one must always be at the end
+	Simulator::Attribute()
+};

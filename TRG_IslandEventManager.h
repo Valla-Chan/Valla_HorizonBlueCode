@@ -72,6 +72,7 @@ public:
 	UILayout eventUIlayout;
 	vector<cCreatureCitizenPtr> mpActivators = {}; // creatures that have been set to investigate the item
 	cTribeHutPtr mpEventItem;
+	string16 mEventItemName = u"";
 	// 
 	cTribePtr mpDummyTribe; // this could be moved to a more generic tribe manager class if other classes want to access it
 	cTribeHutPtr mSavedHut;
@@ -90,6 +91,7 @@ public:
 
 	void OnModeEntered(uint32_t previousModeID, uint32_t newModeID) override;
 
+	void RestoreName();
 	void SpawnDummyTribe();
 	void SpawnEventItem();
 	void RemoveEventItem();

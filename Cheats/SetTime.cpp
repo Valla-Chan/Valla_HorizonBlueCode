@@ -45,9 +45,15 @@ void SetTime::ParseLine(const ArgScript::Line& line)
 			if (Simulator::IsTribeGame()) {
 				position = GameNounManager.GetPlayerTribe()->GetPosition();
 			}
-			//else if (Simulator::IsCivGame()) {
-			//	position = GameNounManager.Get
-			//}
+			else if (Simulator::IsCivGame()) {
+				auto cities = GetData<cCity>();
+				if (!cities.empty()) {
+					position = cities[0]->GetPosition();
+				}
+			}
+			else if (Simulator::IsSpaceGame()) {
+				position = GetPlayerUFO()->GetPosition();
+			}
 		}
 	}
 

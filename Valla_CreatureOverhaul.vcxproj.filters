@@ -265,6 +265,9 @@
     <ClInclude Include="HBdebug.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
+    <ClInclude Include="Cheats\SetEmpireColor.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -478,6 +481,9 @@
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="HBdebug.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\SetEmpireColor.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
   </ItemGroup>

@@ -36,6 +36,13 @@ bool TRG_TribeHutManager::Read(Simulator::ISerializerStream* stream)
 }
 
 void TRG_TribeHutManager::Update(int deltaTime, int deltaGameTime) {
+	if (GameViewManager.GetHoveredObject()) {
+		auto hut = object_cast<cTribeHut>(GameViewManager.GetHoveredObject());
+		if (hut && hut->mHealthPoints > 0 && hut->GetTribe() && !hut->GetTribe()->IsPlayerOwned()) {
+			UI::SimulatorRollover::ShowRollover(hut);
+		}
+		
+	}
 }
 
 //-----------------------------------------------------------------------------------
