@@ -20,12 +20,19 @@ TRG_CreaturePickup::~TRG_CreaturePickup()
 
 //-----------------------------------------------------------------------------------------------
 
+// TODO: THIS ALWAYS RETURNS FALSE
 bool TRG_CreaturePickup::IsPlannerOpen() {
 	if (IsTribeGame()) {
-		auto editor = Editors::GetEditor();
-		if (editor && editor->IsActive()) {
-			return true;
-		}
+
+		auto window = WindowManager.GetMainWindow();
+		auto plannerUI = window->FindWindowByID(0x93019DBC);
+
+		if (plannerUI && plannerUI->IsVisible()) { return true; }
+
+		//auto editor = Editors::GetEditor();
+		//if (editor && editor->IsActive()) {
+		//	return true;
+		//}
 	}
 	return false;
 }
@@ -218,7 +225,7 @@ bool TRG_CreaturePickup::HandleUIMessage(IWindow* window, const Message& message
 	else if (message.Mouse.IsLeftButton() && message.IsType(kMsgMouseDown) && !held_member) {
 		// Loop through all tribal citizens in avatar tribe
 		cTribePtr tribe = GetPlayerTribe();
-		if (!tribe) { return false; }
+		if (!tribe || IsPlannerOpen()) { return false; }
 		auto members = tribe->GetSelectableMembers();
 
 		for (auto member : members) {

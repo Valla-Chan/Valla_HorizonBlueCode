@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Spore\BasicIncludes.h>
+#include "TRG_ToolIDs.h"
 
 #define TRG_TribeHutManagerPtr intrusive_ptr<TRG_TribeHutManager>
 
@@ -24,15 +25,17 @@ public:
 
 	//---------------------------------------------------------
 
+	const ResourceKey hutstyles_manifest = ResourceKey(0xC42E83F6, Names::prop, id("hutstyles"));
+	enum HutStyles {
+		Carnivore = 0x0653F6B7,
+		Herbivore = 0x0653F6B6,
+		Omnivore = 0x0653F6B8,
+		Canvas = 0x0653F6B9,
+		Timber = 0xEA07B653,
+	};
 	enum HutType {
 		Main = 0,
 		Home = 1,
-	};
-	enum HomeRange {
-		// Allocate 10 slots for tribal homes
-		HomeStart = 12,
-		HomeEnd = 22,
-		//
 	};
 	enum NewTribeColors {
 		Black = 0x053dbca1,
@@ -53,6 +56,9 @@ public:
 
 	void AddTribeRenameUI(bool paletteLoaded);
 	void UpdateNPCTribeNames();
+	void SetupNewTribe(cTribePtr tribe);
+	ResourceKey GetHutStyle(uint32_t hutstyle, int tier = 1) const;
+	void SetTribeHutStyle(cTribePtr tribe, ResourceKey& hutstyle);
 	void SetTribeName(cTribePtr tribe);
 	void SetTribeColor(cTribePtr tribe);
 	ResourceKey GetChieftainNameLocaleResource(cCreatureCitizenPtr chieftain) const;
@@ -63,6 +69,7 @@ public:
 	// Editor / Sporepedia
 
 	void OpenHutShopper();
+	void OpenStaffShopper();
 	void OnShopperAccept(const ResourceKey& selection) override;
 	void OnModeEntered(uint32_t previousModeID, uint32_t newModeID) override;
 

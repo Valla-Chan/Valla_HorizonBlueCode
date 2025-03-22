@@ -72,7 +72,7 @@ public:
 	UILayout eventUIlayout;
 	vector<cCreatureCitizenPtr> mpActivators = {}; // creatures that have been set to investigate the item
 	cTribeHutPtr mpEventItem;
-	string16 mEventItemName = u"";
+	//string16 mEventItemName = u"";
 	// 
 	cTribePtr mpDummyTribe; // this could be moved to a more generic tribe manager class if other classes want to access it
 	cTribeHutPtr mSavedHut;

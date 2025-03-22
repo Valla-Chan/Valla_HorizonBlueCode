@@ -28,8 +28,13 @@ bool TRG_TribeHutManager::Write(Simulator::ISerializerStream* stream)
 }
 bool TRG_TribeHutManager::Read(Simulator::ISerializerStream* stream)
 {
+	has_pulled_tribenames = false;
 	if (!mTribeName.empty()) {
 		mTribeName.clear();
+	}
+	if (mHutResMain.instanceID != 0x0 || mHutResHome.instanceID != 0x0) {
+		mHutResMain = {};
+		mHutResHome = {};
 	}
 	SporeDebugPrint("TRG_TribeHutManager is reading...");
 	return Simulator::ClassSerializer(this, ATTRIBUTES).Read(stream);
@@ -73,6 +78,7 @@ void TRG_TribeHutManager::AddTribeRenameUI(bool paletteLoaded) {
 		if (nameWindowOld) {
 			nameslot->DisposeWindowFamily(nameWindowOld);
 		}
+
 		// create new naming UI
 		auto namepanel = Editors::GetEditor()->mpEditorNamePanel;
 		namepanel = new(UI::EditorNamePanel);
@@ -98,22 +104,89 @@ void TRG_TribeHutManager::UpdateNPCTribeNames() {
 	}
 }
 
+void TRG_TribeHutManager::SetupNewTribe(cTribePtr tribe) {
+	SetTribeName(tribe);
+	//SetTribeColor(tribe);
+
+	// Set Tribal hut
+	int archetype = tribe->mTribeArchetype;
+	int tier = 2; // TODO: figure out what defines the hut tier in NPC tribes.
+	uint32_t style = Canvas;
+	ResourceKey hutstyle;
+
+	// Set tribe hut from archetype
+	if (!tribe->IsPlayerOwned() && archetype > -1) {
+		switch (archetype) {
+			case 7: style = Omnivore; break;
+			case 4: style = Carnivore; break;
+		}
+		hutstyle = GetHutStyle(style, tier);
+		if (hutstyle.instanceID != 0x0) {
+			SetTribeHutStyle(tribe, hutstyle);
+		}
+	}
+}
+
+// 'hutstyle' is a keys property in the hutstyles manifest file that contains hut tiers.
+// tier is typically 1-3
+ResourceKey TRG_TribeHutManager::GetHutStyle(uint32_t hutstyle, int tier) const {
+	PropertyListPtr mpPropList;
+	if (PropManager.GetPropertyList(hutstyles_manifest.instanceID, hutstyles_manifest.groupID, mpPropList))
+	{
+		size_t keycount;
+		ResourceKey* keys;
+		if (App::Property::GetArrayKey(mpPropList.get(), hutstyle, keycount, keys)) {
+			if (keycount > 0) {
+				tier = clamp(tier-1, 0, int(keycount-1));
+				return keys[tier];
+			}
+		}
+	}
+	return ResourceKey();
+}
+
+// Apply a hutstyle to a tribe
+void TRG_TribeHutManager::SetTribeHutStyle(cTribePtr tribe, ResourceKey &hutstyle) {
+	ResourceKey hutDmgHi = hutstyle;
+	ResourceKey hutDmgMd = hutstyle;
+	ResourceKey hutDmgLo = hutstyle;
+	PropertyListPtr mpPropList;
+	if (PropManager.GetPropertyList(hutstyle.instanceID, hutstyle.groupID, mpPropList))
+	{
+		App::Property::GetKey(mpPropList.get(), 0x492D3892, hutDmgHi);
+		App::Property::GetKey(mpPropList.get(), 0x492D3893, hutDmgMd);
+		App::Property::GetKey(mpPropList.get(), 0x492D3894, hutDmgLo);
+
+		//tribe->GetHut()->SetModelKey(hutstyle);
+		tribe->GetHut()->mUndamagedModel = hutstyle;
+		tribe->GetHut()->mDestructModelHi = hutDmgHi;
+		tribe->GetHut()->mDestructModelMd = hutDmgMd;
+		tribe->GetHut()->mDestructModelLo = hutDmgLo;
+	}
+	else { return; }
+	
+}
+
 // Set NPC tribe name
 void TRG_TribeHutManager::SetTribeName(cTribePtr tribe) {
 	int archetype = tribe->mTribeArchetype;
 	LocalizedString tribeName;
 
+	// Set tribe name from archetype
 	if (!tribe->IsPlayerOwned() && archetype > -1) {
-		// Set tribe name from archetype
+		// Neutral
 		if (archetype == 15 || archetype == 12) {
 			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000000);
 		}
+		// Orange
 		else if (archetype == 7) {
 			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000002);
 		}
+		// Red
 		else if (archetype == 4) {
 			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000003);
 		}
+		// Default
 		else {
 			tribeName = LocalizedString(id("TribeArchetypes"), 0x00000000);
 		}
@@ -243,7 +316,12 @@ void TRG_TribeHutManager::OnModeEntered(uint32_t previousModeID, uint32_t newMod
 void TRG_TribeHutManager::OpenHutShopper() {
 	auto request = Sporepedia::ShopperRequest(this);
 	request.shopperID = id("FixedObjectHutShopper");
-	//request.pEditorRequest
+	request.Show(request);
+}
+
+void TRG_TribeHutManager::OpenStaffShopper() {
+	auto request = Sporepedia::ShopperRequest(this);
+	request.shopperID = id("FixedObjectStaffShopper");
 	request.Show(request);
 }
 
@@ -257,8 +335,12 @@ void TRG_TribeHutManager::OnShopperAccept(const ResourceKey& selection)
 		BakeManager.Bake(selection, NULL);
 	}
 	// store model
-	if (mHutType == Main) { mHutResMain = selection; }
-	else { mHutResHome = selection; }
+	switch (mHutType) {
+		case Main:
+			mHutResMain = selection; break;
+		case Home:
+			mHutResHome = selection; break;
+		}
 	
 	UpdateHutIcon(mHutType);
 	UpdateHutModels(mHutType);
@@ -267,7 +349,7 @@ void TRG_TribeHutManager::OnShopperAccept(const ResourceKey& selection)
 
 
 
-// TODO: detect when the planner is opened/hut page is loaded, and update the icon.
+// Detect when the planner is opened/hut page is loaded, and update the icon.
 
 //-------------------------------------------
 
@@ -300,7 +382,11 @@ void TRG_TribeHutManager::UpdateHutIcon(int hutType) {
 	ResourceKey hutResource;
 	//// Chieftain Hut
 	if (hutType == Main) {
+
+		// TODO: this is not correct!
+		// If there is no resource, it should default back to hut image of the assigned diet type.
 		if (mHutResMain == ResourceKey()) { return; }
+
 		hutResource = mHutResMain;
 		auto window = WindowManager.GetMainWindow();
 		auto imagewindow = window->FindWindowByID(0x7D081C1F);
@@ -359,6 +445,7 @@ void TRG_TribeHutManager::UpdateHutModels(int hutType) {
 	}
 }
 
+
 //-------------------------------------------
 
 bool TRG_TribeHutManager::HandleMessage(uint32_t messageID, void* msg)
@@ -413,6 +500,9 @@ bool TRG_TribeHutManager::HandleUIMessage(IWindow* window, const Message& messag
 			if (id == 0x04A1CB6B) {
 				OpenHutShopper();
 			}
+		}
+		else if (id == id >= 0x04AAFF6B && id <= 0x04AAFF6D) {
+			OpenStaffShopper();
 		}
 		// Planner Accept Button
 		else if (id == 0x1036A039) {

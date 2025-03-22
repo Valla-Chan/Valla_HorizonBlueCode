@@ -52,18 +52,26 @@ public:
 
 	const float progress_value = 0.67f; // starter health scale for hut construction
 
-	/// For tool types past those in Simulator::TribeToolType
-	enum ToolTypes {
-		HomePalette = 11, // only used in the palette
-		// Allocate 10 slots for tribal homes
-		HomeStart = 12,
-		HomeEnd = 22,
-		//
-		EventRare = 23,
-		Watchtower = 24,
-	};
-	
 
+	const eastl::hash_set<uint32_t> defaultTribeTools = {
+		id("attack1"),
+		id("attack2"),
+		id("attack3"),
+		id("social1"),
+		id("social2"),
+		id("social3"),
+		id("chieftain"),
+		id("defaulttool"),
+		id("firepit"),
+		id("fish"),
+		id("gather"),
+		id("heal"),
+	};
+
+	hash_map<int, uint32_t> tribeToolIDs;
+
+	// Build progress models
+	// TODO: make these actually different between types. maybe even data driven, if needed to have ghost FX...
 	const ResourceKey plot_social01 = ResourceKey(id("tt_construction_social_01"), TypeIDs::Names::prop, id("toolplots"));
 	const ResourceKey plot_social02 = ResourceKey(id("tt_construction_social_02"), TypeIDs::Names::prop, id("toolplots"));
 
@@ -87,8 +95,10 @@ public:
 
 	eastl::array<cTribeToolData*, 64> mToolDataArray; // tool data after 11
 
+	void PopulateTribeToolData();
 	cTribeToolData* GetTribeToolData(int toolType) const;
 	static cTribeToolData* TribeToolDataFromProp(ResourceKey key, int typeIDoverride = -1);
+	static int TribeToolTypeIDFromProp(ResourceKey key);
 
 	//---------------------------------------
 

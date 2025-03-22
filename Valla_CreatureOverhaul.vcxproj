@@ -134,6 +134,10 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="Cheats\HurtTarget.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Cheats\Kill.h" />
     <ClInclude Include="Cheats\MarkInteractives.h">
       <SubType>
@@ -218,6 +222,10 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="CreatureSpeedBoost.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="CRE_ViewerAnims.h">
       <SubType>
       </SubType>
@@ -253,6 +261,11 @@
     </ClInclude>
     <ClInclude Include="CRG_WaterBehavior.h" />
     <ClInclude Include="CR_JetHover.h" />
+    <ClInclude Include="cVallaVector.h" />
+    <ClInclude Include="CVG_CityWalls.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="CVG_CreatureManager.h">
       <SubType>
       </SubType>
@@ -307,6 +320,10 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="TRG_CreaturePickup.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="TRG_FireDanceManager.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -373,6 +390,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="Cheats\HurtMe.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="Cheats\HurtTarget.cpp">
       <SubType>
       </SubType>
     </ClCompile>
@@ -455,6 +476,10 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="CreatureSpeedBoost.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="CRG_AttackBasic.cpp">
       <SubType>
       </SubType>
@@ -485,6 +510,11 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="CRG_WaterBehavior.cpp" />
+    <ClCompile Include="cVallaVector.cpp" />
+    <ClCompile Include="CVG_CityWalls.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="CVG_CreatureManager.cpp">
       <SubType>
       </SubType>
@@ -541,6 +571,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="TRG_CreaturePickup.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="TRG_FireDanceManager.cpp">
       <SubType>
       </SubType>
     </ClCompile>

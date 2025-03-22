@@ -1,13 +1,9 @@
 #pragma once
 
 #include <Spore\BasicIncludes.h>
+#include "CreatureSpeedBoost.h"
 
 #define TRG_MemberManagerPtr intrusive_ptr<TRG_MemberManager>
-
-///
-/// In your dllmain Initialize method, add the system like this:
-/// ModAPI::AddSimulatorStrategy(new TRG_MemberManager(), TRG_MemberManager::NOUN_ID);
-///
 
 using namespace Simulator;
 
@@ -69,6 +65,8 @@ public:
 		End,
 	};
 
+	// TODO: replace with a hashmap that points to definition files.
+	// Colors are now random per creature.
 	const eastl::hash_map<uint32_t, ColorRGB> mTraitList = {
 		{ Tough, ColorRGB(0xb47c30) },		// tan
 		{ Aggressive, ColorRGB(0x9d0505) },	// scarlet
@@ -117,10 +115,11 @@ public:
 
 	//----------------------------------------------------------------------
 
+	CreatureSpeedBoost* mCreatureSpeedBoost = nullptr;
 	eastl::hash_map<uint32_t, MemberPersonality> mCreaturePersonalities; // cCreatureCitizenPtr
-
-	//vector<MemberPersonality> mCreaturePersonalities = {};
 	vector<cCreatureCitizenPtr> mCurrentBabies;
+
+	bool mbSuppressBabyGrowFX = false;
 
 	//-------------------------------------------------------------------
 
@@ -138,13 +137,15 @@ public:
 	void AssignPersonality(cCreatureCitizenPtr creature);
 	void ApplyPersonality(MemberPersonality& personality);
 	void ApplyAllPersonalities();
+	void ApplyAllPersonalities2();
+	void ResetSuppressBabyFX();
 	MemberPersonality GetPersonality(cCreatureCitizenPtr creature) const;
 
 	//-------------------------------------------------------------------
 	static Simulator::Attribute ATTRIBUTES[];
 
 private:
-
+	intrusive_ptr<App::ScheduledTaskListener> mBabyFXSuppressTask;
 };
 
 

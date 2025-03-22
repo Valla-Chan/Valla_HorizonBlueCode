@@ -37,10 +37,15 @@ void* CLG_CellController::Cast(uint32_t type) const
 
 void CLG_CellController::Update() {
 	if (!IsCellGame()) { return; }
+
+	UpdatePlayerHealth();
+
+	// Stealth
 	if (mbStateStealthed) {
 		Simulator::cObjectPoolIndex cellIndices[200];
 		auto avatar = Simulator::Cell::GetPlayerCell();
 		if (!avatar) { mbStateStealthed = false; return; }
+
 		int numCells = Simulator::Cell::FindCellsInRadius(
 			CellGame.mpCellQuery,
 			avatar->GetPosition(), 20.0f,  // center and radius of search
@@ -66,17 +71,44 @@ void CLG_CellController::Update() {
 	}
 }
 
+bool modulateplayerhealth = true;
+// TODO: eventually do this for more cells?
 void CLG_CellController::UpdatePlayerHealth() {
 	auto avatar = Simulator::Cell::GetPlayerCell();
 	mPrevPlayerHealth = mCurrentPlayerHealth;
 	mCurrentPlayerHealth = avatar->mHealthPoints;
-	// player has taken damage
-	if (mPrevPlayerHealth < mCurrentPlayerHealth) {
-		if (mbStateStealthed) {
-			ToggleStealth(false);
-		}
-		
+
+	// player respawned
+	if (mPrevPlayerHealth == 0 && mCurrentPlayerHealth == 6) {
+
 	}
+	else if (mPrevPlayerHealth != mCurrentPlayerHealth) {
+		// player has taken damage
+		if (mPrevPlayerHealth < mCurrentPlayerHealth) {
+			// disable stealth
+			if (mbStateStealthed) {
+				ToggleStealth(false);
+			}
+		}
+		if (modulateplayerhealth) {
+			modulateplayerhealth = false;
+			int damagetaken = mPrevPlayerHealth - mCurrentPlayerHealth;
+			float healthbuff = 2.0f;
+			float newdamagetaken = damagetaken / healthbuff;
+			if (newdamagetaken < 0) {
+				newdamagetaken = clamp(int(floor(newdamagetaken)), -12, -1);
+			}
+			else {
+				newdamagetaken = clamp(int(ceil(newdamagetaken)), 1, 12);
+			}
+			avatar->mHealthPoints = mPrevPlayerHealth - newdamagetaken;
+		}
+		else {
+			modulateplayerhealth = true;
+		}
+	}
+	
+		
 	// TODO: also do this if the player deals damage to an NPC cell via spikes or electric
 }
 
@@ -98,6 +130,7 @@ void CLG_CellController::JetBurst() {
 	if (!IsCellGame()) { return; }
 	auto avatar = Simulator::Cell::GetPlayerCell();
 	// TODO: make this always
+	// why did i trail off when making this comment last year, now i have no idea what this meant
 	avatar->field_90 *= -50.0f;
 	Simulator::Cell::PlayAnimation(avatar, avatar, CellAnimations::kAnimIndexCellMoveJetBlink, avatar->mCurrentAnimation);
 }
@@ -153,6 +186,7 @@ void CLG_CellController::Pheromone(bool attract, float radius, float time) {
 				// If we don't disable this, chasing cells will not flee us
 				cell->mFleeCellTime = radius;
 				cell->mFleeCellIndex = avatar->Index();
+
 			}
 		}
 	}
@@ -171,11 +205,14 @@ int CLG_CellController::GetEventFlags() const
 bool CLG_CellController::HandleUIMessage(IWindow* window, const Message& message)
 {
 	if (!IsCellGame()) { return false; }
+	if (!Simulator::Cell::GetPlayerCell() || Simulator::Cell::GetPlayerCell()->mHealthPoints == 0) {
+		return false;
+	}
 
 	// pressed enter or escape or etc
 	if (message.IsType(kMsgKeyDown)) {
 		if (message.Key.vkey == VK_SPACE) {
-			if (GetJetLvl() > 0) {
+			if (true || GetJetLvl() > 0) {
 				ToggleStealth(!mbStateStealthed);
 			}
 			return false;

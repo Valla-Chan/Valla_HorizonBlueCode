@@ -2,11 +2,13 @@
 
 /// For tool types past those in Simulator::TribeToolType
 enum ToolTypes {
-	HomePalette = 11, // only used in the palette
+	// only used in the palette or generation
+	HomePalette = 11,
+	DecorPalette = 12,
+	EventRare = 13,
 	// Allocate 10 slots for tribal homes
-	HomeStart = 12,
-	HomeEnd = 22,
+	HomeStart = 14,
+	HomeEnd = 24,
 	//
-	EventRare = 23,
-	Watchtower = 24,
+	Watchtower = 25,
 };

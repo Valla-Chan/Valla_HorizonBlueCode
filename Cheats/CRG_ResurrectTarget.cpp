@@ -22,8 +22,12 @@ void CRG_ResurrectTarget::ParseLine(const ArgScript::Line& line)
 			target->mbDead = false;
 			target->mHerd->mbExtinction = false;
 			target->mbHasBeenEaten = false;
+			if (target->mMaxHealthPoints < 2) {
+				target->mMaxHealthPoints = 15;
+			}
 			target->SetHealthPoints(target->mMaxHealthPoints);
 			target->mHunger = 100.0;
+			target->func90h();
 		}
 		else {
 			App::ConsolePrintF("This cheat requires a valid target!");
@@ -37,6 +41,6 @@ const char* CRG_ResurrectTarget::GetDescription(ArgScript::DescriptionMode mode)
 		return "This cheat resurrects the targeted dead creature.";
 	}
 	else {
-		return "ResurrectTarget: This cheat resurrects the targeted dead creature.";
+		return "Resurrect: This cheat resurrects the targeted dead creature.";
 	}
 }

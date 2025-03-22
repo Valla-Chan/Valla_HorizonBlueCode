@@ -20,11 +20,10 @@ bool TRG_MemberManager::Write(Simulator::ISerializerStream* stream)
 }
 bool TRG_MemberManager::Read(Simulator::ISerializerStream* stream)
 {
+	mBabyFXSuppressTask = false;
 	auto data = Simulator::ClassSerializer(this, ATTRIBUTES).Read(stream);
 	StoreCurrentBabies();
-	Simulator::ScheduleTask(this, &TRG_MemberManager::ApplyAllPersonalities, 0.001f);
-	//ApplyAllPersonalities();
-	//
+	Simulator::ScheduleTask(this, &TRG_MemberManager::ApplyAllPersonalities, 0.0001f);
 	return data;
 }
 
@@ -121,13 +120,12 @@ void TRG_MemberManager::AssignPersonality(cCreatureCitizenPtr creature) {
 // apply the personality color and etc to the specified creature.
 void TRG_MemberManager::ApplyPersonality(MemberPersonality& personality) {
 	if (personality.valid && personality.mpCreature) {
-		personality.mpCreature->mbColorIsIdentity = true;
 		personality.mpCreature->SetIdentityColor(personality.mIDColor);
 		personality.mpCreature->mAge = 1;
 	}
 }
 
-// apply the personality color and etc to all the creatures. Must do this on load game.
+// Forces the creaturesto grow up in prep for their ID color. Must do this on load game. Calls ApplyAllPersonalities2().
 void TRG_MemberManager::ApplyAllPersonalities() {
 	if (!IsTribeGame())  { return; }
 	auto tribe = GameNounManager.GetPlayerTribe();
@@ -135,15 +133,37 @@ void TRG_MemberManager::ApplyAllPersonalities() {
 
 	for (auto member : tribe->GetTribeMembers()) {
 		auto personality = GetPersonality(member);
+		if (member->mAge == 1 && personality.valid && personality.mpCreature) {
+			personality.mpCreature->mbColorIsIdentity = true;
+			mbSuppressBabyGrowFX = true;
+			personality.mpCreature->GrowUp();
+
+			// make sure this var resets.
+			if (mBabyFXSuppressTask && !mBabyFXSuppressTask->HasExecuted()) {
+				App::RemoveScheduledTask(mBabyFXSuppressTask);
+			}
+			mBabyFXSuppressTask = App::ScheduleTask(this, &TRG_MemberManager::ResetSuppressBabyFX, 0.01f);
+		}
+	}
+	Simulator::ScheduleTask(this, &TRG_MemberManager::ApplyAllPersonalities2, 0.1f);
+}
+
+// Apply the personality color and etc to all the creatures.
+void TRG_MemberManager::ApplyAllPersonalities2() {
+	auto tribe = GameNounManager.GetPlayerTribe();
+
+	for (auto member : tribe->GetTribeMembers()) {
+		auto personality = GetPersonality(member);
 		if (personality.valid && personality.mpCreature) {
 			ApplyPersonality(personality);
-			//personality.mpCreature->funcC4h();
-			//personality.mpCreature->funcD4h();
-			personality.mpCreature->func78h();
-			//personality.mpCreature->mAge = 0;
 		}
 	}
 }
+
+void TRG_MemberManager::ResetSuppressBabyFX() {
+	mbSuppressBabyGrowFX = false;
+}
+
 
 TRG_MemberManager::MemberPersonality TRG_MemberManager::GetPersonality(cCreatureCitizenPtr creature) const {
 	auto personalityFind = mCreaturePersonalities.find(creature->mID);

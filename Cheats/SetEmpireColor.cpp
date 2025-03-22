@@ -20,9 +20,16 @@ void SetEmpireColor::ParseLine(const ArgScript::Line& line)
 	ColorRGBA colorRGBA = ColorRGBA(color.r, color.g, color.b, 1.0f);
 	uint32_t colorHex = uint32_t(round(color.r*0xFF)*0x10000 + round(color.g*0xFF)*0x100 + round(color.b*0xFF));
 
-
+	if (IsCreatureGame()) {
+		auto avatar = GameNounManager.GetAvatar();
+		if (avatar) {
+			avatar->mbColorIsIdentity = true;
+			avatar->GrowUp();
+			avatar->SetIdentityColor(color);
+		}
+	}
 	// TODO: none of these are fully working.
-	if (IsTribeGame()) {
+	else if (IsTribeGame()) {
 		auto tribe = GameNounManager.GetPlayerTribe();
 		if (!tribe) { return; }
 		tribe->mCachedColor = color;

@@ -268,6 +268,19 @@
     <ClInclude Include="Cheats\SetEmpireColor.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
+    <ClInclude Include="TRG_FireDanceManager.h">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="CreatureSpeedBoost.h">
+      <Filter>Valla_HorizonBlue</Filter>
+    </ClInclude>
+    <ClInclude Include="cVallaVector.h" />
+    <ClInclude Include="CVG_CityWalls.h">
+      <Filter>Valla_HorizonBlue\CVG</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\HurtTarget.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -484,6 +497,19 @@
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\SetEmpireColor.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_FireDanceManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClCompile>
+    <ClCompile Include="CreatureSpeedBoost.cpp">
+      <Filter>Valla_HorizonBlue</Filter>
+    </ClCompile>
+    <ClCompile Include="cVallaVector.cpp" />
+    <ClCompile Include="CVG_CityWalls.cpp">
+      <Filter>Valla_HorizonBlue\CVG</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\HurtTarget.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
   </ItemGroup>

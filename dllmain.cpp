@@ -42,6 +42,7 @@
 #include "Cheats/SetTechLevel.h"
 #include "Cheats/RepairAll.h"
 #include "Cheats/SetEmpireColor.h"
+#include "Cheats/HurtTarget.h"
 //#include "ListenAllMessages.h"
 
 // UI
@@ -70,9 +71,11 @@
 #include "TRG_TribePlanManager.h"
 #include "TRG_TribeHutManager.h"
 #include "TRG_SuppressScavenger.h"
+#include "TRG_FireDanceManager.h"
 
 // CVG Ingame Behaviors
 #include "CVG_CreatureManager.h"
+#include "CVG_CityWalls.h"
 
 // EP1 Ingame Behaviors
 #include "EP1_PosseCommand.h"
@@ -89,23 +92,27 @@
 // Scripts
 #include "CRE_ViewerAnims.h"
 #include "CR_JetHover.h"
+#include "CreatureSpeedBoost.h"
 
 CLG_CellController* cellcontroller;
 
 cObjectManager* obconverter;
+CreatureSpeedBoost* creaturespeedboost;
 
 CRG_DiseaseManager* diseasemanager;
 CRG_Inventory* crg_inventory;
 
-TRG_ChieftainManager* chiefmanager;
+TRG_ChieftainManager* trg_chiefmanager;
 TRG_CreaturePickup* trg_creaturepickup;
 TRG_MemberManager* trg_membermanager;
 TRG_IslandEventManager* trg_ieventmanager;
 TRG_TribePlanManager* trg_tribeplanmanager;
 TRG_TribeHutManager* trg_hutmanager;
 TRG_SuppressScavenger* trg_suppressscavenger;
+TRG_FireDanceManager* trg_firedancemanager;
 
 CVG_CreatureManager* cvg_creaturemanager;
+CVG_CityWalls* cvg_citywalls;
 
 
 EP1_PosseCommand* ep1_possecommand;
@@ -119,6 +126,7 @@ EP1_GameplayObject_IceCube* ep1_gameplayobject_icecube;
 EP1_BehaviorManager* ep1_behaviormanager;
 
 cCreatureCitizenPtr last_named_chieftain;
+cCommEvent* pLastEvent = nullptr;
 
 void Initialize()
 {
@@ -132,7 +140,7 @@ void Initialize()
 	CheatManager.AddCheat("BrainDrain", new(CRG_BrainDrain));
 	//CheatManager.AddCheat("SwapCreature", new(CRG_SwapCreature));
 	CheatManager.AddCheat("PosessTarget", new(CRG_PosessTarget));
-	CheatManager.AddCheat("ResurrectTarget", new(CRG_ResurrectTarget));
+	CheatManager.AddCheat("Resurrect", new(CRG_ResurrectTarget));
 	CheatManager.AddCheat("Recharge", new(CRG_Recharge));
 	CheatManager.AddCheat("SpawnPlant", new(CRG_SpawnPlant));
 	CheatManager.AddCheat("GrowUp", new(CRG_GrowUp));
@@ -160,6 +168,7 @@ void Initialize()
 	CheatManager.AddCheat("SetTechLevel", new(SetTechLevel));
 	CheatManager.AddCheat("RepairAll", new(RepairAll));
 	CheatManager.AddCheat("SetEmpireColor", new(SetEmpireColor));
+	CheatManager.AddCheat("HurtTarget", new(HurtTarget));
 	//CheatManager.AddCheat("ListenAllMessages", new(ListenAllMessages));
 
 #ifdef _DEBUG
@@ -185,24 +194,36 @@ void Initialize()
 	CRG_AttackBasic* crg_attackbasic = new(CRG_AttackBasic);
 	crg_inventory = new(CRG_Inventory);
 	SimulatorSystem.AddStrategy(crg_inventory, CRG_Inventory::NOUN_ID);
+	creaturespeedboost = new(CreatureSpeedBoost);
+	SimulatorSystem.AddStrategy(creaturespeedboost, CreatureSpeedBoost::NOUN_ID);
 
 	// TRG
 	
 	trg_creaturepickup = new(TRG_CreaturePickup);
-	chiefmanager = new(TRG_ChieftainManager);
 	trg_tribeplanmanager = new(TRG_TribePlanManager);
 	trg_suppressscavenger = new(TRG_SuppressScavenger);
+
 	// strategies
 	
 	trg_membermanager = new(TRG_MemberManager);
 	SimulatorSystem.AddStrategy(trg_membermanager, TRG_MemberManager::NOUN_ID);
+	trg_membermanager->mCreatureSpeedBoost = creaturespeedboost;
+
+	trg_firedancemanager = new(TRG_FireDanceManager);
+	SimulatorSystem.AddStrategy(trg_firedancemanager, TRG_FireDanceManager::NOUN_ID);
+	trg_firedancemanager->mCreatureSpeedBoost = creaturespeedboost;
+
 	trg_ieventmanager = new(TRG_IslandEventManager);
 	SimulatorSystem.AddStrategy(trg_ieventmanager, TRG_IslandEventManager::NOUN_ID);
 	trg_hutmanager = new(TRG_TribeHutManager);
 	SimulatorSystem.AddStrategy(trg_hutmanager, TRG_TribeHutManager::NOUN_ID);
 	
+	trg_chiefmanager = new(TRG_ChieftainManager);
+	SimulatorSystem.AddStrategy(trg_chiefmanager, TRG_ChieftainManager::NOUN_ID);
+
 
 	// CVG
+	cvg_citywalls = new(CVG_CityWalls);
 	cvg_creaturemanager = new(CVG_CreatureManager);
 	SimulatorSystem.AddStrategy(cvg_creaturemanager, CVG_CreatureManager::NOUN_ID);
 
@@ -248,16 +269,19 @@ void Dispose()
 	obconverter = nullptr;
 	diseasemanager = nullptr;
 	crg_inventory = nullptr;
+	creaturespeedboost = nullptr;
 
-	chiefmanager = nullptr;
+	trg_chiefmanager = nullptr;
 	trg_creaturepickup = nullptr;
 	trg_tribeplanmanager = nullptr;
 	trg_ieventmanager = nullptr;
 	trg_membermanager = nullptr;
 	trg_hutmanager = nullptr;
 	trg_suppressscavenger = nullptr;
+	trg_firedancemanager = nullptr;
 
 	cvg_creaturemanager = nullptr;
+	cvg_citywalls = nullptr;
 
 	ep1_possecommand = nullptr;
 	ep1_captainabilities = nullptr;
@@ -269,6 +293,7 @@ void Dispose()
 	ep1_behaviormanager = nullptr;
 
 	last_named_chieftain = nullptr;
+	pLastEvent = nullptr;
 	
 }
 
@@ -294,15 +319,118 @@ cCreatureCitizen* GetAnimCreatureCitizenOwner(const AnimatedCreaturePtr& animcre
 	return nullptr;
 }
 
+cCreatureBase* GetAnimCreatureBaseOwner(const AnimatedCreaturePtr& animcreature) {
+	cCombatantPtr target = nullptr;
+	for (auto creature : Simulator::GetData<Simulator::cCreatureBase>()) { //loop through all creatures
+		if (creature->mpAnimatedCreature.get() == animcreature) //if the current creature is the owner of the AnimatedCreature that triggered the event
+		{
+			return creature.get(); //set the crt pointer to the current creature
+		}
+	}
+	return nullptr;
+}
+
 // Detour the animation playing func
 member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*)) {
 	bool detoured(uint32_t animID, int* pChoice) {
 
+		auto thing = this;
+
 		if (IsTribeGame()) {
 
-			
-			if (animID == 0x02C39200) { // get_tool
-				auto creature = object_cast<cCreatureCitizen>(GetAnimCreatureCitizenOwner(this));
+			// Chieftain attacks
+			if (animID == 0x05766A10 || animID == 0x05766A11) { // chief_attack_01
+				if (trg_chiefmanager->mbStaffSingleSided) {
+					auto creature = GetAnimCreatureCitizenOwner(this);
+					if (creature && creature == GameNounManager.GetPlayerTribe()->GetLeaderCitizen()) {
+
+						return original_function(this, 0x056D2CF2, pChoice); // axe_attack
+
+					}
+				}
+			}
+			// Chieftain fishing
+			if ((animID >= 0x02C39231 && animID <= 0x02C39244) || animID == 0x05f08fa3) {
+				if (trg_chiefmanager->mbStaffSingleSided) {
+					auto creature = GetAnimCreatureCitizenOwner(this);
+					if (creature && creature == GameNounManager.GetPlayerTribe()->GetLeaderCitizen()) {
+
+						switch (animID) {
+							case 0x02C3923B: // chief_fish_spear
+								return original_function(this, 0x83F8973B, pChoice);
+							case 0x02C39244: // chief_fish_dump
+								return original_function(this, 0x83F89744, pChoice);
+							//
+							case 0x02C39231: // chief_fish_idle_start
+								return original_function(this, 0x02C39211, pChoice);
+							case 0x02C39236: // chief_fish_idle
+								return original_function(this, 0x02C39216, pChoice);
+							case 0x02C39240: // chief_fish_succ_1
+								return original_function(this, 0x02C39220, pChoice);
+							case 0x02C39241: // chief_fish_succ_2
+								return original_function(this, 0x02C39221, pChoice);
+							case 0x02C39242: // chief_fish_succ_3
+								return original_function(this, 0x02C39222, pChoice);
+							case 0x02C39243: // chief_fish_fail
+								return original_function(this, 0x02C39223, pChoice);
+							//case 0x05f08fa3:
+							//	return original_function(this, 0x83F8973B, pChoice);
+						}
+
+					}
+				}
+			}
+
+			// Marshmallow
+			if (animID == 0x06426C10) { // vig_roastmarshmallow
+				auto creature = GetAnimCreatureCitizenOwner(this);
+				if (creature) {
+
+					// randomize whether to use an alternate roast anim
+					if (randf() >= 0.5) {
+						// TODO: Fixme!
+						int herb = CapabilityChecker.GetCapabilityLevel(creature, 0x022E785C);
+						if (herb > 0 /*creature->IsHervibore()*/) {
+							int carn = CapabilityChecker.GetCapabilityLevel(creature, 0x022E7847);
+							
+							// omnivore
+							if (carn > 0) {
+								if (randf() > 0.5) {
+									return original_function(this, 0x896B933A, pChoice); //vig_roasthotdog
+								}
+								else {
+									return original_function(this, 0x896B933B, pChoice); //vig_roasttoast
+								}
+							}
+							// herbivore
+							else {
+								return original_function(this, 0x896B933B, pChoice); //vig_roasttoast
+							}							
+						}
+						else {
+							return original_function(this, 0x896B933A, pChoice); //vig_roasthotdog
+						}
+					}
+				}
+			}
+
+			// Fire Dance start and end
+			else if (animID == TRG_FireDanceManager::DanceAnims::soc_fire_dance_turn_fast) {
+				auto creature = GetAnimCreatureCitizenOwner(this);
+				if (creature) {
+					trg_firedancemanager->AddDancer(creature);
+				}
+			}
+			else if (animID == TRG_FireDanceManager::DanceAnims::soc_celebrate_trg) {
+				auto creature = GetAnimCreatureCitizenOwner(this);
+				if (creature) {
+					trg_firedancemanager->HitLastDanceAnim(creature);
+				}
+			}
+
+			// Get_tool
+			else if (animID == 0x02C39200) { 
+				auto creature = GetAnimCreatureCitizenOwner(this);
 				if (creature && creature->IsSelected() && creature->mpOwnerTribe == GameNounManager.GetPlayerTribe()) {
 					// only suppress if this is a creature that is going towards the event item
 					if (trg_ieventmanager->IsCreatureActivator(creature)) {
@@ -313,7 +441,7 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 
 		}
 
-		if (IsCreatureGame() || IsScenarioMode()) {
+		else if (IsCreatureGame() || IsScenarioMode()) {
 
 			// replace the jump jet animations when in mid-flight
 			uint32_t jetanim = JetHover_GetAnim(animID);
@@ -346,7 +474,7 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 			if (animID == 0x5403B863) { // "gen_posse_call"
 				// Make this only play if avatar in combat stance mode when interacting
 				// For some reason, these are opposite.
-				if ((IsScenarioMode() && CreatureGameData.GetAbilityMode() != cCreatureGameData::AbilityMode::Attack) ||
+				if ((IsScenarioMode() && CreatureGameData.GetAbilityMode() == cCreatureGameData::AbilityMode::Attack) ||
 					(IsCreatureGame() && CreatureGameData.GetAbilityMode() == cCreatureGameData::AbilityMode::Attack) ){
 					return original_function(this, 0x0418B841, pChoice); //"csa_phpto_flex"
 				}
@@ -387,6 +515,25 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 			}
 		}
 
+
+		// DEBUG:
+#ifdef DEBUG
+		if (GameNounManager.GetPlayerTribe() ) {
+			
+			auto creature = GetAnimCreatureCitizenOwner(this);
+			// only check anims on the chieftain!
+			//if (GameNounManager.GetPlayerTribe()->GetLeaderCitizen() == creature) {
+
+				// only check anims on the player tribe members
+				if (creature && creature->mpOwnerTribe == GameNounManager.GetPlayerTribe()) {
+
+					SporeDebugPrint("Animation: %x", animID);
+				}
+			//}
+			
+		}
+#endif // DEBUG	
+		
 		//SporeDebugPrint("Animation: %x", animID);
 		return original_function(this, animID, pChoice);
 
@@ -440,6 +587,17 @@ member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 				return original_function(this, 0xFA09CD25);
 			}
 
+		}
+		// fix the deny spice geyser issue
+		else if (IsCivGame() && id == 0x3a204b0) {
+			auto hovered = GameViewManager.GetHoveredObject();
+			if (hovered) {
+				cCommodityNodePtr geyser = object_cast<cCommodityNode>(hovered);
+				if (geyser && geyser->mPoliticalID != GameNounManager.GetPlayerCivilization()->GetPoliticalID()) {
+					return original_function(this, BasicCursorIDs::Cursors::ClaimSpice);
+				}
+			}
+			
 		}
 		
 		return original_function(this, id);
@@ -496,8 +654,7 @@ static_detour(TribeSpawn_detour, cTribe*(const Vector3&, int, int, int, bool, cS
 			species = cvg_creaturemanager->GetRandomTribeSpecies(species);
 		}
 		cTribe* tribe = original_function(position, tribeArchetype, numMembers, foodAmount, boolvalue, species);
-		trg_hutmanager->SetTribeName(tribe);
-		//trg_hutmanager->SetTribeColor(tribe);
+		trg_hutmanager->SetupNewTribe(tribe);
 		
 		return tribe;
 	}
@@ -508,8 +665,10 @@ member_detour(TribeSpawnMember_detour, Simulator::cTribe, cCreatureCitizen* (int
 	cCreatureCitizen* detoured(int integer) {
 		this->mSpeciesKeys[0] = ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200);
 		cCreatureCitizen* ciziten = original_function(this, integer);
-		ciziten->mbColorIsIdentity = true;
-		trg_membermanager->StoreCurrentBabies();
+		if (ciziten) {
+			ciziten->mbColorIsIdentity = true;
+			trg_membermanager->StoreCurrentBabies();
+		}
 
 		return ciziten;
 	}
@@ -522,6 +681,14 @@ member_detour(HerdSpawn_detour, Simulator::cHerd, cHerd*(const Vector3&, cSpecie
 		//App::ConsolePrintF("Herd Spawned");
 		cHerd* herd = original_function(this, position, pSpeciesProfile, herdSize, isOwnedByAvatar, creaturePersonality, createNest);
 		return herd;
+
+		// TODO: herd variety
+	}
+};
+
+member_detour(GetTribeMaxPopulation_detour, Simulator::cTribe, size_t()) {
+	size_t detoured() {
+		return trg_tribeplanmanager->GetTribeMaxPopulation(this);
 	}
 };
 
@@ -536,7 +703,7 @@ static_detour(GetTribeToolData_detour, cTribeToolData*(int)) {
 		if (data) {
 			// Exception for tribal rares:
 			// Pull data from random model file
-			if (data->mToolType == TRG_TribePlanManager::ToolTypes::EventRare) {
+			if (data->mToolType == ToolTypes::EventRare) {
 				auto model = trg_ieventmanager->GetEventItemModelKey();
 				data->mToolDamageHiKey = model;
 				data->mToolDamageLoKey = model;
@@ -554,10 +721,35 @@ static_detour(GetTribeToolData_detour, cTribeToolData*(int)) {
 // Detour GetToolClass in cTribeTool
 member_detour(GetToolClass_detour, Simulator::cTribeTool, int()) {
 	int detoured() {
-		if (this->GetToolType() > 11) {
+		if (this->GetToolType() > 13) {
 			return 1;
 		}
 		return original_function(this);
+	}
+};
+
+// Detour GetRefundMoney in cTribeTool
+member_detour(GetRefundMoney_detour, Simulator::cTribeTool, int()) {
+	int detoured() {
+		// sell for full price if under construction
+		if (trg_tribeplanmanager->IsToolInProgress(this)) {
+			return Simulator::GetTribeToolData(this->GetToolType())->mPrice;
+		}
+		return original_function(this);
+	}
+};
+
+//virtual_detour(WalkTo_detour, Simulator::cCreatureAnimal, Simulator::cCreatureBase, void(int, const Vector3&, const Vector3&, float, float)) //cCreatureAnimal
+//{
+
+// Detour RemoveTool in cTribe
+virtual_detour(RemoveTool_detour, Simulator::cTribe, Simulator::cTribe, void(cTribeTool*)) {
+	void detoured(cTribeTool* tribeTool) {
+		//tribeTool->mTribe = nullptr;
+		//this->mTribeLayout.SetParameters(tribeTool->GetPosition(), 0, tribeTool->GetDirection(), 0);
+		//this->SetPosition(tribeTool->GetPosition()); // setting tribe position moves the camera and tool-rotation-point to this spot. fucks up the tribe if remains set when saving.
+		//this->slot
+		original_function(this, tribeTool);
 	}
 };
 
@@ -616,7 +808,7 @@ member_detour(GetHandheldItemForTool_detour, Simulator::cCreatureCitizen, int (i
 	int detoured(int toolType) {
 		// chieftain staff
 		if (toolType == kTribeToolTypeChieftain) {
-			chiefmanager->AddChiefToQueue(this);
+			trg_chiefmanager->AddChiefToQueue(this);
 		}
 		return original_function(this, toolType);
 	}
@@ -679,6 +871,9 @@ member_detour(UIShowEvent_detour, Simulator::cUIEventLog, uint32_t(uint32_t, uin
 							trg_membermanager->ApplyPersonality(personality);
 						}
 					}
+					if (trg_membermanager->mbSuppressBabyGrowFX) {
+						return 0x0;
+					}
 				}
 			}
 
@@ -705,8 +900,11 @@ member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint3
 			MessageManager.MessageSend(id("CinematicBegin"), nullptr);
 		}
 
-		// detect if a baby is growing up and send a message
+		// detect if a baby is growing up and send a message or suppress FX.
 		if (instanceId == 0x3A616FEE) {
+			if (IsTribeGame() && trg_membermanager->mbSuppressBabyGrowFX) {
+				instanceId = 0x0;
+			}
 			MessageManager.MessageSend(id("BabyGrowUp"), nullptr);
 		}
 
@@ -720,8 +918,8 @@ member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint3
 
 			int dietvalue = 0;
 			if (swapnum > -1) {
-				dietvalue = chiefmanager->NextQueueItem();
-				uint32_t staff_id = chiefmanager->GetStaffID(dietvalue, swapnum);
+				dietvalue = trg_chiefmanager->NextQueueItem();
+				uint32_t staff_id = trg_chiefmanager->GetStaffID(dietvalue, swapnum);
 
 				if (staff_id != 0x0) {
 					return original_function(this, staff_id, groupId);
@@ -739,18 +937,24 @@ member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint3
 // Detour a player part unlocking function
 member_detour(CRGunlock_detour, Simulator::CreatureGamePartUnlocking, struct cCollectableItemID(UnkHashMap&, bool, int, int))
 {
-	struct cCollectableItemID detoured(UnkHashMap& unk1, bool unk2, int unk3, int unk4)
+	struct cCollectableItemID detoured(UnkHashMap& unk1, bool firstCall, int unk3, int unlockLevel)
 	{
-		SporeDebugPrint("unlocking part! hashmap size: %x, bool: %b, ints: %i %i", unk1.size(), unk2, unk3, unk4);
-		cCollectableItemID partid = original_function(this, unk1, unk2, unk3, unk4);
+		//Simulator::GetPlayer()->mpCRGItems->mUnlockableItems.clear();
+		//Simulator::GetPlayer()->mpCRGItems->AddUnlockableItem(id("ce_details_wing_04-symmetric"), 0x40626000, 4, id("ce_category_wings"), 0, 3, 0, 1.0f, id("CRG_partUnlock_detail"));
+
+		SporeDebugPrint("unlocking part! hashmap size: %x, bool: %b, ints: %i %i", unk1.size(), firstCall, unk3, unlockLevel);
+		cCollectableItemID partid = original_function(this, unk1, firstCall, unk3, unlockLevel);
 		SporeDebugPrint("part ID: 0x%x ! 0x%x ", partid.groupID, partid.instanceID );
 		
 		//if (partid.instanceID != 0xffffffff) {
-		//partid.groupID = 0x887C91BB;
+		//	partid.groupID = 0x4FB30F93;
+		//	partid.instanceID = 0x00000;
 		//}
 		
 		//Simulator::GetPlayer()->mpCRGItems->AddUnlockableItem(id("ce_details_wing_04-symmetric"), 0x40626000, 4, id("ce_category_wings"), 0, 3, 0, 1.0f, id("CRG_partUnlock_detail"));
 		//Simulator::GetPlayer()->mpCRGItems->AddUnlockableItemFromProp(ResourceKey(id("ce_details_wing_04-symmetric"), TypeIDs::Names::prop, 0x40626000), id("ce_category_wings"), 0, 3, 0);
+
+
 
 		return partid;
 
@@ -809,7 +1013,6 @@ virtual_detour(WalkTo_detour, Simulator::cCreatureAnimal, Simulator::cCreatureBa
 				return;
 			}
 		}*/
-
 		// Check if the creature is in the captain posse playing a scheduled walk. If so, do not interrupt them!
 		auto schedule = ep1_possecommand->GetCreatureSchedule(object_cast<Simulator::cCreatureAnimal>(this));
 		
@@ -877,6 +1080,34 @@ static_detour(CellShouldNotAttack_detour, bool(cCellObjectData*, cCellObjectData
 			return true;
 		}
 		return original_function(cell1, cell2);
+	}
+};
+
+
+bool sporepediapause = false;
+
+// Detour the audio playing func
+static_detour(PlayAudio_detour, void(uint32_t, Audio::AudioTrack)) {
+	void detoured(uint32_t soundID, Audio::AudioTrack track) {
+		original_function(soundID, track);
+		if (soundID == id("spd_exit") || soundID == id("spd_makenew_click") || soundID == id("spd_verb_edit_click")) {
+			if (sporepediapause) {
+				sporepediapause = false;
+				GameTimeManager.Resume(TimeManagerPause::Gameplay);
+			}
+		}
+	}
+};
+
+static_detour(AssetBrowserShow_Detour, void(ShopperRequest&)) {
+	void detoured(ShopperRequest & request) {
+		original_function(request);
+		// TODO: this works but we need a way to unpause it.
+		if (!sporepediapause) {
+			sporepediapause = true;
+			GameTimeManager.Pause(TimeManagerPause::Gameplay);
+		}
+		
 	}
 };
 
@@ -963,9 +1194,11 @@ bool trg_has_set_category = false;
 
 // Editor parts palette loading func, PaletteUI::Load
 member_detour(PaletteUILoad_detour, Palettes::PaletteUI, void(Palettes::PaletteMain*, UTFWin::IWindow*, bool, Palettes::PaletteInfo*)) {
-	void detoured(Palettes::PaletteMain * pPalette, UTFWin::IWindow * pWindow, bool bool1, Palettes::PaletteInfo * pInfo) {
+	void detoured(Palettes::PaletteMain* pPalette, UTFWin::IWindow* pWindow, bool bool1, Palettes::PaletteInfo* pInfo) {
 		trg_has_set_category = false;
 		original_function(this, pPalette, pWindow, bool1, pInfo);
+
+
 
 		// Tribal
 		if (IsTribeGame()) {
@@ -981,6 +1214,13 @@ member_detour(PaletteUILoad_detour, Palettes::PaletteUI, void(Palettes::PaletteM
 // PaletteUI::SetActiveCategory
 member_detour(PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int)) {
 	void detoured(int categoryIndex) {
+
+		// Civ
+		if (IsCivGame()) {
+			// TODO: start tracking if the player mouses over city wall up/downgrades
+			cvg_citywalls->ProcessCityWallReduction();
+		}
+
 		// load normally and store last page
 		if (!IsTribeGame() || trg_has_set_category) {
 			original_function(this, categoryIndex);
@@ -993,7 +1233,9 @@ member_detour(PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int))
 		}
 		// load last page
 		else {
+			//if (trg_last_category != 0) {
 			original_function(this, trg_last_category);
+			//}
 			Simulator::ScheduleTask(this, &PaletteUISetActiveCategory_detour::EnableHasSetCategory, 0.0001f);
 		}
 
@@ -1003,10 +1245,11 @@ member_detour(PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int))
 		MessageManager.MessageSend(id("UpdateHut"), nullptr);
 		MessageManager.MessageSend(id("UpdateHomes"), nullptr);
 
+		MessageManager.MessageSend(id("UpdateStaffIcon"), nullptr);
+
 	}
 };
 
-//-----------------------------------
 
 // Specialized citizen role names
 
@@ -1026,7 +1269,7 @@ static_detour(CitizenGetSpecializedName_detour, Fixed32StringType* (Fixed32Strin
 			//return type;
 		}
 
-		return original_function(type, object);;
+		return original_function(type, object);
 	}
 };
 
@@ -1044,6 +1287,25 @@ member_detour(LocalStringSetText_detour, LocalizedString, bool(uint32_t, uint32_
 	}
 };
 
+//-----------------------------------
+// Civ
+
+#include <Spore\Simulator\SubSystem\CommManager.h>
+member_detour(ShowCommEvent_detour, Simulator::cCommManager, void(cCommEvent*)) {
+	void detoured(cCommEvent* pEvent) {
+		MessageManager.MessageSend(id("CinematicBegin"), nullptr);
+		GameTimeManager.SetSpeedFactors(1.0f, 2.0f, 4.0f, 8.0f);
+		GameTimeManager.SetSpeed(0);
+		pLastEvent = pEvent;
+		App::ScheduleTask(this, &ShowCommEvent_detour::ShowLastCommEvent, 0.001f);
+		
+	}
+
+	void ShowCommEvent_detour::ShowLastCommEvent() {
+		original_function(this, pLastEvent);
+		pLastEvent = nullptr;
+	}
+};
 
 member_detour(CitySpawnVehicle_detour, Simulator::cCity, cVehicle* (VehiclePurpose speciality, VehicleLocomotion locomotion, struct ResourceKey key, bool isSpaceStage)) {
 	cVehicle* detoured(VehiclePurpose speciality, VehicleLocomotion locomotion, struct ResourceKey key, bool isSpaceStage) {
@@ -1052,6 +1314,7 @@ member_detour(CitySpawnVehicle_detour, Simulator::cCity, cVehicle* (VehiclePurpo
 
 		return vehicle;
 	}
+
 	void CitySpawnVehicle_detour::SetVehicleScale() {
 		auto vehicles = GetDataByCast<cVehicle>();
 		if (vehicles.size() == 0) { return; }
@@ -1068,6 +1331,7 @@ member_detour(CitySpawnVehicle_detour, Simulator::cCity, cVehicle* (VehiclePurpo
 void AttachDetours()
 {
 	
+	PlayAudio_detour::attach(GetAddress(Audio, PlayAudio));
 	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
 	SetCursor_detour::attach(GetAddress(UTFWin::cCursorManager, SetActiveCursor));
 	EffectOverride_detour::attach(GetAddress(Swarm::cEffectsManager, GetDirectoryAndEffectIndex));
@@ -1077,7 +1341,6 @@ void AttachDetours()
 	HerdSpawn_detour::attach(GetAddress(Simulator::cGameNounManager, CreateHerd));
 	TribeSpawnMember_detour::attach(GetAddress(Simulator::cTribe, SpawnMember));
 
-	//CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
 	AvatarScaling_detour::attach(GetAddress(Simulator::cCreatureGameData, CalculateAvatarNormalizingScale));
 
 	WalkTo_detour::attach(GetAddress(Simulator::cCreatureBase, WalkTo));
@@ -1086,17 +1349,22 @@ void AttachDetours()
 	ScenarioPlayModeUpdateGoals_detour::attach(GetAddress(Simulator::cScenarioPlayMode, UpdateGoals));
 
 	// TODO: needs disk spore address!
-	CombatTakeDamage_detour::attach(Address(0x00bfcf10));
+	CombatTakeDamage_detour::attach(GetAddress(Simulator::cCombatant, TakeDamage));
 
 	CellShouldNotAttack_detour::attach(GetAddress(Simulator::Cell, ShouldNotAttack));
+
+	AssetBrowserShow_Detour::attach(GetAddress(ShopperRequest, Show));
 
 	ReadSPUI_detour::attach(GetAddress(UTFWin::UILayout, Load));
 	PaletteUILoad_detour::attach(GetAddress(Palettes::PaletteUI, Load));
 	PaletteUISetActiveCategory_detour::attach(GetAddress(Palettes::PaletteUI, SetActiveCategory));
 
+	GetTribeMaxPopulation_detour::attach(Address(0x00c8ec70));
 	// Tribetools
 	GetTribeToolData_detour::attach(GetAddress(Simulator, GetTribeToolData));
 	GetToolClass_detour::attach(GetAddress(Simulator::cTribeTool, GetToolClass));
+	GetRefundMoney_detour::attach(GetAddress(Simulator::cTribeTool, GetToolClass));
+	RemoveTool_detour::attach(GetAddress(Simulator::cTribe, RemoveTool));
 	GetRolloverIdForObject_detour::attach(GetAddress(UI::SimulatorRollover, GetRolloverIdForObject));
 	CreateTool_detour::attach(GetAddress(Simulator::cTribe, CreateTool));
 	CitizenDoAction_detour::attach(GetAddress(Simulator::cCreatureCitizen, DoAction));
@@ -1111,9 +1379,11 @@ void AttachDetours()
 	CitizenGetSpecializedName_detour::attach(GetAddress(Simulator::cCreatureCitizen, GetSpecializedName));
 	LocalStringSetText_detour::attach(GetAddress(LocalizedString, SetText));
 	
-
+	// Civ
+	ShowCommEvent_detour::attach(GetAddress(Simulator::cCommManager, ShowCommEvent));
 	CitySpawnVehicle_detour::attach(GetAddress(Simulator::cCity, SpawnVehicle));
 
+	CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
 	//CRGunlockUnk1_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597BC0));
 	//CRGunlockUnk2_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));
 	

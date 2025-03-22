@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "HBdebug.h"
 #include <Spore\Editors\Editor.h>
+#include <Spore\Simulator\cCreatureGameData.h>
 
 
 HBdebug::HBdebug()
@@ -88,9 +89,13 @@ void HBdebug::ParseLine(const ArgScript::Line& line)
 {
 	// Some common vars we might want to use
 	//-------------------------------------------
-	// objects
+	// objects and players
 	auto avatar = GameNounManager.GetAvatar();
+	auto player = GetPlayer();
+	cHerdPtr herd; if (avatar) { herd = avatar->mHerd; }
+	cNestPtr nest; if (herd) { nest = herd->mpNest; }
 	auto tribe = GameNounManager.GetPlayerTribe();
+	cCreatureCitizenPtr chieftain; if (tribe) { chieftain = tribe->GetLeaderCitizen(); }
 	auto hovered = GameViewManager.GetHoveredObject();
 	auto hoveredAnimal = object_cast<cCreatureAnimal>(hovered);
 	auto hoveredCitizen = object_cast<cCreatureCitizen>(hovered);
@@ -100,6 +105,8 @@ void HBdebug::ParseLine(const ArgScript::Line& line)
 	// editor
 	auto editor = GetEditor();
 	auto editorModel = Editor.GetEditorModel();
+	// CRG part unlocks
+	cCollectableItemsPtr crgparts; if (player) { crgparts = player->mpCRGItems; }
 	// planet
 	auto planetRecord = Simulator::GetActivePlanetRecord();
 	auto empire = Simulator::GetPlayerEmpire();
@@ -110,6 +117,18 @@ void HBdebug::ParseLine(const ArgScript::Line& line)
 	// Your code here:
 	//-------------------------------------------
 
+	if (hovered) {
+		hovered = hovered;
+	}
+
+	//if (herd && herd->mpHerdMom) {
+	//	herd->mpHerdMom->mbColorIsIdentity = true;
+	//	herd->mpHerdMom->GrowUp();
+	//	herd->mpHerdMom->SetIdentityColor(ColorRGB(5, 0, 3));
+	//}
+
+	//auto key = ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200);
+	//editor->AddCreature(1, &key);
 
 	//-------------------------------------------
 	SporeDebugPrint("HBdebug done executing.");

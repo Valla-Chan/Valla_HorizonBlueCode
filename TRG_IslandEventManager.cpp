@@ -80,7 +80,7 @@ void TRG_IslandEventManager::OnModeEntered(uint32_t previousModeID, uint32_t new
 
 void TRG_IslandEventManager::RestoreName() {
 	if (mpEventItem && mpDummyTribe) {
-		mpDummyTribe->SetName(mEventItemName.c_str());
+		mpDummyTribe->SetName(GetEventItemNameChar(mpEventItem->GetModelKey()));
 	}
 }
 
@@ -142,7 +142,7 @@ void TRG_IslandEventManager::SpawnEventItem() {
 		mpEventItem = simulator_new<Simulator::cTribeHut>();
 		mpEventItem->mpTribe = mpDummyTribe;
 		mpDummyTribe->SetName(name);
-		mEventItemName = name;
+		//mEventItemName = name;
 
 		mpEventItem->mUndamagedModel = modelKey;
 		mpEventItem->SetModelKey(modelKey);
@@ -745,7 +745,7 @@ Simulator::Attribute TRG_IslandEventManager::ATTRIBUTES[] = {
 	SimAttribute(TRG_IslandEventManager,mSavedHut,4),
 	SimAttribute(TRG_IslandEventManager,mbItemWasClicked,5),
 	SimAttribute(TRG_IslandEventManager,mpActivators,6),
-	SimAttribute(TRG_IslandEventManager,mEventItemName,7),
+	//SimAttribute(TRG_IslandEventManager,mEventItemName,7),
 	// This one must always be at the end
 	Simulator::Attribute()
 };

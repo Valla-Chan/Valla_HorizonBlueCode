@@ -8,6 +8,7 @@ TRG_TribePlanManager::TRG_TribePlanManager()
 	WindowManager.GetMainWindow()->AddWinProc(this);
 	CursorManager.Load(0xFA09CD25, u"cursor_construct");
 	//MessageManager.AddListener(this, id("PlannerPopup"));
+	PopulateTribeToolData();
 }
 
 
@@ -43,13 +44,6 @@ void TRG_TribePlanManager::Update()
 
 		UpdateToolsProgress();
 		UpdatePopulation();
-
-		// Only run when the rollover UI is visible
-		auto window = WindowManager.GetMainWindow();
-		auto textfield = window->FindWindowByID(0x0199A7D1);
-		if (textfield) {
-			UpdateTribePopulationUI();
-		}
 
 		//// Handle manual hovered rollover
 		//// This must go last
@@ -97,6 +91,7 @@ void TRG_TribePlanManager::AddedBaby() {
 void TRG_TribePlanManager::AddedMember() {
 }
 
+// DEPRECATED
 void TRG_TribePlanManager::UpdateTribePopulationUI() {
 	auto window = WindowManager.GetMainWindow();
 	auto textfield = window->FindWindowByID(0x0199A7D1); // ID of the NEW population text in Rollover_TribeHut.spui and Rollover_Tribe_Minimap.spui
@@ -139,6 +134,11 @@ void TRG_TribePlanManager::UpdateTribePopulationUI() {
 		if (tribe) {
 			int currentPop = tribe->GetTribeMembers().size();
 			int maxPop = GetTribeMaxPopulation(tribe);
+			//if (maxPop > tribe->mTribeMembers.size()) {
+			//	tribe->mTribeMembers.resize(maxPop);
+			//	tribe->mCommunityMembers.resize(maxPop);
+			//	tribe->mCommunitySize = maxPop;
+			//}
 
 			// create the population caption string
 			eastl::string16 captionStr;
@@ -201,29 +201,65 @@ int TRG_TribePlanManager::GetTribeMaxPopulation(cTribePtr tribe) const {
 //-----------------------------------------
 // TOOLDATA
 
-// TODO: Maybe read and store the files from the folder in a vector, like the normal code does.
+// Read and store the new tool files from the folder in a vector, like the normal tool code does.
+void TRG_TribePlanManager::PopulateTribeToolData() {
+
+	eastl::vector<ResourceKey> keys;
+
+	// pull new Tribe Tool entry props from tribe_tools~ folder
+	ResourceManager.GetRecordKeyList(keys,
+		&Resource::StandardFileFilter(
+			ResourceKey::kWildcardID,
+			GroupIDs::Names::TribeToolData,
+			TypeIDs::prop,
+			ResourceKey::kWildcardID
+		)
+	);
+
+	for (const ResourceKey& key : keys) {
+		// if this is a default tribe tool, do not store it.
+		if (defaultTribeTools.find(key.instanceID) != defaultTribeTools.end()) { continue; }
+
+		int typeID = TribeToolTypeIDFromProp(key);
+		tribeToolIDs.insert(make_pair(typeID, key.instanceID));
+	}
+}
+
+// Get the tribe tool data by the tooltype.
+// works only for new tools to avoid a callback loop in the detour.
 cTribeToolData* TRG_TribePlanManager::GetTribeToolData(int toolType) const {
 	using namespace TypeIDs;
-	if (toolType > TRG_TribePlanManager::ToolTypes::HomePalette) {
+	// default tools
+	if (toolType <= ToolTypes::DecorPalette) {
+		//return Simulator::GetTribeToolData(toolType);
+		return nullptr;
+	}
+	// HB tools
+	// NOTE: 'HomePalette' and 'DecorPalette' will never have any real tools associated with it, as it only exists to allow houses to be spawned.
+	else {
 		//instantiate
 		ResourceKey toolKey = ResourceKey(0x0, Names::prop, GroupIDs::TribeToolData);
 		int typeIDoverride = -1;
 
-		// Home hut
-		// Note: The entire range of Housing objects all return the data from tool 11
-		if (toolType > TRG_TribePlanManager::ToolTypes::HomePalette && toolType <= TRG_TribePlanManager::ToolTypes::HomeEnd) {
-			toolKey.instanceID = id("homehut");
-			typeIDoverride = toolType;
-		}
 		// Island Event Rare
-		else if (toolType == EventRare) {
+		if (toolType == EventRare) {
 			// TODO: this should maybe do something special that returns the actual model of the rare as well?
 			toolKey.instanceID = id("homehut");
 			typeIDoverride = toolType;
 		}
-		// all else is WatchTower for now.
-		else {
-			toolKey.instanceID = id("WatchTower");
+		// Home Hut
+		// Note: The entire range of Housing objects all return the data from tool 11
+		else if (toolType >= ToolTypes::HomeStart && toolType <= ToolTypes::HomeEnd) {
+			toolKey.instanceID = id("homehut");
+			typeIDoverride = toolType;
+		}
+		// all else is pulled from the hashmap
+		else if (toolType > HomeEnd) {
+			auto E = tribeToolIDs.find(toolType);
+			if (E != tribeToolIDs.end()) {
+				toolKey.instanceID = E.get_node()->mValue.second;
+			}
+			
 		}
 
 		// get the actual data from this file
@@ -233,6 +269,8 @@ cTribeToolData* TRG_TribePlanManager::GetTribeToolData(int toolType) const {
 	return nullptr;
 }
 
+// typeIDoverride forces 'mToolType' of the tribal tool shed to store as this value.
+// typeIDoverride = -1 disables the override.
 cTribeToolData* TRG_TribePlanManager::TribeToolDataFromProp(ResourceKey key, int typeIDoverride) {
 	cTribeToolData* toolData = new(cTribeToolData);
 	toolData->mFileKey = key;
@@ -241,8 +279,12 @@ cTribeToolData* TRG_TribePlanManager::TribeToolDataFromProp(ResourceKey key, int
 	PropertyListPtr mpPropList;
 	if (PropManager.GetPropertyList(key.instanceID, key.groupID, mpPropList))
 	{
-		App::Property::GetInt32(mpPropList.get(), 0x04294750, toolData->mToolType);
-		App::Property::GetInt32(mpPropList.get(), 0x04294751, toolData->mToolClass);
+		uint32_t tType = -1;
+		uint32_t tClass = 0;
+		App::Property::GetUInt32(mpPropList.get(), 0x04294750, tType);
+		App::Property::GetUInt32(mpPropList.get(), 0x04294751, tClass);
+		toolData->mToolType = int(tType);
+		toolData->mToolClass = int(tClass);
 		App::Property::GetInt32(mpPropList.get(), 0x02166464, toolData->mPrice);
 		App::Property::GetFloat(mpPropList.get(), 0x03A26420, toolData->mToolHealth);
 
@@ -272,6 +314,9 @@ cTribeToolData* TRG_TribePlanManager::TribeToolDataFromProp(ResourceKey key, int
 
 		App::Property::GetText(mpPropList.get(), 0x8F6FC401, toolData->mName);
 	}
+	else {
+		return nullptr;
+	}
 	//toolData->mToolType = 4;
 	if (typeIDoverride != -1) {
 		toolData->mToolType = typeIDoverride;
@@ -279,6 +324,17 @@ cTribeToolData* TRG_TribePlanManager::TribeToolDataFromProp(ResourceKey key, int
 	toolData->mToolClass = 1;
 
 	return toolData;
+}
+
+int TRG_TribePlanManager::TribeToolTypeIDFromProp(ResourceKey key) {
+	uint32_t toolTypeID = -1;
+
+	PropertyListPtr mpPropList;
+	if (PropManager.GetPropertyList(key.instanceID, key.groupID, mpPropList))
+	{
+		App::Property::GetUInt32(mpPropList.get(), 0x04294750, toolTypeID);
+	}
+	return toolTypeID;
 }
 
 //-----------------------------------------
@@ -400,6 +456,12 @@ void TRG_TribePlanManager::ToolComplete(cTribeToolPtr tool) {
 	if (IsToolHome(tool)) {
 		//MessageManager.MessageSend(id("UpdateHomes"), nullptr);
 	}
+	else {
+		// debug
+		//for (auto member : GameNounManager.GetPlayerTribe()->GetTribeMembers()) {
+		//	member->DoAction(kCitizenActionGrabTool, tool.get());
+		//}
+	}
 }
 
 
@@ -488,13 +550,11 @@ bool TRG_TribePlanManager::HandleUIMessage(IWindow* window, const Message& messa
 		auto id = message.source->GetControlID();
 		// pressed baby button
 		if (id == 0x0625CD52) {
-			if (mBabySpawnTask) {
+			if (mBabySpawnTask && !mBabySpawnTask->HasExecuted()) {
 				Simulator::RemoveScheduledTask(mBabySpawnTask);
 			}
 			mbBabySpawning = true;
 			mBabySpawnTask = Simulator::ScheduleTask(this, &TRG_TribePlanManager::ResetBabySpawningVar, 6.0f);
-			//debug
-			auto tribe = GameNounManager.GetPlayerTribe();
 		}
 
 	}
