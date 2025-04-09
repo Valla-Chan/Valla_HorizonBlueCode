@@ -2,6 +2,8 @@
 
 #include <Spore\BasicIncludes.h>
 #include "TRG_ToolIDs.h"
+#include "TribeToolStratManager.h"
+//#include "TribeToolDataKeys.h"
 
 #define TRG_TribePlanManagerPtr intrusive_ptr<TRG_TribePlanManager>
 
@@ -40,6 +42,8 @@ public:
 	int mPopulationSelectable = 0;
 	bool mbBabySpawning = false;
 
+	bool TribeHasToolType(cTribePtr tribe, int tooltype) const;
+
 	void UpdatePopulation();
 	void AddedBaby();
 	void AddedMember();
@@ -52,37 +56,26 @@ public:
 
 	const float progress_value = 0.67f; // starter health scale for hut construction
 
+	// TODO: a lot of this stuff needs to be moved to the tribetoolstratmanager, and removed from here.
 
-	const eastl::hash_set<uint32_t> defaultTribeTools = {
-		id("attack1"),
-		id("attack2"),
-		id("attack3"),
-		id("social1"),
-		id("social2"),
-		id("social3"),
-		id("chieftain"),
-		id("defaulttool"),
-		id("firepit"),
-		id("fish"),
-		id("gather"),
-		id("heal"),
+	// additional data for new tribe tools
+
+	struct ToolMetadata {
+		int mHandHeldIndex = 0;
+		uint32_t mHandHeldItemEffect = 0x0;
+		uint32_t mToolEnRouteAnim = 0x0;
+
+		bool mbToolPrebuilt = false; // todo: make this work like the houses except in its own range of decor items that is functionally infinite, and map the used ID number to its palette tool ID
+		bool mbToolAllowMultiple = false;
+		bool mbToolDisableRollover = false;
+
+		ResourceKey mSpecializedName = {};
+		ResourceKey mAbilityKey = {};
 	};
 
 	hash_map<int, uint32_t> tribeToolIDs;
+	hash_map<int, cTribeToolStratManager::ToolMetadata*> tribeToolMetadata;
 
-	// Build progress models
-	// TODO: make these actually different between types. maybe even data driven, if needed to have ghost FX...
-	const ResourceKey plot_social01 = ResourceKey(id("tt_construction_social_01"), TypeIDs::Names::prop, id("toolplots"));
-	const ResourceKey plot_social02 = ResourceKey(id("tt_construction_social_02"), TypeIDs::Names::prop, id("toolplots"));
-
-	const ResourceKey plot_attack01 = ResourceKey(id("tt_construction_social_01"), TypeIDs::Names::prop, id("toolplots"));
-	const ResourceKey plot_attack02 = ResourceKey(id("tt_construction_social_02"), TypeIDs::Names::prop, id("toolplots"));
-
-	const ResourceKey plot_heal01 = ResourceKey(id("tt_construction_social_01"), TypeIDs::Names::prop, id("toolplots"));
-	const ResourceKey plot_heal02 = ResourceKey(id("tt_construction_social_02"), TypeIDs::Names::prop, id("toolplots"));
-
-	const ResourceKey plot_food01 = ResourceKey(id("tt_construction_social_01"), TypeIDs::Names::prop, id("toolplots"));
-	const ResourceKey plot_food02 = ResourceKey(id("tt_construction_social_02"), TypeIDs::Names::prop, id("toolplots"));
 	//---------------------------------------
 
 	int mToolsAmount = 0;
@@ -91,14 +84,27 @@ public:
 	vector<cTribeToolPtr> mpInProgressTools = {};
 	vector<float> mpPlotHealths = {};
 
+	vector<Vector2> mToolQueueCitizenData; // ToolID, HandheldID
+
+
 	//---------------------------------------
 
-	eastl::array<cTribeToolData*, 64> mToolDataArray; // tool data after 11
+	eastl::array<cTribeToolData*, 64> mToolDataArray; // hb tribal tool data
 
 	void PopulateTribeToolData();
+	ToolMetadata* TRG_TribePlanManager::GetTribeToolMetadata(int toolType) const;
 	cTribeToolData* GetTribeToolData(int toolType) const;
 	static cTribeToolData* TribeToolDataFromProp(ResourceKey key, int typeIDoverride = -1);
 	static int TribeToolTypeIDFromProp(ResourceKey key);
+	static ToolMetadata* TribeToolMetadataFromProp(ResourceKey key);
+	void SetDesiredHandheldItem(cCreatureCitizenPtr citizen);
+	
+	ResourceKey GetCitizenNameLocaleResource(cCreatureCitizenPtr citizen) const;
+	// Add a chief creature's diet value to the queue
+	void AddCitizenToolTypeToQueue(int toolID, int handheldID);
+	void RemoveCitizenToolTypeQueue();
+	//int NextQueueItem();
+	uint32_t ConvertToolEffectID(uint32_t instanceId);
 
 	//---------------------------------------
 
@@ -112,9 +118,15 @@ public:
 	bool IsToolHome(cTribeToolPtr tool) const;
 	int GetNewHomeID(cTribePtr tribe) const;
 	ResourceKey GetPlotModel(cTribeToolPtr tool) const;
+	void RemoveFromProgress(cTribeToolPtr tool);
 	cTribeToolPtr GetHoveredConstructionPlot() const;
 	bool IsConstructionPlotHovered() const;
 	bool IsToolInProgress(cTribeToolPtr tool) const;
+
+	//Vector2 GetDecorIDRange(int toolType) const;
+	//int GetDecorRealToolID(int toolType) const; // get the actual tool ID from the modified one
+	//int GetNewDecorID(int toolType, cTribePtr tribe) const;
+
 
 	int GetEventFlags() const override;
 	// This is the function you have to implement, called when a window you added this winproc to received an event
