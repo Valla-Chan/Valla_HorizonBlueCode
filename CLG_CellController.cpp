@@ -2,6 +2,8 @@
 #include "CLG_CellController.h"
 #include "capabilitychecker.h"
 
+
+
 CLG_CellController::CLG_CellController()
 {
 	WindowManager.GetMainWindow()->AddWinProc(this);
@@ -96,12 +98,12 @@ void CLG_CellController::UpdatePlayerHealth() {
 			float healthbuff = 2.0f;
 			float newdamagetaken = damagetaken / healthbuff;
 			if (newdamagetaken < 0) {
-				newdamagetaken = clamp(int(floor(newdamagetaken)), -12, -1);
+				newdamagetaken = (float)clamp(int(floor(newdamagetaken)), -12, -1);
 			}
 			else {
-				newdamagetaken = clamp(int(ceil(newdamagetaken)), 1, 12);
+				newdamagetaken = (float)clamp(int(ceil(newdamagetaken)), 1, 12);
 			}
-			avatar->mHealthPoints = mPrevPlayerHealth - newdamagetaken;
+			avatar->mHealthPoints = int(mPrevPlayerHealth - newdamagetaken);
 		}
 		else {
 			modulateplayerhealth = true;

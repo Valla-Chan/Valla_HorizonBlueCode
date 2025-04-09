@@ -549,6 +549,7 @@ void TRG_IslandEventManager::GoToEventItem() {
 // TODO: use the part model to find a list of prompts to show.
 // Then use the randomly chosen prompt to fill out data in the UI
 void TRG_IslandEventManager::ShowEventUI() {
+	if (!IsTribeGame()) { return; }
 	MessageManager.MessageSend(id("DropCreature"),nullptr);
 	mbItemWasClicked = false;
 	GameTimeManager.Pause(TimeManagerPause::Cinematic);
@@ -634,6 +635,7 @@ int TRG_IslandEventManager::GetEventFlags() const
 	return kEventFlagBasicInput | kEventFlagAdvanced;
 }
 
+
 // Ingame mouse messages
 bool TRG_IslandEventManager::HandleUIMessage(IWindow* window, const Message& message)
 {
@@ -656,14 +658,37 @@ bool TRG_IslandEventManager::HandleUIMessage(IWindow* window, const Message& mes
 	//------------------------------------------------------
 	// LEFT
 
+	if (message.IsType(kMsgMouseMove) ) {
+		if (rightclick_over_eventitem) {
+			mouse_state_valid = false;
+		}
+		if (!hovering_event_item && IsEventItemHovered()) {
+			hovering_event_item = true;
+			CursorManager.SetActiveCursor(0x24C6D844);
+		}
+		else if (hovering_event_item && !IsEventItemHovered()) {
+			hovering_event_item = false;
+			CursorManager.SetActiveCursor(0x0);
+		}
+		
+	}
+
 	// Checking if left clicking on event item
 	if ((message.IsType(kMsgMouseDown) && message.Mouse.IsLeftButton() && IsEventItemHovered())) {
+		if (rightclick_over_eventitem) {
+			mouse_state_valid = false;
+		}
+		rightclick_over_eventitem = false;
 		return ClickedEventItem(0, true);
 	}
 	// left click released on event item
+	// TODO: suppress the sporepedia asset view at the source.
 	else if ( (message.IsType(kMsgMouseMove) && !IsEventItemHovered()) ||
 		(message.IsType(kMsgMouseUp) && message.Mouse.mouseButton == kMouseButtonLeft) ) {
-		
+		rightclick_over_eventitem = false;
+		if (message.IsType(kMsgMouseUp)) {
+			mouse_state_valid = true;
+		}
 		return ClickedEventItem(0, false);
 	}
 
@@ -672,9 +697,17 @@ bool TRG_IslandEventManager::HandleUIMessage(IWindow* window, const Message& mes
 
 	// Checking if right clicking on event item
 	else if (message.IsType(kMsgMouseDown) && message.Mouse.IsRightButton() && IsEventItemHovered()) {
-		//ShowEventUI();
-		GoToEventItem();
-		return true;
+		rightclick_over_eventitem = true;
+		return false;
+	}
+	// right click released on event item
+	else if (message.IsType(kMsgMouseUp) && message.Mouse.mouseButton == kMouseButtonRight && IsEventItemHovered()) {
+		mouse_state_valid = true;
+		if (rightclick_over_eventitem && mouse_state_valid) {
+			GoToEventItem();
+		}
+		rightclick_over_eventitem = false;
+		return false;
 	}
 
 	return false;

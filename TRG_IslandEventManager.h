@@ -142,6 +142,9 @@ public:
 	//--------------------------------------------------------------------
 	
 	int GetEventFlags() const override;
+	bool rightclick_over_eventitem = false;
+	bool hovering_event_item = false;
+	bool mouse_state_valid = true;
 	/// This is the function you have to implement, called when a window you added this winproc to received an event
 	bool HandleUIMessage(IWindow* pWindow, const Message& message) override;
 	//bool HandleMessage(uint32_t messageID, void* msg) override;

@@ -15,9 +15,7 @@ public:
 	TRG_SuppressScavenger();
 	~TRG_SuppressScavenger();
 
-	bool mbSuppressed = false;
-	void SetSuppressed(bool state);
-	bool SuppressScavenger();
+	void SuppressScavenger();
 	void RemoveScavengerCreature();
 
 	int AddRef() override;

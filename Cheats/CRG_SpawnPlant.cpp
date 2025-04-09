@@ -19,20 +19,27 @@ void CRG_SpawnPlant::ParseLine(const ArgScript::Line& line)
 	cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
 
 	if (avatar) {
-		App::ConsolePrintF("Searching for convertible items...");
+		cVehiclePtr vehicle = simulator_new<Simulator::cVehicle>();
+		vehicle->Load(kVehicleLand, kVehicleColony, avatar->GetModelKey());
+		//vehicle->Load(kVehicleAir, kVehicleColony, avatar->GetModelKey());
+		vehicle->Teleport(avatar->GetPosition(), avatar->GetOrientation());
 
-		auto interactables = GetData<cInteractiveOrnament>();
-		App::ConsolePrintF("interactable objects: %i", interactables.size());
-		App::ConsolePrintF("searching for model: %x", mdl_carcass01);
-		for (auto object : interactables) {
-			App::ConsolePrintF("Found model: %x", object->GetModelKey().instanceID);
-			if (object->GetModelKey().instanceID == mdl_carcass01) {
-				App::ConsolePrintF("Found a carcass.");
+		vehicle->mpChaseTarget = avatar;
+		vehicle->SetTarget(avatar.get());
+	}
+	else {
+		auto tribe = GameNounManager.GetPlayerTribe();
+		if (tribe) {
+			auto chieftain = tribe->GetLeaderCitizen();
+			if (chieftain) {
+				cVehiclePtr vehicle = simulator_new<Simulator::cVehicle>();
+				vehicle->Load(kVehicleLand, kVehicleColony, chieftain->GetModelKey());
+				vehicle->Teleport(chieftain->GetPosition(), chieftain->GetOrientation());
+
+				vehicle->mpChaseTarget = chieftain;
+				vehicle->SetTarget(chieftain);
 			}
 		}
-		//Simulator::GetActivePlanetRecord()->mWaterScore = 1.0f;
-		//Simulator::GetActivePlanetRecord()->mTemperatureScore = 1.0f;
-		//Simulator::GetActivePlanetRecord()->mAtmosphereScore = 0.0f;
 	}
 }
 

@@ -15,6 +15,7 @@ EP1_GameplayObject_DriveMarker::~EP1_GameplayObject_DriveMarker()
 
 void EP1_GameplayObject_DriveMarker::Update()
 {
+	mbAllowDriving = true;
 	if (IsPlayingAdventure()) {
 		if (mIsDriving && (mCurrentVehicle || mCurrentCreature)) {
 			// Exit vehicle if dead
@@ -44,16 +45,40 @@ void EP1_GameplayObject_DriveMarker::Update()
 //------------------------------------------------------------------------------------------------
 
 bool EP1_GameplayObject_DriveMarker::IsPlayingAdventure() {
-	return (IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::PlayMode);
+	return ((IsScenarioMode() && ScenarioMode.GetMode() == App::cScenarioMode::Mode::PlayMode) || IsCreatureGame() || IsTribeGame());
 }
 
 // Get the vehicle that is rolled over with the mouse
 cVehiclePtr EP1_GameplayObject_DriveMarker::GetHoveredVehicle() {
-	auto vehicles = Simulator::GetDataByCast<Simulator::cVehicle>();
-	for (auto vehicle : vehicles) {
-		if (vehicle->IsRolledOver()) {
-			return vehicle;
+	if (!IsTribeGame()) {
+		auto vehicles = Simulator::GetDataByCast<Simulator::cVehicle>();
+		for (auto vehicle : vehicles) {
+			if (vehicle->IsRolledOver()) {
+				return vehicle;
+			}
 		}
+	}
+	// fall back to a manual trace in tribal stage
+	else {
+			auto pViewer = CameraManager.GetViewer();
+
+			Vector3 camPos = Vector3(0, 0, 0);
+			Vector3 camDir = Vector3(0, 0, 0);
+
+			// Get vector to the center of the screen.
+			auto windowArea = WindowManager.GetMainWindow()->GetArea();
+			pViewer->GetCameraToMouse(camPos, camDir);
+
+			vector<cSpatialObjectPtr> raycastObjects;
+
+			if (GameViewManager.RaycastAll(camPos, camPos + (camDir * 900.0f), raycastObjects, true)) {
+				for (auto object : raycastObjects) {
+					auto vehicle = object_cast<cVehicle>(object);
+					if (vehicle) {
+						return vehicle;
+					}
+				}
+			}
 	}
 	return nullptr;
 }
@@ -82,7 +107,7 @@ bool EP1_GameplayObject_DriveMarker::IsVehicleDrivable(cVehiclePtr vehicle) cons
 // Get how fast the current vehicle should move
 // TODO: make this work well.
 float EP1_GameplayObject_DriveMarker::GetCurrentVehicleSpeed() const {
-	return 5.0f;
+	//return 5.0f;
 
 	if (mCurrentVehicle) {
 		return mCurrentVehicle->GetStandardSpeed() * mCurrentVehicle->mSpeedStat;
@@ -100,10 +125,21 @@ cSpatialObjectPtr EP1_GameplayObject_DriveMarker::GetVehicleSpatial() const {
 
 //------------------------------------------------------------------------------------------------
 
+cCreatureBasePtr EP1_GameplayObject_DriveMarker::GetAvatar() const {
+	auto avatar = GameNounManager.GetAvatar();
+	if (!avatar) {
+		auto tribe = GameNounManager.GetPlayerTribe();
+		if (tribe) {
+			return tribe->GetLeaderCitizen();
+		}
+	}
+	return avatar;
+}
+
 // TODO: combine these into 1 func with 2 args (1 will be nullptr)
 void EP1_GameplayObject_DriveMarker::EnterVehicle(cVehiclePtr vehicle) {
 	if (!IsPlayingAdventure() || mDrivingCooldown) { return; }
-	auto avatar = GameNounManager.GetAvatar();
+	auto avatar = GetAvatar();
 	if (avatar) {
 		mCurrentVehicle = vehicle;
 		mCurrentCreature = nullptr;
@@ -115,7 +151,7 @@ void EP1_GameplayObject_DriveMarker::EnterVehicle(cVehiclePtr vehicle) {
 // Debug Test
 void EP1_GameplayObject_DriveMarker::EnterCreature(cCreatureAnimalPtr creature) {
 	if (!IsPlayingAdventure() || mDrivingCooldown) { return; }
-	auto avatar = GameNounManager.GetAvatar();
+	auto avatar = GetAvatar();
 	if (avatar) {
 		mCurrentCreature = creature;
 		mCurrentVehicle = nullptr;
@@ -126,7 +162,7 @@ void EP1_GameplayObject_DriveMarker::EnterCreature(cCreatureAnimalPtr creature) 
 }
 
 void EP1_GameplayObject_DriveMarker::Enter() {
-	auto avatar = GameNounManager.GetAvatar();
+	auto avatar = GetAvatar();
 	if (avatar) {
 		mIsDriving = true;
 		float scale = avatar->GetScale();
@@ -143,7 +179,7 @@ void EP1_GameplayObject_DriveMarker::Enter() {
 
 void EP1_GameplayObject_DriveMarker::ExitVehicle() {
 	if (mCurrentVehicle || mCurrentCreature) {
-		auto avatar = GameNounManager.GetAvatar();
+		auto avatar = GetAvatar();
 		if (avatar && IsPlayingAdventure()) {
 			StartDrivingCooldown();
 
@@ -190,8 +226,8 @@ void EP1_GameplayObject_DriveMarker::ExitVehicle() {
 
 
 void EP1_GameplayObject_DriveMarker::ExitVehicle_Delayed() {
-	if (IsScenarioMode()) {
-		auto avatar = GameNounManager.GetAvatar();
+	if (IsScenarioMode() || IsCreatureGame()) {
+		auto avatar = GetAvatar();
 		if (avatar) {
 			avatar->mbIsGhost = false;
 			avatar->mbEnabled = true;
@@ -318,7 +354,8 @@ void EP1_GameplayObject_DriveMarker::SetDestinationFromInput() {
 void EP1_GameplayObject_DriveMarker::DriveToDestination() {
 	if ((mCurrentVehicle || mCurrentCreature) && mDestinationPos != Vector3(0, 0, 0)) {
 		if (mCurrentVehicle) {
-			mCurrentVehicle->MoveTo(mDestinationPos);
+			mDestinationPos;
+			mCurrentVehicle->MoveTo(mDestinationPos, 3.0, 5.0, true);
 		} else {
 			mCurrentCreature->WalkTo(1, mDestinationPos, mDestinationPos, 1.0f, 1.0f);
 			mCurrentCreature->MoveTo(mDestinationPos);
@@ -329,11 +366,11 @@ void EP1_GameplayObject_DriveMarker::DriveToDestination() {
 			Vector3 dir;
 			Vector3 velocity;
 			if (mCurrentVehicle) {
-				dir = mDestinationPos - mCurrentVehicle->GetPosition();
+				dir = mCurrentVehicle->GetOrientationYawTowards(mDestinationPos).ToEuler();
 				velocity = mCurrentVehicle->GetVelocity();
 			}
 			else {
-				dir = mDestinationPos - mCurrentCreature->GetPosition();
+				dir = mCurrentCreature->GetOrientationYawTowards(mDestinationPos).ToEuler();
 				velocity = mCurrentCreature->GetVelocity();
 			}
 
@@ -344,6 +381,7 @@ void EP1_GameplayObject_DriveMarker::DriveToDestination() {
 			else {
 				newVelocity = velocity + (dir * 0.05f);
 			}
+
 			// Apply
 			if (mCurrentVehicle) {
 				mCurrentVehicle->SetVelocity(newVelocity);
@@ -359,7 +397,7 @@ void EP1_GameplayObject_DriveMarker::DriveToDestination() {
 
 
 void EP1_GameplayObject_DriveMarker::TeleportAvatarToVehicle() {
-	auto avatar = GameNounManager.GetAvatar();
+	auto avatar = GetAvatar();
 	if (avatar) {
 		avatar->mbIsGhost = true;
 		if (mPrevAvatarHealth > 0.0f) {
@@ -432,6 +470,7 @@ int EP1_GameplayObject_DriveMarker::GetEventFlags() const
 bool EP1_GameplayObject_DriveMarker::HandleUIMessage(IWindow* window, const Message& message)
 {
 	if (!IsPlayingAdventure()) { return false; }
+	if (!mbAllowDriving) { return false; }
 
 	// Driving
 	if (mIsDriving) {

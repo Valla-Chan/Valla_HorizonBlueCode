@@ -61,8 +61,6 @@ public:
 	void SetTribeHutStyle(cTribePtr tribe, ResourceKey& hutstyle);
 	void SetTribeName(cTribePtr tribe);
 	void SetTribeColor(cTribePtr tribe);
-	ResourceKey GetChieftainNameLocaleResource(cCreatureCitizenPtr chieftain) const;
-	string16 GetChieftainNameString(cCreatureCitizenPtr chieftain) const;
 	void UpdateStoredTribeNames();
 	void UpdateTribeNamesFromStored();
 

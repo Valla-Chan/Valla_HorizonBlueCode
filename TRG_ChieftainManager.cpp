@@ -151,8 +151,26 @@ int TRG_ChieftainManager::NextQueueItem() {
 	if (value == -1) {
 		value = GetChiefDietValue(nullptr);
 	}
-	//tribe_staff_id = -1;
 	return value;
+}
+
+uint32_t TRG_ChieftainManager::ConvertStaffEffectID(uint32_t instanceId) {
+	uint32_t staff_id = 0x0;
+	int attachment = GetStaffAttachmentIndex(instanceId);
+	int dietvalue = 0;
+	if (attachment > -1) {
+		dietvalue = NextQueueItem();
+		staff_id = GetStaffID(dietvalue, attachment);
+	}
+	return staff_id;
+}
+
+// 0 = reg  1 = fish  2 = seaweed
+int TRG_ChieftainManager::GetStaffAttachmentIndex(uint32_t instanceId) const {
+	if (instanceId == id("trg_chieftain_staff")) { return 0; }
+	if (instanceId == id("trg_chieftain_staff_fish")) { return 1; }
+	if (instanceId == id("trg_chieftain_staff_seaweed")) { return 2; }
+	return -1;
 }
 
 uint32_t TRG_ChieftainManager::GetStaffID(int diet, int attachment) const {

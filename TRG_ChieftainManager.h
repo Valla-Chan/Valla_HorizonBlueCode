@@ -45,6 +45,8 @@ public:
 	void AddChiefToQueue(const cCreatureCitizenPtr chief);
 	int NextQueueItem();
 
+	uint32_t ConvertStaffEffectID(uint32_t instanceId);
+	int GetStaffAttachmentIndex(uint32_t instanceId) const;
 	uint32_t GetStaffID(int diet, int attachment) const;
 	uint32_t GetStaffID(const ResourceKey &staffres, int attachment) const;
 

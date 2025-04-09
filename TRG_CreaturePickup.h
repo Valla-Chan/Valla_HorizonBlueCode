@@ -24,8 +24,8 @@ public:
 
 	bool temp_deny_pickup = false;
 
-	cCreatureCitizenPtr possible_member;
-	cCreatureCitizenPtr held_member;
+	cCreatureCitizenPtr possible_member = nullptr;
+	cCreatureCitizenPtr held_member = nullptr;
 
 	static bool IsPlannerOpen();
 	static cTribePtr GetPlayerTribe();

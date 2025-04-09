@@ -15,15 +15,13 @@ CRG_BrainDrain::~CRG_BrainDrain()
 void CRG_BrainDrain::ParseLine(const ArgScript::Line& line)
 {
 	if (Simulator::IsCreatureGame() && GameNounManager.GetAvatar()) {
-		if (Simulator::cCreatureGameData::GetEvolutionPoints() > 0) {
-			float points = 100.0;
-			if (Simulator::cCreatureGameData::GetEvolutionPoints() < 100) {
-				points = Simulator::cCreatureGameData::GetEvolutionPoints();
-			}
-			Simulator::cCreatureGameData::AddEvolutionPoints(-1.0f*points);
+		float points = 100.0;
+		if (Simulator::cCreatureGameData::GetEvolutionPoints() < 100) {
+			points = Simulator::cCreatureGameData::GetEvolutionPoints();
 		}
+		Simulator::cCreatureGameData::AddEvolutionPoints(-1.0f * points);
 		
-		Simulator::cCreatureGameData::AddEvolutionPoints(Simulator::cCreatureGameData::GetEvoPointsToNextBrainLevel());
+		
 	}
 }
 

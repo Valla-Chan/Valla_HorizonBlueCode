@@ -20,7 +20,6 @@ TRG_CreaturePickup::~TRG_CreaturePickup()
 
 //-----------------------------------------------------------------------------------------------
 
-// TODO: THIS ALWAYS RETURNS FALSE
 bool TRG_CreaturePickup::IsPlannerOpen() {
 	if (IsTribeGame()) {
 
@@ -75,26 +74,42 @@ void TRG_CreaturePickup::Update()
 	}
 	// Set cursor
 	else {
-		auto tribe = GetPlayerTribe();
-		if (!tribe) { return; }
-		auto members = tribe->GetSelectableMembers();
-		for (auto member : members) {
-			if (member && member->IsRolledOver()) {
-				CursorManager.SetActiveCursor(BasicCursorIDs::Cursors::GrabOpen);
-			}
-		}
 		//only run if no held creature
 		auto hovered = GameViewManager.GetHoveredObject();
 		if (hovered) {
-			auto citizen = object_cast<cCreatureCitizen>(hovered);
 			// Creature Citizen
-			
-			// If this line is uncommented, Only display info for creatures from our tribe.
-			//if (citizen->mpOwnerTribe == GameNounManager.GetPlayerTribe()) {
-				if (citizen && !IsPlannerOpen()) {
-					UI::SimulatorRollover::ShowRollover(citizen);
+			auto citizen = object_cast<cCreatureCitizen>(hovered);
+
+			// Members Rollover
+			if (citizen && !IsPlannerOpen()) {
+				auto tribe = GetPlayerTribe();
+				if (!tribe) { return; }
+				auto members = tribe->GetSelectableMembers();
+				for (auto member : members) {
+					if (member && member->IsRolledOver()) {
+						//CursorManager.SetActiveCursor(BasicCursorIDs::Cursors::GrabOpen);
+						CursorManager.SetActiveCursor(0x0);
+					}
 				}
-			//}
+				
+				UI::SimulatorRollover::ShowRollover(citizen);
+			}
+
+			// Pets Rollover
+			else {
+				auto creature = object_cast<cCreatureAnimal>(hovered);
+				if (creature && !creature->mbDead && !IsPlannerOpen()) {
+					auto tribe = GetPlayerTribe();
+					if (!tribe) { return; }
+					auto pet_herd = tribe->mpDomesticatedAnimalsHerd;
+					if (creature->mHerd == pet_herd) {
+						//creature->SetIdentityColor(tribe->mCachedColor);
+
+						UI::SimulatorRollover::ShowRollover(creature);
+						
+					}
+				}
+			}
 			
 		}
 	}
@@ -188,13 +203,21 @@ void TRG_CreaturePickup::UnclickMB1() {
 	temp_deny_pickup = true;
 	// Now just send the message
 	window->SendMsg(message);
+	if (held_member) {
+		Drop();
+	}
 }
 
 //-----------------------------------------------------------------------------------------------
 
 bool TRG_CreaturePickup::HandleMessage(uint32_t messageID, void* msg)
 {
-	if (!IsTribeGame()) { return nullptr; }
+	if (!IsTribeGame()) {
+		if (messageID == SimulatorMessages::kMsgSwitchGameMode && held_member) {
+			held_member = nullptr;
+		}
+		return nullptr;
+	}
 
 	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("CinematicBegin") || messageID == id("DropCreature"))
 	{
@@ -214,6 +237,12 @@ bool TRG_CreaturePickup::HandleUIMessage(IWindow* window, const Message& message
 	if (temp_deny_pickup) { temp_deny_pickup = false; return false; }
 
 	if (!IsTribeGame()) { return false; }
+
+	// mouse moved away from a member
+	if (message.IsType(kMsgMouseMove) && !possible_member && !IsPlannerOpen() && CursorManager.GetActiveCursor() == BasicCursorIDs::Cursors::GrabOpen)
+	{
+		CursorManager.SetActiveCursor(0x0);
+	}
 
 	// Drop creature
 	if (message.IsType(kMsgMouseUp) && held_member) {

@@ -27,6 +27,57 @@ int cCapabilityChecker::GetCapabilityLevel(const cCreatureBasePtr& creature, con
 	return 0;
 }
 
+
+bool cCapabilityChecker::IsPartOnCreature(const cCreatureBasePtr& creature, const ResourceKey part) const
+{
+	if (creature) {
+
+		// holds left, right, and center keys for part.
+		vector<ResourceKey> partKeys;
+		partKeys.push_back(part);
+
+		{
+			ResourceKey part_right = GetModelKeyValue(part, 0x18C1DBE0);
+			ResourceKey part_left = GetModelKeyValue(part, 0x0F48EB09);
+			ResourceKey part_centered = GetModelKeyValue(part, 0x3A3B9D21);
+
+			if (part_right.instanceID != 0x0 && part_right.instanceID != part.instanceID) {
+				partKeys.push_back(part_right);
+			}
+			if (part_left.instanceID != 0x0 && part_left.instanceID != part.instanceID) {
+				partKeys.push_back(part_left);
+			}
+			if (part_centered.instanceID != 0x0 && part_centered.instanceID != part.instanceID) {
+				partKeys.push_back(part_centered);
+			}
+
+		}
+
+		ResourceObjectPtr res;
+		if (ResourceManager.GetResource(creature->mSpeciesKey, &res)) {
+			auto resource = object_cast<Editors::cEditorResource>(res);
+
+			// Loop through the creature parts to find the desired ones.
+			for (size_t i = 0; i < resource->mBlocks.size(); i++) {
+				Editors::cEditorResourceBlock block = resource->mBlocks[i];
+				for (size_t j = 0; j < partKeys.size(); j++) {
+					if (block.instanceID == partKeys[j].instanceID) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+
+int cCapabilityChecker::GetPartUnlockLevel(const ResourceKey part) const
+{
+	int level = GetModelIntValue(part, 0x03A289AC);
+	if (level > 1) { return level; }
+	return 1;
+}
+
 int cCapabilityChecker::GetCapabilityLevelFromResource(const ResourceKey speciesKey, const uint32_t propertyID) const
 {
 	int32_t caplvl = 0;
@@ -113,7 +164,40 @@ ResourceKey cCapabilityChecker::GetModelKeyValue(const ResourceKey& modelKey, co
 		bool test = App::Property::GetKey(mpPropList.get(), property, key);
 		return key;
 	}
-	else { return ResourceKey(0, 0, 0); }
+	else { return {}; }
+}
+
+ResourceKey cCapabilityChecker::GetModelParentKey(const ResourceKey& modelKey) const {
+	return GetModelKeyValue(modelKey, 0x00B2CCCB);
+}
+
+// Open a model resource and find text entry
+LocalizedString cCapabilityChecker::GetModelText(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	LocalizedString string;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetText(mpPropList.get(), property, string);
+	}
+	return string;
+}
+
+// Open a model resource and find text entry
+// TODO: is the use of a static string16 going to cause issues? consider returning char if so
+eastl::string16& cCapabilityChecker::GetModelString16(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	static eastl::string16& string = string16(u"");
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetString16(mpPropList.get(), property, string);
+	}
+	return string;
+}
+
+LocalizedString cCapabilityChecker::GetModelBlockName(const ResourceKey& modelKey) const {
+	return GetModelText(modelKey, 0x8F6FC401);
 }
 
 // Open a model resource and find if a property uint32 exists in the file
@@ -141,6 +225,19 @@ uint32_t cCapabilityChecker::GetModelUInt32Value(const ResourceKey& modelKey, co
 		}
 	}
 	return 0x0;
+}
+
+// Open a model resource and find a key instance ID from a property
+uint32_t cCapabilityChecker::GetModelKeyInstanceID(const ResourceKey& modelKey, const uint32_t property) const
+{
+	PropertyListPtr mpPropList;
+	uint32_t instanceID;
+	if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+	{
+		bool test = App::Property::GetKeyInstanceID(mpPropList.get(), property, instanceID);
+		return instanceID;
+	}
+	else { return {}; }
 }
 
 // Open a model resource and get a float value of a property

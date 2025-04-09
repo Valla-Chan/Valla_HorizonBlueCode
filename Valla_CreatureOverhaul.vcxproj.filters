@@ -32,6 +32,12 @@
     <Filter Include="Valla_HorizonBlue\CLG">
       <UniqueIdentifier>{5febacce-0d1d-42f0-9457-2e2ca36bca37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Valla_HorizonBlue\SPG">
+      <UniqueIdentifier>{9ab8a3a1-61f3-4b0a-b5dc-c999ca6ec868}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Valla_HorizonBlue\TRG\ToolStrats">
+      <UniqueIdentifier>{4da496a3-55b8-45be-95f2-f899a6daa585}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -281,6 +287,30 @@
     <ClInclude Include="Cheats\HurtTarget.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
+    <ClInclude Include="TRG_TraitTables.h">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="CRG_PartShards.h">
+      <Filter>Valla_HorizonBlue\CRG</Filter>
+    </ClInclude>
+    <ClInclude Include="WinProc_HoverMessage.h">
+      <Filter>Valla_HorizonBlue\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_TribeSlotManager.h">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="ToolFrenzyBomb.h">
+      <Filter>Valla_HorizonBlue\SPG</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_UseTribalTool.h">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="cTribeToolStrategy.h">
+      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    </ClInclude>
+    <ClInclude Include="TribeToolStratManager.h">
+      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -511,6 +541,27 @@
     </ClCompile>
     <ClCompile Include="Cheats\HurtTarget.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="CRG_PartShards.cpp">
+      <Filter>Valla_HorizonBlue\CRG</Filter>
+    </ClCompile>
+    <ClCompile Include="WinProc_HoverMessage.cpp">
+      <Filter>Valla_HorizonBlue\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_TribeSlotManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClCompile>
+    <ClCompile Include="ToolFrenzyBomb.cpp">
+      <Filter>Valla_HorizonBlue\SPG</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_UseTribalTool.cpp">
+      <Filter>Valla_HorizonBlue\Cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="cTribeToolStrategy.cpp">
+      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    </ClCompile>
+    <ClCompile Include="TribeToolStratManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

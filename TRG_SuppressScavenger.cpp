@@ -12,19 +12,11 @@ TRG_SuppressScavenger::~TRG_SuppressScavenger()
 
 //------------------------------------------------------
 
-// TODO: make the scarecrow call this.
-void TRG_SuppressScavenger::SetSuppressed(bool state) {
-	mbSuppressed = state;
-}
 
-
-bool TRG_SuppressScavenger::SuppressScavenger() {
+void TRG_SuppressScavenger::SuppressScavenger() {
 	if (IsTribeGame()) {
-		if (mbSuppressed) {
-			Simulator::ScheduleTask(this, &TRG_SuppressScavenger::RemoveScavengerCreature, 1.0f);
-		}
+		Simulator::ScheduleTask(this, &TRG_SuppressScavenger::RemoveScavengerCreature, 1.0f);
 	}
-	return mbSuppressed;
 	
 }
 
@@ -34,8 +26,11 @@ void TRG_SuppressScavenger::RemoveScavengerCreature() {
 			// If creature is the scavenger type
 			if (creature && creature->mHerd && creature->mHerd->mArchetype == id("TRG_Food_Scavenger")) {
 				// Send him to hell
-				creature->Teleport(Vector3(0, 0, 0), creature->mOrientation);
-				creature->SetHealthPoints(0);
+				creature->mbMarkedForDeletion = true;
+				if (creature) {
+					creature->Teleport(Vector3(0, 0, 0), creature->mOrientation);
+					creature->SetHealthPoints(0);
+				}
 			}
 		}
 	}

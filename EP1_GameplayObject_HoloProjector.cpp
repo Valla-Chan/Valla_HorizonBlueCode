@@ -110,7 +110,7 @@ void EP1_GameplayObject_HoloProjector::ResetCombatantEffect(cCombatantPtr combat
 
 bool EP1_GameplayObject_HoloProjector::MouseClick() {
 	auto rolled = object_cast<cCreatureAnimal>(GetRolledCombatant());
-	if (rolled && CursorManager.GetActiveCursor() != 0x8054dea) { // do not select the creature unless the mouse cursor is a talk to icon
+	if (rolled && IsCreatureHologram(rolled) && CursorManager.GetActiveCursor() != 0x8054dea) { // do not select the creature unless the mouse cursor is a talk to icon
 		return true;
 	}
 	return false;

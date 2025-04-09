@@ -25,6 +25,8 @@ public:
 	//-----------------------------------------
 	// Sent when an object is clicked
 	const uint32_t CLICKMESSAGE_ID = id("ClickedObject");
+	//bool left_pressed = false;
+	//bool right_pressed = false;
 
 	struct ClickMessage
 	{

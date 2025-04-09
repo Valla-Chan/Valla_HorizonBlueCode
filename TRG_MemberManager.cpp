@@ -98,7 +98,7 @@ ColorRGB TRG_MemberManager::GetRandColor() const {
 				break;
 			}
 		}
-		tries++;
+		tries--;
 	}
 	return mIDcolors[colorIndex];
 }
@@ -125,7 +125,7 @@ void TRG_MemberManager::ApplyPersonality(MemberPersonality& personality) {
 	}
 }
 
-// Forces the creaturesto grow up in prep for their ID color. Must do this on load game. Calls ApplyAllPersonalities2().
+// Forces the creatures to grow up in prep for their ID color. Must do this on load game. Calls ApplyAllPersonalities2().
 void TRG_MemberManager::ApplyAllPersonalities() {
 	if (!IsTribeGame())  { return; }
 	auto tribe = GameNounManager.GetPlayerTribe();

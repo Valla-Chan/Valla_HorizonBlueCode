@@ -100,6 +100,8 @@ void CreatureSpeedBoost::Update(int deltaTime, int deltaGameTime) {
 
 void CreatureSpeedBoost::ApplySpeedBoost(cCreatureBasePtr creature, float newSpeed)
 {
+	// TODO: only apply this to creatures on the ground.
+	
 	//auto indexFind = mpBoostedCreatures.find(creature->mID);
 	creature->mDesiredSpeed = newSpeed;
 	mpBoostedCreatures[creature->mID] = newSpeed;

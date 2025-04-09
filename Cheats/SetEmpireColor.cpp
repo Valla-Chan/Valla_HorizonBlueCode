@@ -58,6 +58,7 @@ void SetEmpireColor::ParseLine(const ArgScript::Line& line)
 				}
 			}
 		}
+		MessageManager.MessageSend(id("PlayerCitySpawned"),nullptr);
 	}
 	else if (IsSpaceGame()) {
 		// Not working

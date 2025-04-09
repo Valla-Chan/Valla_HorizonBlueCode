@@ -35,6 +35,8 @@ public:
 	float GetCurrentVehicleSpeed() const;
 	cSpatialObjectPtr GetVehicleSpatial() const;
 
+	cCreatureBasePtr GetAvatar() const;
+
 	void EnterVehicle(cVehiclePtr vehicle);
 	void EnterCreature(cCreatureAnimalPtr creature);
 	void Enter();
@@ -63,7 +65,7 @@ private:
 	// The creature we might be riding
 	cCreatureAnimalPtr mCurrentCreature;
 
-	
+	bool mbAllowDriving = false;
 	bool mIsDriving; // True if the user is "inside" the vehicle, false otherwise
 	bool mDrivingCooldown = false; // true if in cooldown from driving or exiting
 	bool mIsMouseHeld = false;

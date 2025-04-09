@@ -224,60 +224,6 @@ void TRG_TribeHutManager::SetTribeColor(cTribePtr tribe) {
 	
 }
 
-// Get NPC chieftain name path
-ResourceKey TRG_TribeHutManager::GetChieftainNameLocaleResource(cCreatureCitizenPtr chieftain) const {
-	int archetype = chieftain->mpOwnerTribe->mTribeArchetype;
-	auto res = ResourceKey(0x000000A0, 0x0, id("TribeArchetypes"));
-
-	if (archetype > 0) {
-		// Set tribe name from archetype
-		/*if (archetype == 15 || archetype == 12) {
-			res.instanceID = 0x000000A0; // chieftain
-		}*/
-		if (archetype == 7) {
-			res.instanceID = 0x000000A2; // general
-		}
-		else if (archetype == 4) {
-			res.instanceID = 0x000000A3; // warlord
-		}
-		else {
-		// chieftain (base game)
-			res.groupID = 0xF71FA311;
-			res.instanceID = 0x04bd540b;
-		}
-	}
-	return res;
-}
-
-// Get NPC chieftain name string
-string16 TRG_TribeHutManager::GetChieftainNameString(cCreatureCitizenPtr chieftain) const {
-	int archetype = chieftain->mpOwnerTribe->mTribeArchetype;
-	LocalizedString tribeName;
-	string16 nameText = u"";
-
-	if (archetype > 0) {
-		// Set tribe name from archetype
-		if (archetype == 15 || archetype == 12) {
-			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A0); // chieftain
-		}
-		else if (archetype == 7) {
-			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A2); // general
-		}
-		else if (archetype == 4) {
-			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A3); // warlord
-		}
-		else {
-			tribeName = LocalizedString(id("TribeArchetypes"), 0x000000A0); // chieftain
-		}
-
-		nameText = string16(tribeName.GetText());
-		nameText.append(u" ");
-		nameText.append(chieftain->mCreatureName);
-
-	}
-	return nameText;
-
-}
 
 // store the player tribe's name
 void TRG_TribeHutManager::UpdateStoredTribeNames() {

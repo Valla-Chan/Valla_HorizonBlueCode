@@ -259,8 +259,16 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="CRG_PartShards.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="CRG_WaterBehavior.h" />
     <ClInclude Include="CR_JetHover.h" />
+    <ClInclude Include="cTribeToolStrategy.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="cVallaVector.h" />
     <ClInclude Include="CVG_CityWalls.h">
       <SubType>
@@ -315,6 +323,11 @@
     </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="ToolFrenzyBomb.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="TRG_TraitTables.h" />
     <ClInclude Include="TRG_ChieftainManager.h">
       <SubType>
       </SubType>
@@ -348,11 +361,27 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="TRG_TribeSlotManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="TRG_UseTribalTool.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="TribeToolStratManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="UI_RenamePlanet.h">
       <SubType>
       </SubType>
     </ClInclude>
     <ClInclude Include="UI_Timescale.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="WinProc_HoverMessage.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -509,7 +538,15 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="CRG_PartShards.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="CRG_WaterBehavior.cpp" />
+    <ClCompile Include="cTribeToolStrategy.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="cVallaVector.cpp" />
     <ClCompile Include="CVG_CityWalls.cpp">
       <SubType>
@@ -566,6 +603,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ToolFrenzyBomb.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="TRG_ChieftainManager.cpp">
       <SubType>
       </SubType>
@@ -598,11 +639,27 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="TRG_TribeSlotManager.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="TRG_UseTribalTool.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="TribeToolStratManager.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="UI_RenamePlanet.cpp">
       <SubType>
       </SubType>
     </ClCompile>
     <ClCompile Include="UI_Timescale.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="WinProc_HoverMessage.cpp">
       <SubType>
       </SubType>
     </ClCompile>

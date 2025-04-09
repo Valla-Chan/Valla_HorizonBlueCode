@@ -11,4 +11,8 @@ enum ToolTypes {
 	HomeEnd = 24,
 	//
 	Watchtower = 25,
+	//
+	Scarecrow = 40,
+	//
+	Decor = 999,
 };
