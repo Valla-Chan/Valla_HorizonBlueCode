@@ -66,12 +66,7 @@
 #include "CRG_PartShards.h"
 
 // TRG
-
-#include "TribeMemberManager.h"
-#include "TribePlanManager.h"
-#include "TribeToolStratManager.h"
-#include "TribeToolManager.h"
-
+#include "HBTribe.h"
 
 // CVG Ingame Behaviors
 #include "CVG_CreatureManager.h"
@@ -197,16 +192,7 @@ void Initialize()
 	crg_partshards = new(CRG_PartShards);
 
 	// TRG
-	
-	auto trg_membermanager = new(cTribeMemberManager);
-	auto trg_tribeplanmanager = new(cTribePlanManager);
-	auto trg_toolstratmanager = new(cTribeToolStratManager);
-	auto trg_toolmanager = new(cTribeToolManager);
-
-	//trg_hutmanager = new(TRG_TribeHutManager);
-	//TRG_TribeSlotManager* trg_slotmanager = new(TRG_TribeSlotManager);
-	//trg_ieventmanager = new(TRG_IslandEventManager); // TODO: make standalone?
-	//trg_firedancemanager = new(TRG_FireDanceManager);
+	HBTribe::Initialize();
 
 
 	// CVG
@@ -881,7 +867,7 @@ member_detour(CreateTool_detour, Simulator::cTribe, cTribeTool* (int)) {
 member_detour(CitizenDoAction_detour, Simulator::cCreatureCitizen, void(int, cGameData*, App::Property*)) {
 	void detoured(int actionId, cGameData * actionObject, App::Property * property) {
 		// try to find the missing action ID names
-		if (actionId == 6 || (actionId > 15 && actionId < 20) || (actionId > 21 && actionId < 24) || actionId > 27) {
+		if ((actionId > 15 && actionId < 20) || (actionId > 21 && actionId < 24) || actionId > 27) {
 			SporeDebugPrint("Citizen action %i taken by creature of tribe %ls", actionId, this->mpOwnerTribe->GetCommunityName().c_str());
 		}
 
@@ -937,7 +923,8 @@ static_detour(GetCachedColorFromId_detour, const Math::ColorRGB& (uint32_t)) {
 
 member_detour(GetTribeMaxPopulation_detour, Simulator::cTribe, size_t()) {
 	size_t detoured() {
-		return TribePlanManager.GetTribeMaxPopulation(this);
+		int size = TribePlanManager.GetTribeMaxPopulation(this);
+		return size;
 	}
 };
 

@@ -16,7 +16,8 @@ class cTribeMemberManager
 	, public TraitTable
 {
 public:
-	static const uint32_t TYPE = id("Valla_CreatureOverhaul::cTribeMemberManager");
+	//static const uint32_t TYPE = id("cTribeMemberManager");
+	static const uint32_t TYPE = id("Valla_CreatureOverhaul::TRG_MemberManager");
 	static const uint32_t NOUN_ID = TYPE;
 
 	cTribeMemberManager();

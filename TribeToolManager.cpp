@@ -460,14 +460,15 @@ void cTribeToolManager::UseTool(vector<cCreatureCitizenPtr> citizens, cTribeTool
 	}
 }
 
+/// Tell a citizen creature to use a tool, if they are part of the same tribe.
 void cTribeToolManager::UseTool(cCreatureCitizenPtr citizen, cTribeToolPtr tool) {
-	citizen->DoAction(kCitizenActionGrabTool, tool->ToGameData());
+	if (citizen->mpOwnerTribe == tool->mTribe) {
+		citizen->DoAction(kCitizenActionGrabTool, tool->ToGameData());
+	}
 }
 
-/// Tell the selected citizen creatures to use a tool.
+/// Tell the selected citizen creatures to use a tool, if they are part of the same tribe.
 void cTribeToolManager::SelectedUseTool(cTribeToolPtr tool) {
-
-	//GameNounManager.GetPlayerTribe().input
 
 	if (CanToolBeUsed(tool)) {
 		auto selected = GetSelectedMembers();

@@ -134,6 +134,7 @@ bool cTribeToolStratManager::HandleToolMouseMessage(IWindow* window, const Messa
 				// Find the strategy that handles this tool, and pass the click inputs to it.
 				auto toolID = mpStoredTool->GetToolType();
 				auto strat = GetStrategyForToolType(toolID);
+				if (!strat) { return false; }
 				// R
 				if (mMouseButtonsPressed.IsRightMousePressed()) {
 					handled = strat->RightClickedTool(mpStoredTool);

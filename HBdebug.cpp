@@ -100,7 +100,6 @@ void HBdebug::StoreData() {
 	hoveredAnimal = object_cast<cCreatureAnimal>(hovered);
 	hoveredCitizen = object_cast<cCreatureCitizen>(hovered);
 	hoveredCombatant = object_cast<cCombatant>(hovered);
-	ship = Simulator::GetPlayerUFO();
 
 // UI
 	window = WindowManager.GetMainWindow();
@@ -117,6 +116,7 @@ void HBdebug::StoreData() {
 	civilization = GameNounManager.GetPlayerCivilization();
 	cities = GetData<cCity>();
 /* firstCity */ if (!cities.empty()) { firstCity = cities[0]; }
+	if (IsSpaceGame()) { ship = Simulator::GetPlayerUFO(); }
 
 }
 
@@ -124,14 +124,12 @@ void HBdebug::StoreData() {
 void HBdebug::ParseLine(const ArgScript::Line& line)
 {
 	StoreData();
-//--------------------------------------------------------------------
-// Your code here:
-//--------------------------------------------------------------------
+
+	// Your code here:
+	//------------------------------------------
 	
-	auto ufo = Simulator::CreateUFO(Simulator::UfoType::Unk5, empire.get());
 
-
-//--------------------------------------------------------------------
+	//------------------------------------------
 	SporeDebugPrint("HBdebug done executing.");
 }
 

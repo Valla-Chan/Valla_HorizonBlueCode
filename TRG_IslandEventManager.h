@@ -11,12 +11,16 @@ using namespace TypeIDs;
 
 class TRG_IslandEventManager 
 	: public Simulator::cStrategy
+	, public DefaultRefCounted
 	, public IWinProc
 	//, public App::IMessageListener
 {
 public:
-	static const uint32_t TYPE = id("TRG_IslandEventManager");
+	static const uint32_t TYPE = id("Valla_CreatureOverhaul::TRG_IslandEventManager");
 	static const uint32_t NOUN_ID = TYPE;
+
+	TRG_IslandEventManager();
+	~TRG_IslandEventManager();
 
 	int AddRef() override;
 	int Release() override;

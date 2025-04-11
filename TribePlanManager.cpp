@@ -8,9 +8,8 @@ cTribePlanManager::cTribePlanManager()
 	trg_suppressscavenger = new(TRG_SuppressScavenger);
 	trg_hutmanager = new(TRG_TribeHutManager);
 	//TRG_TribeSlotManager* trg_slotmanager = new(TRG_TribeSlotManager);
-	trg_ieventmanager = new(TRG_IslandEventManager); // TODO: make standalone?
+	trg_ieventmanager = new(TRG_IslandEventManager);
 	trg_firedancemanager = new(TRG_FireDanceManager);
-	new(TRG_SuppressScavenger);
 
 	App::AddUpdateFunction(this);
 	WindowManager.GetMainWindow()->AddWinProc(this);
@@ -61,6 +60,13 @@ void cTribePlanManager::Update()
 {
 	if (IsTribeGame()) {
 		UpdatePopulation();
+
+		// Only run when the rollover UI is visible
+		auto window = WindowManager.GetMainWindow();
+		auto textfield = window->FindWindowByID(0x0199A7D1);
+		if (textfield) {
+			UpdateTribePopulationUI();
+		}
 	}
 }
 
@@ -89,8 +95,72 @@ void cTribePlanManager::AddedBaby() {
 void cTribePlanManager::AddedMember() {
 }
 
+// DEPRECATED? Added back in because the new solution stopped working
+void cTribePlanManager::UpdateTribePopulationUI() {
+	auto window = WindowManager.GetMainWindow();
+	auto textfield = window->FindWindowByID(0x0199A7D1); // ID of the NEW population text in Rollover_TribeHut.spui and Rollover_Tribe_Minimap.spui
+	if (textfield) {
+
+		cTribePtr tribe;
+
+		//-------------------------------
+		// INITIAL - SEARCH BY ROLLOVER
+		//-------------------------------
+		// loop thru all tribes to check hut rollover status
+		for (auto item : Simulator::GetData<Simulator::cTribe>()) {
+			if (item->mpHut->IsRolledOver()) {
+				tribe = item;
+				break;
+			}
+		}
+		//-------------------------------
+		// BACKUP - SEARCH BY NAME
+		//-------------------------------
+		if (!tribe) {
+			// use the name to determine what village we are hovering over (tried color, didnt work :/ )
+			auto nameText = window->FindWindowByID(0x031e94d0);
+			auto textCaption = nameText->GetCaption();
+			// if the text is "Noogie", this means it is invalid and should cancel.
+			auto compare1 = string16(u"Noogie").compare(textCaption);
+			if (compare1 == 0) { return; }
+
+			// loop thru all tribes to compare names
+			for (auto item : Simulator::GetData<Simulator::cTribe>()) {
+				auto tribeName = item->GetCommunityName();
+				auto compare = tribeName.compare(textCaption);
+				if (compare == 0) {
+					tribe = item;
+					break;
+				}
+			}
+		}
+		// Found a tribe, get its population
+		if (tribe) {
+			int currentPop = tribe->GetTribeMembers().size();
+			int maxPop = GetTribeMaxPopulation(tribe);
+			//if (maxPop > tribe->mTribeMembers.size()) {
+			//	tribe->mTribeMembers.resize(maxPop);
+			//	tribe->mCommunityMembers.resize(maxPop);
+			//	tribe->mCommunitySize = maxPop;
+			//}
+
+			// create the population caption string
+			eastl::string16 captionStr;
+			captionStr.sprintf(u"%i / %i", currentPop, maxPop);
+
+			// assign the caption string
+			textfield->SetCaption(captionStr.c_str());
+			textfield->SetVisible(true);
+
+			UpdateTribeBabyUI(tribe, currentPop, maxPop);
+
+		}
+	}
+}
+
+
 // The baby UI has to be manually controlled, due to a vanilla-spore glitch
-void cTribePlanManager::UpdateTribeBabyUI(cTribePtr tribe, int population, int maxpopulation) const {
+void cTribePlanManager::UpdateTribeBabyUI(cTribePtr tribe, int population, int maxpopulation) {
 	int currentPop = population;
 	int maxPop = maxpopulation;
 	if (population == -1 || maxpopulation == -1) {

@@ -79,7 +79,8 @@ protected:
 	static cTribePlanManager* sInstance;
 
 private:
-	void UpdateTribeBabyUI(cTribePtr tribe, int population = -1, int maxpopulation = -1) const;
+	void UpdateTribePopulationUI();
+	void UpdateTribeBabyUI(cTribePtr tribe, int population = -1, int maxpopulation = -1);
 	void ResetBabySpawningVar();
 	intrusive_ptr<Simulator::ScheduledTaskListener> mBabySpawnTask;
 };
