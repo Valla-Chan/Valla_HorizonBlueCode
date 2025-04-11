@@ -6,6 +6,7 @@
 EP1_GameplayObject_DriveMarker::EP1_GameplayObject_DriveMarker()
 {
 	App::AddUpdateFunction(this);
+	WindowManager.GetMainWindow()->AddWinProc(this);
 }
 
 

@@ -38,6 +38,15 @@
     <Filter Include="Valla_HorizonBlue\TRG\ToolStrats">
       <UniqueIdentifier>{4da496a3-55b8-45be-95f2-f899a6daa585}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Valla_HorizonBlue\TRG\Submanagers">
+      <UniqueIdentifier>{558fc6a8-52b4-4577-b79a-2a3a089e0f24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Valla_HorizonBlue\TRG\Managers">
+      <UniqueIdentifier>{8f4b1f08-88d0-4e89-b3eb-9dbd687598c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Valla_HorizonBlue\TRG\Headers">
+      <UniqueIdentifier>{855756a1-fabb-4eaa-8e4f-ccfeee90835b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -148,12 +157,6 @@
     <ClInclude Include="CRG_WaterBehavior.h">
       <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
-    <ClInclude Include="TRG_ChieftainManager.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClInclude>
-    <ClInclude Include="TRG_CreaturePickup.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClInclude>
     <ClInclude Include="EP1_GameplayObject_HoloProjector.h">
       <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClInclude>
@@ -183,9 +186,6 @@
     </ClInclude>
     <ClInclude Include="Cheats\TRG_AddToTribe.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
-    </ClInclude>
-    <ClInclude Include="TRG_IslandEventManager.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
     <ClInclude Include="CRG_Inventory.h">
       <Filter>Valla_HorizonBlue\CRG</Filter>
@@ -226,9 +226,6 @@
     <ClInclude Include="MouseClickRegister.h">
       <Filter>Valla_HorizonBlue</Filter>
     </ClInclude>
-    <ClInclude Include="TRG_TribeHutManager.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClInclude>
     <ClInclude Include="CRG_MovementHelper.h">
       <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
@@ -253,12 +250,6 @@
     <ClInclude Include="CLG_CellController.h">
       <Filter>Valla_HorizonBlue\CLG</Filter>
     </ClInclude>
-    <ClInclude Include="TRG_ToolIDs.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClInclude>
-    <ClInclude Include="TRG_SuppressScavenger.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClInclude>
     <ClInclude Include="Cheats\RepairAll.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
@@ -267,9 +258,6 @@
     </ClInclude>
     <ClInclude Include="Cheats\SetEmpireColor.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
-    </ClInclude>
-    <ClInclude Include="TRG_FireDanceManager.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
     <ClInclude Include="CreatureSpeedBoost.h">
       <Filter>Valla_HorizonBlue</Filter>
@@ -281,17 +269,11 @@
     <ClInclude Include="Cheats\HurtTarget.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
-    <ClInclude Include="TRG_TraitTables.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClInclude>
     <ClInclude Include="CRG_PartShards.h">
       <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClInclude>
     <ClInclude Include="WinProc_HoverMessage.h">
       <Filter>Valla_HorizonBlue\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="TRG_TribeSlotManager.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
     <ClInclude Include="ToolFrenzyBomb.h">
       <Filter>Valla_HorizonBlue\SPG</Filter>
@@ -302,20 +284,47 @@
     <ClInclude Include="cTribeToolStrategy.h">
       <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
     </ClInclude>
-    <ClInclude Include="TribeToolStratManager.h">
-      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    <ClInclude Include="TRG_ChieftainManager.h">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_CreaturePickup.h">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_FireDanceManager.h">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_IslandEventManager.h">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_SuppressScavenger.h">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_TribeHutManager.h">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_TribeSlotManager.h">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClInclude>
+    <ClInclude Include="TribeMemberManager.h">
+      <Filter>Valla_HorizonBlue\TRG\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="TribePlanManager.h">
+      <Filter>Valla_HorizonBlue\TRG\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_ToolIDs.h">
+      <Filter>Valla_HorizonBlue\TRG\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_TraitTables.h">
+      <Filter>Valla_HorizonBlue\TRG\Headers</Filter>
     </ClInclude>
     <ClInclude Include="TribeToolDataKeys.h">
-      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+      <Filter>Valla_HorizonBlue\TRG\Headers</Filter>
     </ClInclude>
     <ClInclude Include="TribeToolManager.h">
-      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+      <Filter>Valla_HorizonBlue\TRG\Managers</Filter>
     </ClInclude>
-    <ClInclude Include="TRG_MemberManager.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClInclude>
-    <ClInclude Include="TRG_TribePlanManager.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
+    <ClInclude Include="TribeToolStratManager.h">
+      <Filter>Valla_HorizonBlue\TRG\Managers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -415,12 +424,6 @@
     <ClCompile Include="CRG_WaterBehavior.cpp">
       <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
-    <ClCompile Include="TRG_ChieftainManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClCompile>
-    <ClCompile Include="TRG_CreaturePickup.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClCompile>
     <ClCompile Include="EP1_GameplayObject_HoloProjector.cpp">
       <Filter>Valla_HorizonBlue\EP1</Filter>
     </ClCompile>
@@ -447,9 +450,6 @@
     </ClCompile>
     <ClCompile Include="Cheats\TRG_AddToTribe.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
-    </ClCompile>
-    <ClCompile Include="TRG_IslandEventManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClCompile>
     <ClCompile Include="CRG_Inventory.cpp">
       <Filter>Valla_HorizonBlue\CRG</Filter>
@@ -490,9 +490,6 @@
     <ClCompile Include="MouseClickRegister.cpp">
       <Filter>Valla_HorizonBlue</Filter>
     </ClCompile>
-    <ClCompile Include="TRG_TribeHutManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClCompile>
     <ClCompile Include="CRG_MovementHelper.cpp">
       <Filter>Valla_HorizonBlue\CRG</Filter>
     </ClCompile>
@@ -517,9 +514,6 @@
     <ClCompile Include="CLG_CellController.cpp">
       <Filter>Valla_HorizonBlue\CLG</Filter>
     </ClCompile>
-    <ClCompile Include="TRG_SuppressScavenger.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClCompile>
     <ClCompile Include="Cheats\RepairAll.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
@@ -528,9 +522,6 @@
     </ClCompile>
     <ClCompile Include="Cheats\SetEmpireColor.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
-    </ClCompile>
-    <ClCompile Include="TRG_FireDanceManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClCompile>
     <ClCompile Include="CreatureSpeedBoost.cpp">
       <Filter>Valla_HorizonBlue</Filter>
@@ -548,9 +539,6 @@
     <ClCompile Include="WinProc_HoverMessage.cpp">
       <Filter>Valla_HorizonBlue\UI</Filter>
     </ClCompile>
-    <ClCompile Include="TRG_TribeSlotManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClCompile>
     <ClCompile Include="ToolFrenzyBomb.cpp">
       <Filter>Valla_HorizonBlue\SPG</Filter>
     </ClCompile>
@@ -560,17 +548,38 @@
     <ClCompile Include="cTribeToolStrategy.cpp">
       <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
     </ClCompile>
-    <ClCompile Include="TribeToolStratManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    <ClCompile Include="TRG_ChieftainManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_CreaturePickup.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_FireDanceManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_IslandEventManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_SuppressScavenger.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_TribeHutManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_TribeSlotManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Submanagers</Filter>
+    </ClCompile>
+    <ClCompile Include="TribeMemberManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="TribePlanManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Managers</Filter>
     </ClCompile>
     <ClCompile Include="TribeToolManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+      <Filter>Valla_HorizonBlue\TRG\Managers</Filter>
     </ClCompile>
-    <ClCompile Include="TRG_MemberManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClCompile>
-    <ClCompile Include="TRG_TribePlanManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
+    <ClCompile Include="TribeToolStratManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\Managers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -344,7 +344,7 @@
       <SubType>
       </SubType>
     </ClInclude>
-    <ClInclude Include="TRG_MemberManager.h">
+    <ClInclude Include="TribeMemberManager.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -357,7 +357,7 @@
       <SubType>
       </SubType>
     </ClInclude>
-    <ClInclude Include="TRG_TribePlanManager.h">
+    <ClInclude Include="TribePlanManager.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -628,7 +628,7 @@
       <SubType>
       </SubType>
     </ClCompile>
-    <ClCompile Include="TRG_MemberManager.cpp">
+    <ClCompile Include="TribeMemberManager.cpp">
       <SubType>
       </SubType>
     </ClCompile>
@@ -640,7 +640,7 @@
       <SubType>
       </SubType>
     </ClCompile>
-    <ClCompile Include="TRG_TribePlanManager.cpp">
+    <ClCompile Include="TribePlanManager.cpp">
       <SubType>
       </SubType>
     </ClCompile>

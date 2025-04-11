@@ -1,11 +1,16 @@
 #include "stdafx.h"
-#include "TRG_TribePlanManager.h"
+#include "TribePlanManager.h"
 #include <Spore\Editors\Editor.h>
 
 cTribePlanManager::cTribePlanManager()
 {
 	sInstance = this;
-	//trg_suppressscavenger = new(TRG_SuppressScavenger);
+	trg_suppressscavenger = new(TRG_SuppressScavenger);
+	trg_hutmanager = new(TRG_TribeHutManager);
+	//TRG_TribeSlotManager* trg_slotmanager = new(TRG_TribeSlotManager);
+	trg_ieventmanager = new(TRG_IslandEventManager); // TODO: make standalone?
+	trg_firedancemanager = new(TRG_FireDanceManager);
+	new(TRG_SuppressScavenger);
 
 	App::AddUpdateFunction(this);
 	WindowManager.GetMainWindow()->AddWinProc(this);
@@ -17,7 +22,7 @@ cTribePlanManager::cTribePlanManager()
 cTribePlanManager::~cTribePlanManager()
 {
 	sInstance = nullptr;
-	//trg_suppressscavenger = nullptr;
+	trg_suppressscavenger = nullptr;
 }
 
 cTribePlanManager* cTribePlanManager::sInstance;

@@ -5,6 +5,8 @@
 CRG_PartShards::CRG_PartShards()
 {
 	WindowManager.GetMainWindow()->AddWinProc(this);
+
+	SimulatorSystem.AddStrategy(this, NOUN_ID);
 }
 
 CRG_PartShards::~CRG_PartShards()

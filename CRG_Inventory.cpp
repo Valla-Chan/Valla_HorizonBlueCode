@@ -47,6 +47,8 @@ void CRG_Inventory::Initialize() {
 	MessageManager.AddListener(this, kMsgRestartAtNest);
 	MessageManager.AddListener(this, kMsgCombatantKilled);
 	MessageManager.AddListener(this, id("BabyGrowUp"));
+
+	SimulatorSystem.AddStrategy(this, NOUN_ID);
 }
 
 void CRG_Inventory::Dispose() {

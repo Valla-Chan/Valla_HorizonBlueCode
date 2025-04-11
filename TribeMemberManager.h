@@ -38,8 +38,8 @@ public:
 	// SUBMANAGERS
 	//---------------------------------------
 
-	TRG_ChieftainManager* trg_chiefmanager = new(TRG_ChieftainManager);
-	TRG_CreaturePickup* trg_creaturepickup = new(TRG_CreaturePickup);
+	TRG_ChieftainManager* trg_chiefmanager;
+	TRG_CreaturePickup* trg_creaturepickup;
 
 	//---------------------------------------
 

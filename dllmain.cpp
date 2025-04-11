@@ -67,17 +67,10 @@
 
 // TRG
 
-#include "TRG_CreaturePickup.h"
-#include "TRG_ChieftainManager.h"
-#include "TRG_MemberManager.h"
-#include "TRG_IslandEventManager.h"
-#include "TRG_TribeHutManager.h"
-#include "TRG_FireDanceManager.h"
-
-#include "TRG_TribePlanManager.h"
+#include "TribeMemberManager.h"
+#include "TribePlanManager.h"
 #include "TribeToolStratManager.h"
 #include "TribeToolManager.h"
-
 
 
 // CVG Ingame Behaviors
@@ -111,18 +104,6 @@ cObjectManager* obconverter;
 CRG_DiseaseManager* diseasemanager;
 CRG_Inventory* crg_inventory;
 CRG_PartShards* crg_partshards;
-
-
-TRG_SuppressScavenger* trg_suppressscavenger;
-TRG_TribeHutManager* trg_hutmanager;
-TRG_TribeSlotManager* trg_slotmanager;
-TRG_IslandEventManager* trg_ieventmanager; // TODO: make standalone?
-TRG_FireDanceManager* trg_firedancemanager;
-//
-TRG_ChieftainManager* trg_chiefmanager;
-TRG_CreaturePickup* trg_creaturepickup;
-
-cTribePlanManager* trg_tribeplanmanager;
 
 CVG_CreatureManager* cvg_creaturemanager;
 CVG_CityWalls* cvg_citywalls;
@@ -211,27 +192,21 @@ void Initialize()
 
 	CRG_AttackBasic* crg_attackbasic = new(CRG_AttackBasic);
 	crg_inventory = new(CRG_Inventory);
-	SimulatorSystem.AddStrategy(crg_inventory, CRG_Inventory::NOUN_ID);
 
 
 	crg_partshards = new(CRG_PartShards);
-	SimulatorSystem.AddStrategy(crg_partshards, CRG_PartShards::NOUN_ID);
 
 	// TRG
 	
 	auto trg_membermanager = new(cTribeMemberManager);
-	trg_tribeplanmanager = new(cTribePlanManager);
+	auto trg_tribeplanmanager = new(cTribePlanManager);
 	auto trg_toolstratmanager = new(cTribeToolStratManager);
 	auto trg_toolmanager = new(cTribeToolManager);
 
-	TRG_SuppressScavenger* trg_suppressscavenger = new(TRG_SuppressScavenger);;
-	TRG_TribeHutManager* trg_hutmanager = new(TRG_TribeHutManager);
+	//trg_hutmanager = new(TRG_TribeHutManager);
 	//TRG_TribeSlotManager* trg_slotmanager = new(TRG_TribeSlotManager);
-	TRG_IslandEventManager* trg_ieventmanager = new(TRG_IslandEventManager); // TODO: make standalone?
-	TRG_FireDanceManager* trg_firedancemanager = new(TRG_FireDanceManager);
-	//
-	TRG_ChieftainManager* trg_chiefmanager = new(TRG_ChieftainManager);
-	TRG_CreaturePickup* trg_creaturepickup = new(TRG_CreaturePickup);
+	//trg_ieventmanager = new(TRG_IslandEventManager); // TODO: make standalone?
+	//trg_firedancemanager = new(TRG_FireDanceManager);
 
 
 	// CVG
@@ -244,10 +219,7 @@ void Initialize()
 
 	// EP1
 	ep1_possecommand = new(EP1_PosseCommand);
-	WindowManager.GetMainWindow()->AddWinProc(ep1_possecommand);
-
 	ep1_captainabilities = new(EP1_CaptainAbilities);
-	WindowManager.GetMainWindow()->AddWinProc(ep1_captainabilities);
 
 	// Initialize Manager
 	gameplayobjectmanager = new(EP1_GameplayObjectManager);
@@ -259,7 +231,6 @@ void Initialize()
 	gameplayobjectmanager->AddGameplayObjectSubmanager(ep1_gameplayobject_icecube);
 
 	ep1_gameplayobject_drivemarker = new(EP1_GameplayObject_DriveMarker);
-	WindowManager.GetMainWindow()->AddWinProc(ep1_gameplayobject_drivemarker);
 
 	ep1_behaviormanager = new(EP1_BehaviorManager);
 
@@ -404,7 +375,7 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 
 					if (!suppress && creature->IsSelected() && creature->mpOwnerTribe == GameNounManager.GetPlayerTribe()) {
 						// only suppress if this is a creature that is going towards the event item
-						if (trg_ieventmanager->IsCreatureActivator(creature)) {
+						if (TribePlanManager.trg_ieventmanager->IsCreatureActivator(creature)) {
 							suppress = true;
 						}
 					}
@@ -527,13 +498,13 @@ member_detour(AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*))
 			else if (animID == TRG_FireDanceManager::DanceAnims::soc_fire_dance_turn_fast) {
 				auto creature = GetAnimCreatureCitizenOwner(this);
 				if (creature) {
-					trg_firedancemanager->AddDancer(creature);
+					TribePlanManager.trg_firedancemanager->AddDancer(creature);
 				}
 			}
 			else if (animID == TRG_FireDanceManager::DanceAnims::soc_celebrate_trg) {
 				auto creature = GetAnimCreatureCitizenOwner(this);
 				if (creature) {
-					trg_firedancemanager->HitLastDanceAnim(creature);
+					TribePlanManager.trg_firedancemanager->HitLastDanceAnim(creature);
 				}
 			}
 
@@ -683,7 +654,7 @@ member_detour(SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
 					}
 				}
 				// island event item hovered
-				if (trg_ieventmanager->IsEventItemHovered() && trg_ieventmanager->mouse_state_valid) {
+				if (TribePlanManager.trg_ieventmanager->IsEventItemHovered() && TribePlanManager.trg_ieventmanager->mouse_state_valid) {
 					return original_function(this, 0x24C6D844);
 				}
 			}
@@ -768,7 +739,7 @@ static_detour(TribeSpawn_detour, cTribe*(const Vector3&, int, int, int, bool, cS
 			species = cvg_creaturemanager->GetRandomTribeSpecies(species);
 		}
 		cTribe* tribe = original_function(position, tribeArchetype, numMembers, foodAmount, boolvalue, species);
-		trg_hutmanager->SetupNewTribe(tribe);
+		TribePlanManager.trg_hutmanager->SetupNewTribe(tribe);
 		
 		return tribe;
 	}
@@ -812,12 +783,12 @@ static_detour(GetTribeToolData_detour, cTribeToolData* (int)) {
 			// Exception for tribal rares:
 			// Pull data from random model file
 			if (data->mToolType == ToolTypes::EventRare) {
-				auto model = trg_ieventmanager->GetEventItemModelKey();
+				auto model = TribePlanManager.trg_ieventmanager->GetEventItemModelKey();
 				data->mToolDamageHiKey = model;
 				data->mToolDamageLoKey = model;
 				data->mToolDamageMdKey = model;
 				data->mRackModelKey = model;
-				data->mName = trg_ieventmanager->GetEventItemName(model);
+				data->mName = TribePlanManager.trg_ieventmanager->GetEventItemName(model);
 			}
 			return data;
 		}
@@ -914,8 +885,8 @@ member_detour(CitizenDoAction_detour, Simulator::cCreatureCitizen, void(int, cGa
 			SporeDebugPrint("Citizen action %i taken by creature of tribe %ls", actionId, this->mpOwnerTribe->GetCommunityName().c_str());
 		}
 
-		if (this->mpOwnerTribe == GameNounManager.GetPlayerTribe() && actionObject != trg_ieventmanager->mpEventItem.get()) {
-			trg_ieventmanager->RemoveCreatureFromActivators(this);
+		if (this->mpOwnerTribe == GameNounManager.GetPlayerTribe() && actionObject != TribePlanManager.trg_ieventmanager->mpEventItem.get()) {
+			TribePlanManager.trg_ieventmanager->RemoveCreatureFromActivators(this);
 		}
 		original_function(this, actionId, actionObject, property);
 
@@ -966,7 +937,7 @@ static_detour(GetCachedColorFromId_detour, const Math::ColorRGB& (uint32_t)) {
 
 member_detour(GetTribeMaxPopulation_detour, Simulator::cTribe, size_t()) {
 	size_t detoured() {
-		return trg_tribeplanmanager->GetTribeMaxPopulation(this);
+		return TribePlanManager.GetTribeMaxPopulation(this);
 	}
 };
 
@@ -986,8 +957,8 @@ member_detour(UIShowEvent_detour, Simulator::cUIEventLog, uint32_t(uint32_t, uin
 			}*/
 			// Scavenger Raid
 			if (instanceID == id("WildAnimalsRaiding")) {
-				if (trg_tribeplanmanager->TribeHasScarecrow(GameNounManager.GetPlayerTribe())) {
-					trg_suppressscavenger->SuppressScavenger();
+				if (TribePlanManager.TribeHasScarecrow(GameNounManager.GetPlayerTribe())) {
+					TribePlanManager.trg_suppressscavenger->SuppressScavenger();
 					return 0x0;
 				}
 				auto value = original_function(this, instanceID, groupID, int1, vector3, dontAllowDuplicates, int2);
@@ -1385,7 +1356,7 @@ member_detour(ReadSPUI_detour, UTFWin::UILayout, bool(const ResourceKey&, bool, 
 		if (IsTribeGame()) {
 
 			// rolling over a tribe hut that is actually a rare item
-			if (name.instanceID == id("Rollover_TribeHut") && trg_ieventmanager->IsEventItemHovered())
+			if (name.instanceID == id("Rollover_TribeHut") && TribePlanManager.trg_ieventmanager->IsEventItemHovered())
 			{
 				ResourceKey newSpui = ResourceKey(id("Rollover_TribeRare"), name.typeID, name.groupID);
 				return original_function(this, newSpui, arg_4, arg_8);
@@ -1499,7 +1470,7 @@ member_detour(PaletteUILoad_detour, Palettes::PaletteUI, void(Palettes::PaletteM
 		// Tribal
 		if (IsTribeGame()) {
 			// Add rename UI to planner
-			trg_hutmanager->AddTribeRenameUI(bool(this));
+			TribePlanManager.trg_hutmanager->AddTribeRenameUI(bool(this));
 		}
 		else {
 			trg_has_set_category = false;

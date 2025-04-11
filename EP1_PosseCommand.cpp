@@ -4,6 +4,7 @@
 
 EP1_PosseCommand::EP1_PosseCommand()
 {
+	WindowManager.GetMainWindow()->AddWinProc(this);
 }
 
 

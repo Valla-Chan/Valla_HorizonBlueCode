@@ -11,7 +11,7 @@ class TRG_FireDanceManager
 	: public Simulator::cStrategy
 {
 public:
-	static const uint32_t TYPE = id("Valla_HorizonBlue::TRG_FireDanceManager");
+	static const uint32_t TYPE = id("TRG_FireDanceManager");
 	static const uint32_t NOUN_ID = TYPE;
 
 	int AddRef() override;

@@ -54,7 +54,6 @@ public:
 	void OnShopperAccept(const ResourceKey& selection) override;
 
 	ResourceKey GetStaffIconResource(ResourceKey selection) const;
-	Graphics::Texture* GetStaffIcon(int hutType) const;
 	void UpdateStaffModel();
 	void UpdateStaffIcon();
 

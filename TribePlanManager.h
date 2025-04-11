@@ -3,16 +3,16 @@
 #include <Spore\BasicIncludes.h>
 #include "TribeToolStratManager.h"
 #include "TribeToolManager.h"
+#include "TribeMemberManager.h"
 
 #include "TRG_SuppressScavenger.h"
-#include "TRG_MemberManager.h"
 #include "TRG_TribeHutManager.h"
 #include "TRG_TribeSlotManager.h"
 #include "TRG_IslandEventManager.h"
 #include "TRG_FireDanceManager.h"
 
 #define cTribePlanManagerPtr intrusive_ptr<cTribePlanManager>
-//#define TribePlanManager (*cTribePlanManager::Get())
+#define TribePlanManager (*cTribePlanManager::Get())
 
 using namespace UTFWin;
 using namespace Simulator;
@@ -44,6 +44,11 @@ public:
 	// SUBMANAGERS
 	//---------------------------------------
 
+	TRG_SuppressScavenger* trg_suppressscavenger;
+	TRG_TribeHutManager* trg_hutmanager;
+	TRG_TribeSlotManager* trg_slotmanager;
+	TRG_IslandEventManager* trg_ieventmanager; // TODO: make standalone?
+	TRG_FireDanceManager* trg_firedancemanager;
 
 	// POPULATION
 	//---------------------------------------

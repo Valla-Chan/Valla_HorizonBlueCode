@@ -3,6 +3,7 @@
 
 EP1_CaptainAbilities::EP1_CaptainAbilities()
 {
+	WindowManager.GetMainWindow()->AddWinProc(this);
 }
 
 

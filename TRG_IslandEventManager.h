@@ -15,7 +15,7 @@ class TRG_IslandEventManager
 	//, public App::IMessageListener
 {
 public:
-	static const uint32_t TYPE = id("Valla_CreatureOverhaul::TRG_IslandEventManager");
+	static const uint32_t TYPE = id("TRG_IslandEventManager");
 	static const uint32_t NOUN_ID = TYPE;
 
 	int AddRef() override;
