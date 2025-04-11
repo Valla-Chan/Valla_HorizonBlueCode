@@ -4,6 +4,7 @@
 
 TRG_TribeHutManager::TRG_TribeHutManager()
 {
+	SimulatorSystem.AddStrategy(this, NOUN_ID);
 }
 
 TRG_TribeHutManager::~TRG_TribeHutManager()

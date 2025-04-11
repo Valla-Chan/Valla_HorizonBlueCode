@@ -6,6 +6,7 @@
 CreatureSpeedBoost::CreatureSpeedBoost()
 {
 	sInstance = this;
+	SimulatorSystem.AddStrategy(this, NOUN_ID);
 }
 
 CreatureSpeedBoost::~CreatureSpeedBoost()

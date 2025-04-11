@@ -3,18 +3,24 @@
 #include <Spore\BasicIncludes.h>
 #include "CreatureSpeedBoost.h"
 #include "TRG_TraitTables.h"
+#include "TRG_ChieftainManager.h"
+#include "TRG_CreaturePickup.h"
 
-#define TRG_MemberManagerPtr intrusive_ptr<TRG_MemberManager>
+#define cTribeMemberManagerPtr intrusive_ptr<cTribeMemberManager>
+#define TribeMemberManager (*cTribeMemberManager::Get())
 
 using namespace Simulator;
 
-class TRG_MemberManager
+class cTribeMemberManager
 	: public Simulator::cStrategy
 	, public TraitTable
 {
 public:
-	static const uint32_t TYPE = id("Valla_CreatureOverhaul::TRG_MemberManager");
+	static const uint32_t TYPE = id("Valla_CreatureOverhaul::cTribeMemberManager");
 	static const uint32_t NOUN_ID = TYPE;
+
+	cTribeMemberManager();
+	~cTribeMemberManager();
 
 	int AddRef() override;
 	int Release() override;
@@ -25,8 +31,17 @@ public:
 	virtual bool WriteToXML(XmlSerializer*) override { return true; }
 	bool Read(Simulator::ISerializerStream* stream) override;
 	void Update(int deltaTime, int deltaGameTime) override;
+	static cTribeMemberManager* Get();
 	//--------------------------------------------------------------------------
 	// This file manages all tribe members, and saves the data with the world.
+
+	// SUBMANAGERS
+	//---------------------------------------
+
+	TRG_ChieftainManager* trg_chiefmanager = new(TRG_ChieftainManager);
+	TRG_CreaturePickup* trg_creaturepickup = new(TRG_CreaturePickup);
+
+	//---------------------------------------
 
 	const ResourceKey IDcolorsKey = ResourceKey(id("MemberColors"), TypeIDs::Names::prop, id("TribeTraits"));
 
@@ -59,7 +74,6 @@ public:
 
 	//----------------------------------------------------------------------
 
-	CreatureSpeedBoost* mCreatureSpeedBoost = nullptr;
 	eastl::hash_map<uint32_t, MemberPersonality> mCreaturePersonalities; // cCreatureCitizenPtr
 	vector<cCreatureCitizenPtr> mCurrentBabies;
 
@@ -88,8 +102,9 @@ public:
 	//-------------------------------------------------------------------
 	static Simulator::Attribute ATTRIBUTES[];
 
+protected:
+	static cTribeMemberManager* sInstance;
+
 private:
 	intrusive_ptr<App::ScheduledTaskListener> mBabyFXSuppressTask;
 };
-
-

@@ -369,6 +369,11 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="TribeToolDataKeys.h" />
+    <ClInclude Include="TribeToolManager.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="TribeToolStratManager.h">
       <SubType>
       </SubType>
@@ -644,6 +649,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="TRG_UseTribalTool.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="TribeToolManager.cpp">
       <SubType>
       </SubType>
     </ClCompile>

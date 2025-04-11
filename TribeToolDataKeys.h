@@ -1,5 +1,7 @@
 #pragma once
 
+using namespace Simulator;
+
 const eastl::hash_set<uint32_t> defaultTribeTools = {
 		id("attack1"),
 		id("attack2"),

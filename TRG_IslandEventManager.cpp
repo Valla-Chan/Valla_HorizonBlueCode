@@ -29,6 +29,7 @@ bool TRG_IslandEventManager::Read(Simulator::ISerializerStream* stream)
 
 void TRG_IslandEventManager::Initialize() {
 	SporeDebugPrint("Island Event Manager is initialized.");
+	SimulatorSystem.AddStrategy(this, NOUN_ID);
 
 	CursorManager.Load(0x24C6D844, u"cursor_unknown");
 	WindowManager.GetMainWindow()->AddWinProc(this);

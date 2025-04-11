@@ -7,6 +7,7 @@
 TRG_ChieftainManager::TRG_ChieftainManager()
 {
 	sInstance = this;
+	SimulatorSystem.AddStrategy(this, NOUN_ID);
 	WindowManager.GetMainWindow()->AddWinProc(this);
 	MessageManager.AddListener(this, id("TRG_GetTool")); // listen for anim event
 	MessageManager.AddListener(this, id("UpdateStaffIcon")); // listen for anim event

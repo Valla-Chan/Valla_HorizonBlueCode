@@ -178,9 +178,6 @@
     <ClInclude Include="Cheats\TRG_GetClosestHerd.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
-    <ClInclude Include="TRG_MemberManager.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClInclude>
     <ClInclude Include="Cheats\TRG_SelectMembers.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClInclude>
@@ -195,9 +192,6 @@
     </ClInclude>
     <ClInclude Include="Cheats\HurtMe.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
-    </ClInclude>
-    <ClInclude Include="TRG_TribePlanManager.h">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
     <ClInclude Include="Cheats\SetVehicleTool.h">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
@@ -310,6 +304,18 @@
     </ClInclude>
     <ClInclude Include="TribeToolStratManager.h">
       <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    </ClInclude>
+    <ClInclude Include="TribeToolDataKeys.h">
+      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    </ClInclude>
+    <ClInclude Include="TribeToolManager.h">
+      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_MemberManager.h">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClInclude>
+    <ClInclude Include="TRG_TribePlanManager.h">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -436,9 +442,6 @@
     <ClCompile Include="Cheats\TRG_GetClosestHerd.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
-    <ClCompile Include="TRG_MemberManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
-    </ClCompile>
     <ClCompile Include="Cheats\TRG_SelectMembers.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
     </ClCompile>
@@ -453,9 +456,6 @@
     </ClCompile>
     <ClCompile Include="Cheats\HurtMe.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
-    </ClCompile>
-    <ClCompile Include="TRG_TribePlanManager.cpp">
-      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClCompile>
     <ClCompile Include="Cheats\SetVehicleTool.cpp">
       <Filter>Valla_HorizonBlue\Cheats</Filter>
@@ -562,6 +562,15 @@
     </ClCompile>
     <ClCompile Include="TribeToolStratManager.cpp">
       <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    </ClCompile>
+    <ClCompile Include="TribeToolManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG\ToolStrats</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_MemberManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
+    </ClCompile>
+    <ClCompile Include="TRG_TribePlanManager.cpp">
+      <Filter>Valla_HorizonBlue\TRG</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

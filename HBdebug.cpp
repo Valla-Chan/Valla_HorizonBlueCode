@@ -85,58 +85,74 @@ cSpatialObjectPtr TraceHitSpatial() {
 
 //-----------------------------------------------------------------------------------
 
+void HBdebug::StoreData() {
+// Some common vars we might want to use
+//--------------------------------------------------------------------
+
+// Objects and Players
+	avatar = GameNounManager.GetAvatar();
+	player = GetPlayer();
+	/* herd */ if (avatar) { herd = avatar->mHerd; }
+	/* nest */ if (herd) { nest = herd->mpNest; }
+	tribe = GameNounManager.GetPlayerTribe();
+	/* chieftain */ if (tribe) { chieftain = tribe->GetLeaderCitizen(); }
+	hovered = GameViewManager.GetHoveredObject();
+	hoveredAnimal = object_cast<cCreatureAnimal>(hovered);
+	hoveredCitizen = object_cast<cCreatureCitizen>(hovered);
+	hoveredCombatant = object_cast<cCombatant>(hovered);
+	ship = Simulator::GetPlayerUFO();
+
+// UI
+	window = WindowManager.GetMainWindow();
+// Editor
+	editor = GetEditor();
+	editorModel = Editor.GetEditorModel();
+
+// CRG part unlocks
+	/* crgparts */ if (player) { crgparts = player->mpCRGItems; }
+
+// Planet
+	planetRecord = Simulator::GetActivePlanetRecord();
+	empire = Simulator::GetPlayerEmpire();
+	civilization = GameNounManager.GetPlayerCivilization();
+	cities = GetData<cCity>();
+/* firstCity */ if (!cities.empty()) { firstCity = cities[0]; }
+
+}
 
 
 void HBdebug::ParseLine(const ArgScript::Line& line)
 {
-	// Some common vars we might want to use
-	//-------------------------------------------
-	// objects and players
-	auto avatar = GameNounManager.GetAvatar();
-	auto player = GetPlayer();
-	cHerdPtr herd; if (avatar) { herd = avatar->mHerd; }
-	cNestPtr nest; if (herd) { nest = herd->mpNest; }
-	auto tribe = GameNounManager.GetPlayerTribe();
-	cCreatureCitizenPtr chieftain; if (tribe) { chieftain = tribe->GetLeaderCitizen(); }
-	auto hovered = GameViewManager.GetHoveredObject();
-	auto hoveredAnimal = object_cast<cCreatureAnimal>(hovered);
-	auto hoveredCitizen = object_cast<cCreatureCitizen>(hovered);
-	auto hoveredCombatant = object_cast<cCombatant>(hovered);
-	// ui
-	auto window = WindowManager.GetMainWindow();
-	// editor
-	auto editor = GetEditor();
-	auto editorModel = Editor.GetEditorModel();
-	// CRG part unlocks
-	cCollectableItemsPtr crgparts; if (player) { crgparts = player->mpCRGItems; }
-	// planet
-	auto planetRecord = Simulator::GetActivePlanetRecord();
-	auto empire = Simulator::GetPlayerEmpire();
-	auto ship = Simulator::GetPlayerUFO();
-	auto civilization = GameNounManager.GetPlayerCivilization();
-	auto cities = GetData<cCity>();
-	cCityPtr firstCity; if (!cities.empty()) { firstCity = cities[0]; }
-	//-------------------------------------------
-	// Your code here:
-	//-------------------------------------------
+	StoreData();
+//--------------------------------------------------------------------
+// Your code here:
+//--------------------------------------------------------------------
 	
-	if (hovered) {
-		hovered = hovered;
-		if (hoveredCitizen) {
-			chieftain->DoAction(kCitizenActionGatherMeat, hoveredCitizen);
-		}
-	}
+	auto ufo = Simulator::CreateUFO(Simulator::UfoType::Unk5, empire.get());
 
-	if (tribe) {
-		//tribe->mTribeLayout.mSlots.clear();
-		for (size_t i = 0; i < tribe->mTribeLayout.mSlots.size(); i++) {
-			tribe->mTribeLayout.mSlots[i].mPosition = Vector3(0, 0, 0);
-		}
-		//tribe->mTribeLayout.mSlots.clear();
-		//vector<Math::Vector3> positions;
-		//tribe->mTribeLayout.InitializeSlots(positions, 1.0);
-	}
 
+//--------------------------------------------------------------------
+	SporeDebugPrint("HBdebug done executing.");
+}
+
+
+
+const char* HBdebug::GetDescription(ArgScript::DescriptionMode mode) const
+{
+	if (mode == ArgScript::DescriptionMode::Basic) {
+		return "Horizon Blue Debugging Placeholder. This cheat does nothing unless modified by a developer.";
+	}
+	else {
+		return "HBdebug: Debugging Placeholder. This cheat does nothing unless modified by a developer.";
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------------------
+// Premade Funcs
+
+
+void HBdebug::TribesAttackShip() {
 	for (auto tribeitem : Simulator::GetData<Simulator::cTribe>()) {
 
 		for (auto member : tribeitem->GetTribeMembers()) {
@@ -159,125 +175,64 @@ void HBdebug::ParseLine(const ArgScript::Line& line)
 					member->DoAction(kCitizenActionGrabTool, tool.get());
 				}
 
-				
+
 			}
 			else {*/
-				member->DoAction(kCitizenActionAttack, ship);
-				member->SetTarget(ship);
-				member->mpTarget = ship;
-				member->mpCombatantTarget = ship;
+			member->DoAction(kCitizenActionAttack, ship.get());
+			member->SetTarget(ship.get());
+			member->mpTarget = ship;
+			member->mpCombatantTarget = ship.get();
 
-				ResourceKey abilitykey = ResourceKey(id("Adventurer_Missile1"), TypeIDs::Names::prop, id("CreatureAbilities"));
+			ResourceKey abilitykey = ResourceKey(id("Adventurer_Missile1"), TypeIDs::Names::prop, id("CreatureAbilities"));
 
-				int abilityindex = -1;
-				bool abilityowned = false;
-				for (int i = member->mpSpeciesProfile->mAbilities.size() - 1; i >= 0; i--)
+			int abilityindex = -1;
+			bool abilityowned = false;
+			for (int i = member->mpSpeciesProfile->mAbilities.size() - 1; i >= 0; i--)
+			{
+				if (member->mpSpeciesProfile->mAbilities[i]->mpPropList->GetResourceKey().instanceID == abilitykey.instanceID)
 				{
-					if (member->mpSpeciesProfile->mAbilities[i]->mpPropList->GetResourceKey().instanceID == abilitykey.instanceID)
-					{
-						abilityindex = i;
-						abilityowned = true;
-						break;
-					}
-				}
-				if (!abilityowned)
-				{
-					cCreatureAbility* ability = new(cCreatureAbility);
-					PropertyListPtr mpPropList;
-					if (PropManager.GetPropertyList(abilitykey.instanceID, abilitykey.groupID, mpPropList))
-					{
-						cCreatureAbility::Parse(ability, mpPropList.get());
-
-						// add the new ability to the species profile
-						member->mpSpeciesProfile->mAbilities.push_back(ability);
-						abilityindex = member->mpSpeciesProfile->mAbilities.size() - 1;
-						member->mRechargingAbilityBits[abilityindex] = 0;
-						member->mInUseAbilityBits[abilityindex] = 0;
-
-						// AbilityState
-						auto a = Simulator::cAbilityState(member->mAbilityStates[abilityindex - 1]);
-						a.field_08 = ResourceID(member->mAbilityStates[abilityindex - 1].field_08);
-						a.field_08.instanceID = abilitykey.instanceID;
-						a.field_08.groupID = abilitykey.groupID;
-						member->mAbilityStates.push_back(a);
-
-					}
-					
-				}
-				if (abilityindex > 0) {
-					member->PlayAbility(abilityindex);
-				}
-				
-
-
-				
-			//}
-			
-			
-			
-
-		}
-
-	}
-
-	//auto campfire = tribe->GetToolByType(10);
-	//if (campfire) {
-	//	campfire->SetToolType(1);
-	//}
-
-	if (IsCellGame()) {
-	
-		Simulator::cObjectPoolIndex cellIndices[200];
-		cCellObjectData* avatar = GetPlayerCell();
-
-		int numCells = Simulator::Cell::FindCellsInRadius(
-			CellGame.mpCellQuery,
-			avatar->GetPosition(), 200.0f,  // center and radius of search
-			cellIndices, 200);
-
-		// stop all found cells from chasing the player
-		for (int i = 0; i < numCells; i++)
-		{
-			cCellObjectData* cell = CellGame.mCells.Get(cellIndices[i]);
-			if (cell->IsCreature()) {
-				if (cell->field_354) {
-					SporeDebugPrint("field_354 true");
-				}
-				if (cell->field_110) {
-					SporeDebugPrint("field_110 true");
-				}
-				if (cell->field_112) {
-					SporeDebugPrint("field_112 true");
-				}
-				if (cell->field_113) {
-					SporeDebugPrint("field_113 true");
+					abilityindex = i;
+					abilityowned = true;
+					break;
 				}
 			}
+			if (!abilityowned)
+			{
+				cCreatureAbility* ability = new(cCreatureAbility);
+				PropertyListPtr mpPropList;
+				if (PropManager.GetPropertyList(abilitykey.instanceID, abilitykey.groupID, mpPropList))
+				{
+					cCreatureAbility::Parse(ability, mpPropList.get());
+
+					// add the new ability to the species profile
+					member->mpSpeciesProfile->mAbilities.push_back(ability);
+					abilityindex = member->mpSpeciesProfile->mAbilities.size() - 1;
+					member->mRechargingAbilityBits[abilityindex] = 0;
+					member->mInUseAbilityBits[abilityindex] = 0;
+
+					// AbilityState
+					auto a = Simulator::cAbilityState(member->mAbilityStates[abilityindex - 1]);
+					a.field_08 = ResourceID(member->mAbilityStates[abilityindex - 1].field_08);
+					a.field_08.instanceID = abilitykey.instanceID;
+					a.field_08.groupID = abilitykey.groupID;
+					member->mAbilityStates.push_back(a);
+
+				}
+
+			}
+			if (abilityindex > 0) {
+				member->PlayAbility(abilityindex);
+			}
+
+
+
+
+			//}
+
+
+
+
 		}
 
-	}
-
-	//if (herd && herd->mpHerdMom) {
-	//	herd->mpHerdMom->mbColorIsIdentity = true;
-	//	herd->mpHerdMom->GrowUp();
-	//	herd->mpHerdMom->SetIdentityColor(ColorRGB(5, 0, 3));
-	//}
-
-	//auto key = ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200);
-	//editor->AddCreature(1, &key);
-
-	//-------------------------------------------
-	SporeDebugPrint("HBdebug done executing.");
-}
-
-
-
-const char* HBdebug::GetDescription(ArgScript::DescriptionMode mode) const
-{
-	if (mode == ArgScript::DescriptionMode::Basic) {
-		return "Horizon Blue Debugging Placeholder. This cheat does nothing unless modified by a developer.";
-	}
-	else {
-		return "HBdebug: Debugging Placeholder. This cheat does nothing unless modified by a developer.";
 	}
 }

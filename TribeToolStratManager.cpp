@@ -4,6 +4,9 @@
 cTribeToolStratManager::cTribeToolStratManager()
 {
 	sInstance = this;
+	AddBaseStrategies();
+	WindowManager.GetMainWindow()->AddWinProc(this);
+	MessageManager.AddListener(this, SimulatorMessages::kMsgSwitchGameMode);
 }
 
 
@@ -35,76 +38,121 @@ int cTribeToolStratManager::Release()
 void* cTribeToolStratManager::Cast(uint32_t type) const
 {
 	CLASS_CAST(Object);
+	CLASS_CAST(IWinProc);
 	CLASS_CAST(cTribeToolStratManager);
 	return nullptr;
 }
 
 //-------------------------------------------------------------------------------
 
-void cTribeToolStratManager::AddStrategy(cTribeToolStrategy* pStrategy, uint32_t id)
+void cTribeToolStratManager::AddStrategy(cTribeToolStrategy* pStrategy, uint32_t strategyID)
 {
-	mStrategies[id] = pStrategy;
+	mStrategies[strategyID] = pStrategy;
 }
 
-cTribeToolStrategyPtr cTribeToolStratManager::GetStrategy(uint32_t id)
+cTribeToolStrategyPtr cTribeToolStratManager::GetStrategy(uint32_t strategyID)
 {
-	auto E = mStrategies.find(id);
+	auto E = mStrategies.find(strategyID);
 	if (E != mStrategies.end()) {
 		return E.get_node()->mValue.second;
 	}
+	return nullptr;
 }
+
+cTribeToolStrategyPtr cTribeToolStratManager::GetStrategyForToolType(int toolID)
+{
+	auto E = mTribeToolStrategies.find(toolID);
+	if (E != mTribeToolStrategies.end()) {
+		return GetStrategy(E.get_node()->mValue.second);
+	}
+	return nullptr;
+}
+
+void cTribeToolStratManager::SetToolIDStrategy(int toolID, uint32_t strategyID) {
+	auto strat = GetStrategy(strategyID);
+	if (strat) {
+		mTribeToolStrategies[toolID] = strategyID;
+		strat->AddHandledToolID(toolID);
+	}
+}
+
+
 
 //-------------------------------------------------------------------------------
 
-cTribeToolPtr cTribeToolStratManager::GetHoveredTool(bool playerOwned) {
-	auto hoveredTool = object_cast<Simulator::cTribeTool>(GameViewManager.GetHoveredObject());
-	if (playerOwned) {
-		if (hoveredTool && hoveredTool->mTribe == GameNounManager.GetPlayerTribe()) {
-			return hoveredTool;
+
+bool cTribeToolStratManager::HandleMessage(uint32_t messageID, void* msg)
+{
+	if (messageID == kMsgSwitchGameMode) {
+		mMouseButtonsPressed.Reset();
+	}
+	return false;
+}
+
+int cTribeToolStratManager::GetEventFlags() const
+{
+	return kEventFlagBasicInput;
+}
+
+bool cTribeToolStratManager::HandleUIMessage(IWindow* window, const Message& message)
+{
+	if (!IsTribeGame()) {
+		return false;
+	}
+
+	if (HandleToolMouseMessage(window, message)) {
+		return true;
+	}
+
+	return false;
+}
+
+// handles clicking, right clicking, mouse interruptions, etc.
+// NOTE: this (tool strat manager) handles the inputs, and defer the hovered tool functions to the strategies that handle that tool.
+
+// TODO: replace the right clicking in this for a detour of the tool input strategy
+bool cTribeToolStratManager::HandleToolMouseMessage(IWindow* window, const Message& message)
+{
+	if (message.IsType(kMsgMouseDown) || message.IsType(kMsgMouseUp) || message.IsType(kMsgMouseMove)) {
+
+		auto hoveredTool = object_cast<Simulator::cTribeTool>(GameViewManager.GetHoveredObject());
+
+		// Mouse Clicked
+		if (message.IsType(kMsgMouseDown)) {
+			// New Click, reset buttons and interrupt state
+			if (!mMouseButtonsPressed.AreAnyPressed()) {
+				mMouseButtonsPressed.Reset();
+				mpStoredTool = hoveredTool;
+			}
+			mMouseButtonsPressed.SetState(message.Mouse.mouseButton, true);
 		}
-		else {
-			return nullptr;
+		// Mouse Released
+		else if (message.IsType(kMsgMouseUp)) {
+			auto handled = false;
+			
+			if (!mMouseButtonsPressed.interrupted && hoveredTool && mpStoredTool == hoveredTool) {
+				// Find the strategy that handles this tool, and pass the click inputs to it.
+				auto toolID = mpStoredTool->GetToolType();
+				auto strat = GetStrategyForToolType(toolID);
+				// R
+				if (mMouseButtonsPressed.IsRightMousePressed()) {
+					handled = strat->RightClickedTool(mpStoredTool);
+				}
+				// L
+				else if (mMouseButtonsPressed.IsLeftMousePressed()) {
+					handled = strat->LeftClickedTool(mpStoredTool);
+				}
+				
+			}
+			mMouseButtonsPressed.SetState(message.Mouse.mouseButton, false);
+			//mMouseButtonsPressed.Clear();
+			return handled;
+		}
+		// Mouse Moved
+		else if (message.IsType(kMsgMouseMove) && mMouseButtonsPressed.AreAnyPressed()) {
+			mMouseButtonsPressed.Interrupt();
 		}
 	}
-	return hoveredTool;
-}
 
-// TODO: may need to access tribe tool metadata.
-bool cTribeToolStratManager::CanToolBeUsed(cTribeToolPtr tool) {
-	return true;
-	//tool->data
-}
-
-
-vector<cCreatureCitizenPtr> cTribeToolStrategy::GetSelectedMembers() {
-	vector<cCreatureCitizenPtr> selected;
-	auto tribe = GameNounManager.GetPlayerTribe();
-	eastl::vector<cSpatialObjectPtr>& members = tribe->GetSelectableMembers();
-	for (auto member : members) {
-		auto citizen = object_cast<Simulator::cCreatureCitizen>(member);
-		if (member->IsSelected() && citizen) {
-			selected.push_back(citizen);
-		}
-	}
-	return selected;
-}
-
-void cTribeToolStrategy::UseTool(vector<cCreatureCitizenPtr> citizens, cTribeToolPtr tool) {
-	for (size_t i = 0; i < citizens.size(); i++) {
-		UseTool(citizens[i], tool);
-	}
-}
-
-void cTribeToolStrategy::UseTool(cCreatureCitizenPtr citizen, cTribeToolPtr tool) {
-	citizen->DoAction(kCitizenActionGrabTool, tool->ToGameData());
-}
-
-/// Tell the selected citizen creatures to use a tool.
-void cTribeToolStrategy::SelectedUseTool(cTribeToolPtr tool) {
-	if (CanToolBeUsed(tool)) {
-		auto selected = GetSelectedMembers();
-		if (selected.size() > 0) {
-			UseTool(selected, tool);
-		}
-	}
+	return false;
 }

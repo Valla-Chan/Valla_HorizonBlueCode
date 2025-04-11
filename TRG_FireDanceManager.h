@@ -41,7 +41,6 @@ public:
 		Speed,
 	};
 
-	CreatureSpeedBoost* mCreatureSpeedBoost = nullptr;
 	Bonus mCurrentBonus = Speed;
 	// TODO: we need to clear these after a timer from when the first creature was added.
 	vector<cCreatureCitizenPtr> mpDancers = {};

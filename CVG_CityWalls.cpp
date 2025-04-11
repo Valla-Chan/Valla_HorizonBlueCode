@@ -51,7 +51,7 @@ void CVG_CityWalls::UpdateCityBuildingColor(cCityPtr city) {
 			city->mpCityWalls->GetModel()->SetColor(colorA);
 		}
 	}
-	// TODO: add in a fix for space stage.
+	// TODO: add in a fix for space stage. mpCivilization is invalid in spg
 }
 
 // color all the building windows to this color.

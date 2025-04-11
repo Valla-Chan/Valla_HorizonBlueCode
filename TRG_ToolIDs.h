@@ -13,6 +13,9 @@ enum ToolTypes {
 	Watchtower = 25,
 	//
 	Scarecrow = 40,
+	Well1 = 54,
+	Well2 = 55,
+	Well3 = 56,
 	//
 	Decor = 999,
 };

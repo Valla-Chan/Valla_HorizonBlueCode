@@ -31,7 +31,7 @@ bool TRG_FireDanceManager::Read(Simulator::ISerializerStream* stream)
 ////////////////////////////////////
 
 void TRG_FireDanceManager::Initialize() {
-	
+	SimulatorSystem.AddStrategy(this, NOUN_ID);
 }
 
 void TRG_FireDanceManager::Dispose() {
@@ -129,7 +129,7 @@ void TRG_FireDanceManager::ApplyBonusToDancer(cCreatureCitizenPtr creature) {
 			//creature-> = 1.5f;
 			break;
 		case Speed:
-			mCreatureSpeedBoost->ApplySpeedBoost(creature, 40); // TODO: have this depend on its base speed capability?
+			CreatureSpeedBoostManager.ApplySpeedBoost(creature, 40); // TODO: have this depend on its base speed capability?
 			// DEBUG
 			creature->SetIdentityColor(ColorRGB(10, 0, 0));
 			break;

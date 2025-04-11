@@ -34,7 +34,6 @@ void TRG_SuppressScavenger::RemoveScavengerCreature() {
 			}
 		}
 	}
-	
 }
 
 

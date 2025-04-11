@@ -2,8 +2,8 @@
 
 #include <Spore\BasicIncludes.h>
 
-//#define CreatureSpeedBoostManager  (*CreatureSpeedBoost::Get())
 #define CreatureSpeedBoostPtr intrusive_ptr<CreatureSpeedBoost>
+#define CreatureSpeedBoostManager  (*CreatureSpeedBoost::Get())
 
 using namespace Simulator;
 class CreatureSpeedBoost
@@ -33,11 +33,6 @@ public:
 	void Update(int deltaTime, int deltaGameTime) override;
 
 	//---------------------------------------------------
-	
-	// creature ID and speed cap
-	eastl::hash_map<uint32_t, float> mpBoostedCreatures;
-	//const uint32_t MsgApplySpeedBoost = id("MsgApplySpeedBoost");
-	//const uint32_t MsgRemoveSpeedBoost = id("MsgApplySpeedBoost");
 
 	void ApplySpeedBoost(cCreatureBasePtr creature, float newSpeed);
 	void RemoveSpeedBoost(cCreatureBasePtr creature);
@@ -48,9 +43,11 @@ public:
 	static Simulator::Attribute ATTRIBUTES[];
 
 private:
-	//
-	// You can add members here
-	//
+	// creature ID and speed cap
+	eastl::hash_map<uint32_t, float> mpBoostedCreatures;
+	//const uint32_t MsgApplySpeedBoost = id("MsgApplySpeedBoost");
+	//const uint32_t MsgRemoveSpeedBoost = id("MsgApplySpeedBoost");
+
 protected:
 	static CreatureSpeedBoost* sInstance;
 };
