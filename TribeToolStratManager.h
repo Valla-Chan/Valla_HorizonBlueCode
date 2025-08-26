@@ -33,12 +33,27 @@ public:
 	hash_map<int, uint32_t> mTribeToolStrategies; // map toolType ID to strategy ID
 	hash_map<uint32_t, cTribeToolStrategyPtr> mStrategies;
 
+	// Strats
 	void AddStrategy(cTribeToolStrategy* pStrategy, uint32_t strategyID);
-	cTribeToolStrategyPtr GetStrategy(uint32_t strategyID);
+	cTribeToolStrategyPtr GetStrategy(uint32_t strategyID) const;
 
-	cTribeToolStrategyPtr GetStrategyForToolType(int toolID);
+	// Tools
+	cTribeToolStrategyPtr GetStrategyForTool(cTribeToolPtr tool) const;
+	cTribeToolStrategyPtr GetStrategyForToolType(int toolID) const;
 	// Associate this tool ID with this strategy ID.
 	void SetToolIDStrategy(int toolID, uint32_t strategyID);
+
+	//------------------------------------------------------------
+	// Actions passed from ingame
+
+	void CreatureAcquiredTool(cCreatureCitizenPtr creature, int tooltype);
+	void CreatureSwitchedToTool(cCreatureCitizenPtr creature, int tooltype);
+	uint32_t GetCreatureInteractAnim(cCreatureCitizenPtr creature, int tooltype);
+
+	//------------------------------------------------------------
+	// Helper funcs
+
+	bool IsToolStateValid(cTribeToolPtr tool) const; // by default, all tools are set to a valid state.
 
 
 protected:

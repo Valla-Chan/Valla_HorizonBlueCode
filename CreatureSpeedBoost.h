@@ -45,6 +45,8 @@ public:
 private:
 	// creature ID and speed cap
 	eastl::hash_map<uint32_t, float> mpBoostedCreatures;
+
+
 	//const uint32_t MsgApplySpeedBoost = id("MsgApplySpeedBoost");
 	//const uint32_t MsgRemoveSpeedBoost = id("MsgApplySpeedBoost");
 

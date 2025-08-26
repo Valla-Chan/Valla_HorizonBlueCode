@@ -99,8 +99,24 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AddressCheat.h" />
+    <ClInclude Include="ArenaCreature.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="ArenaMode.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="CapabilityChecker.h" />
+    <ClInclude Include="cCreaturePickup.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="cCreatureVector.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="cCriticalHit.h" />
     <ClInclude Include="Cheats\BuildCRG.h" />
     <ClInclude Include="Cheats\CRG_BrainBoost.h" />
     <ClInclude Include="Cheats\CRG_BrainDrain.h" />
@@ -130,6 +146,7 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="Cheats\HBCheats.h" />
     <ClInclude Include="Cheats\HurtMe.h">
       <SubType>
       </SubType>
@@ -270,11 +287,11 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="cVallaVector.h" />
-    <ClInclude Include="CVG_CityWalls.h">
+    <ClInclude Include="CityWallsManager.h">
       <SubType>
       </SubType>
     </ClInclude>
-    <ClInclude Include="CVG_CreatureManager.h">
+    <ClInclude Include="CityMemberManager.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -309,10 +326,16 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="HBAssetBrowser.h" />
+    <ClInclude Include="HBCell.h" />
+    <ClInclude Include="HBCiv.h" />
+    <ClInclude Include="HBCrg.h" />
     <ClInclude Include="HBdebug.h">
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="HBEp1.h" />
+    <ClInclude Include="HBSpace.h" />
     <ClInclude Include="HBTribe.h">
       <SubType>
       </SubType>
@@ -326,6 +349,10 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="TargetCheat.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ToolFrenzyBomb.h">
       <SubType>
@@ -396,8 +423,24 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AddressCheat.cpp" />
+    <ClCompile Include="ArenaCreature.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="ArenaMode.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="CapabilityChecker.cpp" />
+    <ClCompile Include="cCreaturePickup.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="cCreatureVector.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="cCriticalHit.cpp" />
     <ClCompile Include="Cheats\BuildCRG.cpp" />
     <ClCompile Include="Cheats\CRG_BrainBoost.cpp" />
     <ClCompile Include="Cheats\CRG_BrainDrain.cpp" />
@@ -482,6 +525,7 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="Cheats\TargetCheat.cpp" />
     <ClCompile Include="Cheats\Teleport.cpp">
       <SubType>
       </SubType>
@@ -557,11 +601,11 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="cVallaVector.cpp" />
-    <ClCompile Include="CVG_CityWalls.cpp">
+    <ClCompile Include="CityWallsManager.cpp">
       <SubType>
       </SubType>
     </ClCompile>
-    <ClCompile Include="CVG_CreatureManager.cpp">
+    <ClCompile Include="CityMemberManager.cpp">
       <SubType>
       </SubType>
     </ClCompile>

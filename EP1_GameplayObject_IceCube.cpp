@@ -20,7 +20,7 @@ void EP1_GameplayObject_IceCube::Update()
 
 bool EP1_GameplayObject_IceCube::IsHandledObject(cSpatialObjectPtr object) const {
 	if (object) {
-		return CapabilityChecker.GetModelBoolValue(object->GetModelKey(), id("modelCapabilityIce")) == true;
+		return CapabilityChecker::GetModelBoolValue(object->GetModelKey(), id("modelCapabilityIce")) == true;
 	}
 	return false;
 }

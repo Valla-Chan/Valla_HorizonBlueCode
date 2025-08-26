@@ -416,7 +416,7 @@ void EP1_GameplayObject_DriveMarker::TeleportAvatarToVehicle() {
 
 		if (mCurrentCreature) {
 			// attach to creature's back
-			auto partoffset = CapabilityChecker.GetPosFromPartCapability(mCurrentCreature, 0xB00F0FEC); // ModelCapabilityMouth
+			auto partoffset = CapabilityChecker::GetPosFromPartCapability(mCurrentCreature, 0xB00F0FEC); // ModelCapabilityMouth
 			newPos = vehicleSpatial->GetPosition() + partoffset;
 		}
 		else {

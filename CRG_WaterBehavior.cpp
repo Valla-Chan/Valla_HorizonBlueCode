@@ -23,7 +23,7 @@ void CRG_WaterBehavior::Update()
 
 	if (avatar && !GameTimeManager.IsPaused()) {
 
-		//caplvl_swim = CapabilityChecker.GetCapabilityLevel(avatar, 0x073CE5DD);
+		//caplvl_swim = CapabilityChecker::GetCapabilityLevel(avatar, 0x073CE5DD);
 
 		// TODO: detect if the position is below water level. Right now this will return true even if far above the water.
 		bool in_water = PlanetModel.IsInWater(avatar->GetPosition());

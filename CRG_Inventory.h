@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Spore\BasicIncludes.h>
-#include "capabilitychecker.h"
+#include "CapabilityChecker.h"
 
 #define CRG_InventoryPtr intrusive_ptr<CRG_Inventory>
 

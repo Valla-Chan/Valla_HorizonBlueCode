@@ -2,7 +2,8 @@
 
 #include <Spore\BasicIncludes.h>
 
-#define CVG_CreatureManagerPtr intrusive_ptr<CVG_CreatureManager>
+#define cCityMemberManagerPtr intrusive_ptr<cCityMemberManager>
+#define CityMemberManager (*cCityMemberManager::Get())
 
 
 using namespace UTFWin;
@@ -13,15 +14,18 @@ using namespace UI;
 using namespace Sporepedia;
 using namespace Sporepedia::OTDB;
 
-class CVG_CreatureManager
+class cCityMemberManager
 	: public Simulator::cStrategy
 	, public IWinProc
 	, public DefaultRefCounted
 	, public App::IMessageListener
 {
 public:
-	static const uint32_t TYPE = id("Valla_CreatureOverhaul::CVG_CreatureManager");
+	static const uint32_t TYPE = id("Valla_CreatureOverhaul::cCityMemberManager");
 	static const uint32_t NOUN_ID = TYPE;
+
+	cCityMemberManager();
+	~cCityMemberManager();
 
 	int AddRef() override;
 	int Release() override;
@@ -33,12 +37,38 @@ public:
 	virtual bool WriteToXML(XmlSerializer*) override { return true; }
 	bool Read(Simulator::ISerializerStream* stream) override;
 	void Update(int deltaTime, int deltaGameTime) override;
+	static cCityMemberManager* Get();
 	//------------------------------------------------
-
-	bool mbMouseClicked = false;
 
 	// Saved vars
 	//float mTimeOfDay;
+
+	bool IsPlayerCityInRange(float camera_max_dist = 700) const;
+	bool IsPlayerCityHovered() const;
+	cCreatureCitizenPtr GetHoveredCitizen(bool playerowned = true) const;
+	cCreatureCitizenPtr TraceHitCitizen() const;
+	
+	bool IsCreatureIndexUsed(int index) const;
+	cSpeciesProfile* GetRandomTribeSpecies(cSpeciesProfile* species);
+	int DetermineNeededCityType() const;
+	void NewCityAppeared();
+
+	uint32_t GetReactionAnimation() const;
+	void CitizenPlayReaction(cCreatureCitizenPtr citizen);
+
+
+	int GetEventFlags() const override;
+	// This is the function you have to implement, called when a window you added this winproc to received an event
+	bool HandleUIMessage(IWindow* pWindow, const Message& message) override;
+	bool HandleMessage(uint32_t messageID, void* msg) override;
+
+	//------------------------------------------------
+	static Simulator::Attribute ATTRIBUTES[];
+
+protected:
+	static cCityMemberManager* sInstance;
+
+private:
 
 	const eastl::vector<uint32_t> civReactionAnims = {
 		0x042A1CAF, // soc_sing_lvl01
@@ -61,33 +91,12 @@ public:
 		0x02481E14, // com_stun
 		0x92314082, // gen_startled
 	};
-
-	bool IsPlayerCityInRange() const;
-	bool IsPlayerCityHovered() const;
-	cCreatureCitizenPtr GetHoveredCitizen(bool playerowned = true) const;
-	cCreatureCitizenPtr TraceHitCitizen() const;
-	
-	bool IsCreatureIndexUsed(int index) const;
-	cSpeciesProfile* GetRandomTribeSpecies(cSpeciesProfile* species);
-	int DetermineNeededCityType() const;
-	void NewCityAppeared();
-
-	uint32_t GetReactionAnimation() const;
-	void CitizenPlayReaction(cCreatureCitizenPtr citizen);
-
-
-	int GetEventFlags() const override;
-	// This is the function you have to implement, called when a window you added this winproc to received an event
-	bool HandleUIMessage(IWindow* pWindow, const Message& message) override;
-	bool HandleMessage(uint32_t messageID, void* msg) override;
-
-	//------------------------------------------------
-	static Simulator::Attribute ATTRIBUTES[];
-
-private:
 	const float mPlayerSpeciesChance = 0.4f;
+
 	vector<Vector3> mClosestCityCreaturePositions = {};
 
 	vector<int> used_creature_indexes = {};
-	bool found_all_tribe_creatures = false;
+	bool found_all_tribe_creatures = false; // for sporepedia query
+	bool mbMouseClicked = false;
+
 };

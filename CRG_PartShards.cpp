@@ -292,7 +292,7 @@ void CRG_PartShards::SetPartUnlockWindowState(bool state, ResourceKey partkey) {
 		auto text_partname = partunlock->FindWindowByID(0xF554489D);
 		auto img_particon = partunlock->FindWindowByID(0x9554489F);
 
-		LocalizedString name = CapabilityChecker.GetModelBlockName(partkey);
+		LocalizedString name = CapabilityChecker::GetModelBlockName(partkey);
 		ResourceKey icon = ResourceKey(partkey.instanceID, TypeIDs::Names::png, 0x02231C8B); // creatureparticons~
 
 		text_partname->SetCaption(name.GetText());
@@ -318,24 +318,24 @@ bool CRG_PartShards::IsPartDestroyed(ResourceKey partkey) const {
 }
 
 bool CRG_PartShards::IsPartUsedOnCreature(ResourceKey partkey, cCreatureBase* creature) const {
-	return CapabilityChecker.IsPartOnCreature(creature, partkey);
+	return CapabilityChecker::IsPartOnCreature(creature, partkey);
 }
 
 bool CRG_PartShards::IsPartMouth(ResourceKey partkey) const {
-	bool mouthcap = CapabilityChecker.GetModelIntValue(partkey, 0xB00F0FEC) >= 1;
-	bool callcap = CapabilityChecker.GetModelIntValue(partkey, 0xF354A87A) >= 1;
+	bool mouthcap = CapabilityChecker::GetModelIntValue(partkey, 0xB00F0FEC) >= 1;
+	bool callcap = CapabilityChecker::GetModelIntValue(partkey, 0xF354A87A) >= 1;
 	return mouthcap && callcap;
 }
 
 bool CRG_PartShards::IsPartWing(ResourceKey partkey) const {
-	bool glidecap = CapabilityChecker.GetModelIntValue(partkey, 0x04F4E1B4) >= 1;
-	bool wingcap = CapabilityChecker.GetModelIntValue(partkey, 0x04F4D188) >= 1;
+	bool glidecap = CapabilityChecker::GetModelIntValue(partkey, 0x04F4E1B4) >= 1;
+	bool wingcap = CapabilityChecker::GetModelIntValue(partkey, 0x04F4D188) >= 1;
 	return glidecap && wingcap;
 }
 
 // part is a functionless or detail part
 bool CRG_PartShards::IsPartDetail(ResourceKey partkey) const {
-	uint32_t rigblocktype = CapabilityChecker.GetModelKeyInstanceID(partkey, 0x0186609D);
+	uint32_t rigblocktype = CapabilityChecker::GetModelKeyInstanceID(partkey, 0x0186609D);
 	
 	// detail, ear, nose, antenna
 	if (rigblocktype == 0x5F0A4B8A || rigblocktype == 0x2E9313CF || rigblocktype == 0x39A35050 || rigblocktype == 0x6E91F0BE) {
@@ -347,15 +347,15 @@ bool CRG_PartShards::IsPartDetail(ResourceKey partkey) const {
 
 // part is a hand, foot, or weapon
 bool CRG_PartShards::IsPartHandFootWeapon(ResourceKey partkey) const {
-	uint32_t rigblocktype = CapabilityChecker.GetModelKeyInstanceID(partkey, 0x0186609D);
+	uint32_t rigblocktype = CapabilityChecker::GetModelKeyInstanceID(partkey, 0x0186609D);
 	
 	if (rigblocktype == 0xDD204963 || rigblocktype == 0xB4B1179D) {
 		return true;
 	}
 	else {
-		if (CapabilityChecker.GetModelIntValue(partkey, 0xB1C3E5B8) >= 1) { return true; }; // charge
-		if (CapabilityChecker.GetModelIntValue(partkey, 0xB1C3E5C0) >= 1) { return true; }; // strike
-		if (CapabilityChecker.GetModelIntValue(partkey, 0xB1C3E5B9) >= 1) { return true; }; // spit
+		if (CapabilityChecker::GetModelIntValue(partkey, 0xB1C3E5B8) >= 1) { return true; }; // charge
+		if (CapabilityChecker::GetModelIntValue(partkey, 0xB1C3E5C0) >= 1) { return true; }; // strike
+		if (CapabilityChecker::GetModelIntValue(partkey, 0xB1C3E5B9) >= 1) { return true; }; // spit
 	}
 
 	return false;
@@ -363,8 +363,8 @@ bool CRG_PartShards::IsPartHandFootWeapon(ResourceKey partkey) const {
 
 // part is a limb assembly
 bool CRG_PartShards::IsPartLimb(ResourceKey partkey) const {
-	bool glidecap = CapabilityChecker.GetModelIntValue(partkey, 0x04F4E1B4) >= 1;
-	bool wingcap = CapabilityChecker.GetModelIntValue(partkey, 0x04F4D188) >= 1;
+	bool glidecap = CapabilityChecker::GetModelIntValue(partkey, 0x04F4E1B4) >= 1;
+	bool wingcap = CapabilityChecker::GetModelIntValue(partkey, 0x04F4D188) >= 1;
 	return glidecap && wingcap;
 }
 
@@ -386,17 +386,17 @@ const eastl::hash_set<uint32_t> cellSpikeParts = {
 bool CRG_PartShards::IsPartCellPart(ResourceKey partkey) const {
 	// TODO: eventually, create a simple bool to add into all the cell parts via UPE that users can add into their own modded cell parts. for now though, do this.
 
-	uint32_t parentkey = CapabilityChecker.GetModelParentKey(partkey).instanceID;
+	uint32_t parentkey = CapabilityChecker::GetModelParentKey(partkey).instanceID;
 
 	// filter, jaw, poker
 	if (parentkey == 0x250CFC9B || parentkey == 0x817CEE91 || parentkey == 0x36862158) {
 		return true;
 	}
 	else {
-		if (CapabilityChecker.GetModelIntValue(partkey, 0x11B79A73) >= 1) { return true; }; // modelCapabilityCellEye
-		if (CapabilityChecker.GetModelIntValue(partkey, 0x11B79302) >= 1) { return true; }; // modelCapabilityCellMovement
-		if (CapabilityChecker.GetModelIntValue(partkey, 0x11B79304) >= 1) { return true; }; // modelCapabilityCellWeaponCharging
-		if (CapabilityChecker.GetModelIntValue(partkey, 0xB1C3E5B9) >= 1) { return true; }; // modelCapabilityCellWeaponCharging
+		if (CapabilityChecker::GetModelIntValue(partkey, 0x11B79A73) >= 1) { return true; }; // modelCapabilityCellEye
+		if (CapabilityChecker::GetModelIntValue(partkey, 0x11B79302) >= 1) { return true; }; // modelCapabilityCellMovement
+		if (CapabilityChecker::GetModelIntValue(partkey, 0x11B79304) >= 1) { return true; }; // modelCapabilityCellWeaponCharging
+		if (CapabilityChecker::GetModelIntValue(partkey, 0xB1C3E5B9) >= 1) { return true; }; // modelCapabilityCellWeaponCharging
 
 		// spike parts do not fall under any of this, check them manually. :/
 		auto partID = partkey.instanceID;
@@ -407,7 +407,7 @@ bool CRG_PartShards::IsPartCellPart(ResourceKey partkey) const {
 
 
 int CRG_PartShards::GetPartUnlockLevel(ResourceKey partkey) const {
-	return CapabilityChecker.GetPartUnlockLevel(partkey);
+	return CapabilityChecker::GetPartUnlockLevel(partkey);
 }
 
 void CRG_PartShards::DestroySelectedParts() {

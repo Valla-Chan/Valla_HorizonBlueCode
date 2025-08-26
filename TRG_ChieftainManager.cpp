@@ -130,9 +130,9 @@ int TRG_ChieftainManager::GetChiefDietValue(cCreatureCitizenPtr chief, bool use_
 		return 4; // use override
 	}
 
-	int carn = CapabilityChecker.GetCapabilityLevel(chief, 0x022E7847);
-	int herb = CapabilityChecker.GetCapabilityLevel(chief, 0x022E785C);
-	int grasper = CapabilityChecker.GetCapabilityLevel(chief, 0xB00F0FE2);
+	int carn = CapabilityChecker::GetCapabilityLevel(chief, 0x022E7847);
+	int herb = CapabilityChecker::GetCapabilityLevel(chief, 0x022E785C);
+	int grasper = CapabilityChecker::GetCapabilityLevel(chief, 0xB00F0FE2);
 	if (herb) {
 		value = herb + carn;
 	}
@@ -219,17 +219,17 @@ uint32_t TRG_ChieftainManager::GetStaffID(const ResourceKey &staffres, int attac
 	uint32_t keyid = 0x0;
 	switch (attachment) {
 		case 0:
-			return CapabilityChecker.GetModelKeyValue(staffres, id("tribeStaffEffect")).instanceID;
+			return CapabilityChecker::GetModelKeyValue(staffres, id("tribeStaffEffect")).instanceID;
 		case 1:
-			keyid = CapabilityChecker.GetModelKeyValue(staffres, id("tribeStaffEffectFish")).instanceID;
+			keyid = CapabilityChecker::GetModelKeyValue(staffres, id("tribeStaffEffectFish")).instanceID;
 			if (keyid == 0x0) {
-				return CapabilityChecker.GetModelKeyValue(staffres, id("tribeStaffEffect")).instanceID;
+				return CapabilityChecker::GetModelKeyValue(staffres, id("tribeStaffEffect")).instanceID;
 			}
 			return keyid;
 		case 2:
-			keyid = CapabilityChecker.GetModelKeyValue(staffres, id("tribeStaffEffectSeaweed")).instanceID;
+			keyid = CapabilityChecker::GetModelKeyValue(staffres, id("tribeStaffEffectSeaweed")).instanceID;
 			if (keyid == 0x0) {
-				return CapabilityChecker.GetModelKeyValue(staffres, id("tribeStaffEffect")).instanceID;
+				return CapabilityChecker::GetModelKeyValue(staffres, id("tribeStaffEffect")).instanceID;
 			}
 			return keyid;
 	}
@@ -253,7 +253,7 @@ void TRG_ChieftainManager::OnShopperAccept(const ResourceKey& selection)
 	}
 	// store model and update staff
 	mStaffRes = selection;
-	mbStaffSingleSided = CapabilityChecker.GetModelBoolValue(selection, id("tribeStaffSingleSided"));
+	mbStaffSingleSided = CapabilityChecker::GetModelBoolValue(selection, id("tribeStaffSingleSided"));
 	UpdateStaffModel();
 	UpdateStaffIcon();
 }
@@ -276,7 +276,15 @@ ResourceKey TRG_ChieftainManager::GetStaffIconResource(ResourceKey selection) co
 // TODO: make this work better
 void TRG_ChieftainManager::UpdateStaffModel() {
 	auto chieftain = GameNounManager.GetPlayerTribe()->GetLeaderCitizen();
-	chieftain->PlayAnimation(0x02C39200); // get_tool
+	// force a tool update
+	// TODO: make this instantanious and play in the tribal planner as well.
+	// maybe briefly unpause the game, force a citizen action,
+	// and swap the change tool animation for a new 1 frame animation that instantly switches the tool, then pause again?
+	chieftain->mCurrentHandheldItem = HandheldItem::kHandheldItemCityProtestSignHunger;
+	// todo: maybe if the chieftain is not doing anything, just play and cancel a generic action?
+
+	//chieftain->PlayAnimation(0x02C39200); // get_tool
+	//chieftain->DoAction(kCitizenActionWalkTo,);
 }
 
 void TRG_ChieftainManager::UpdateStaffIcon() {

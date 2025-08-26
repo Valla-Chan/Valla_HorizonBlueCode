@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "TribeToolStratManager.h"
+#include "TribeToolManager.h"
 
 cTribeToolStratManager::cTribeToolStratManager()
 {
@@ -50,7 +51,7 @@ void cTribeToolStratManager::AddStrategy(cTribeToolStrategy* pStrategy, uint32_t
 	mStrategies[strategyID] = pStrategy;
 }
 
-cTribeToolStrategyPtr cTribeToolStratManager::GetStrategy(uint32_t strategyID)
+cTribeToolStrategyPtr cTribeToolStratManager::GetStrategy(uint32_t strategyID) const
 {
 	auto E = mStrategies.find(strategyID);
 	if (E != mStrategies.end()) {
@@ -59,7 +60,12 @@ cTribeToolStrategyPtr cTribeToolStratManager::GetStrategy(uint32_t strategyID)
 	return nullptr;
 }
 
-cTribeToolStrategyPtr cTribeToolStratManager::GetStrategyForToolType(int toolID)
+cTribeToolStrategyPtr cTribeToolStratManager::GetStrategyForTool(cTribeToolPtr tool) const
+{
+	return GetStrategyForToolType(tool->GetToolType());
+}
+
+cTribeToolStrategyPtr cTribeToolStratManager::GetStrategyForToolType(int toolID) const
 {
 	auto E = mTribeToolStrategies.find(toolID);
 	if (E != mTribeToolStrategies.end()) {
@@ -76,10 +82,57 @@ void cTribeToolStratManager::SetToolIDStrategy(int toolID, uint32_t strategyID) 
 	}
 }
 
+//-------------------------------------------------------------------------------
+// Actions passed from ingame
+
+void cTribeToolStratManager::CreatureAcquiredTool(cCreatureCitizenPtr creature, int tooltype) {
+	auto strat = GetStrategyForToolType(tooltype);
+	auto tribe = creature->mpOwnerTribe;
+	if (strat && tribe) {
+		strat->CreatureAcquiredTool(creature, tribe->GetToolByType(creature->mSpecializedTool));
+	}
+}
+void cTribeToolStratManager::CreatureSwitchedToTool(cCreatureCitizenPtr creature, int tooltype) {
+	auto strat = GetStrategyForToolType(tooltype);
+	auto tribe = creature->mpOwnerTribe;
+	if (strat && tribe) {
+		strat->CreatureHandheldItemChanged(creature, tribe->GetToolByType(creature->mSpecializedTool));
+	}
+}
+uint32_t cTribeToolStratManager::GetCreatureInteractAnim(cCreatureCitizenPtr creature, int tooltype) {
+	auto strat = GetStrategyForToolType(tooltype);
+	// strats can return situationally varying animations, so check that first
+	if (strat) {
+		auto tribe = creature->mpOwnerTribe;
+		if (tribe) {
+			strat->GetInteractAnim(creature, creature->mpOwnerTribe->GetToolByType(tooltype));
+		}
+	}
+	// fall back to metadata if no strat
+	else {
+		auto meta = TribeToolManager.GetTribeToolMetadata(tooltype);
+		if (meta) {
+			return meta->mToolInteractAnim;
+		}
+	}
+	return 0x0;
+}
+
+//-------------------------------------------------------------------------------
+// Helper Funcs
+
+
+bool cTribeToolStratManager::IsToolStateValid(cTribeToolPtr tool) const {
+	auto strat = GetStrategyForTool(tool);
+	if (strat) {
+		return strat->mbToolStateValid;
+	}
+	return true;
+}
 
 
 //-------------------------------------------------------------------------------
-
+// Messages
 
 bool cTribeToolStratManager::HandleMessage(uint32_t messageID, void* msg)
 {
@@ -114,6 +167,8 @@ bool cTribeToolStratManager::HandleUIMessage(IWindow* window, const Message& mes
 bool cTribeToolStratManager::HandleToolMouseMessage(IWindow* window, const Message& message)
 {
 	if (message.IsType(kMsgMouseDown) || message.IsType(kMsgMouseUp) || message.IsType(kMsgMouseMove)) {
+
+		if (TribeToolManager.IsPlannerOpen()) { return false; }
 
 		auto hoveredTool = object_cast<Simulator::cTribeTool>(GameViewManager.GetHoveredObject());
 

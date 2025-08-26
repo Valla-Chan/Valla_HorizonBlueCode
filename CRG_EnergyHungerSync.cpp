@@ -58,7 +58,7 @@ void CRG_EnergyHungerSync::SyncCreatureHungerEnergy(cCreatureBasePtr creature) {
 			SetEnergyFloat(hunger_f);
 			energy_to_restore = 0.0f;
 			// NOTE: this value needs to update after going into the editor!
-			//caplvl_energyregen = CapabilityChecker.GetCapabilityLevel(avatar, 0x073CE5DD);
+			//caplvl_energyregen = CapabilityChecker::GetCapabilityLevel(avatar, 0x073CE5DD);
 			return;
 		}
 

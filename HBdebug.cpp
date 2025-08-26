@@ -113,21 +113,28 @@ void HBdebug::StoreData() {
 // Planet
 	planetRecord = Simulator::GetActivePlanetRecord();
 	empire = Simulator::GetPlayerEmpire();
-	civilization = GameNounManager.GetPlayerCivilization();
+	if (IsCivGame()) {
+		civilization = GameNounManager.GetPlayerCivilization();
+	}
 	cities = GetData<cCity>();
 /* firstCity */ if (!cities.empty()) { firstCity = cities[0]; }
 	if (IsSpaceGame()) { ship = Simulator::GetPlayerUFO(); }
 
 }
 
+//-----------------------------------------------------------------------------------
 
 void HBdebug::ParseLine(const ArgScript::Line& line)
 {
-	StoreData();
+	//StoreData();
+	window = WindowManager.GetMainWindow();
+	// Editor
+	editor = GetEditor();
 
 	// Your code here:
 	//------------------------------------------
 	
+	editor->field_472 = true;
 
 	//------------------------------------------
 	SporeDebugPrint("HBdebug done executing.");

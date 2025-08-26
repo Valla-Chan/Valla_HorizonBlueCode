@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "TRG_CreaturePickup.h"
+#include "Common.h"
 #include <Spore\UTFWin\Cursors.h>
 
 TRG_CreaturePickup::TRG_CreaturePickup()
@@ -19,22 +20,6 @@ TRG_CreaturePickup::~TRG_CreaturePickup()
 
 
 //-----------------------------------------------------------------------------------------------
-
-bool TRG_CreaturePickup::IsPlannerOpen() {
-	if (IsTribeGame()) {
-
-		auto window = WindowManager.GetMainWindow();
-		auto plannerUI = window->FindWindowByID(0x93019DBC);
-
-		if (plannerUI && plannerUI->IsVisible()) { return true; }
-
-		//auto editor = Editors::GetEditor();
-		//if (editor && editor->IsActive()) {
-		//	return true;
-		//}
-	}
-	return false;
-}
 
 
 cTribePtr TRG_CreaturePickup::GetPlayerTribe() {
@@ -81,7 +66,7 @@ void TRG_CreaturePickup::Update()
 			auto citizen = object_cast<cCreatureCitizen>(hovered);
 
 			// Members Rollover
-			if (citizen && !IsPlannerOpen()) {
+			if (citizen && !Common::IsPlannerOpen()) {
 				auto tribe = GetPlayerTribe();
 				if (!tribe) { return; }
 				auto members = tribe->GetSelectableMembers();
@@ -98,7 +83,7 @@ void TRG_CreaturePickup::Update()
 			// Pets Rollover
 			else {
 				auto creature = object_cast<cCreatureAnimal>(hovered);
-				if (creature && !creature->mbDead && !IsPlannerOpen()) {
+				if (creature && !creature->mbDead && !Common::IsPlannerOpen()) {
 					auto tribe = GetPlayerTribe();
 					if (!tribe) { return; }
 					auto pet_herd = tribe->mpDomesticatedAnimalsHerd;
@@ -120,7 +105,7 @@ void TRG_CreaturePickup::Update()
 
 bool TRG_CreaturePickup::CanPickUp(cCreatureCitizenPtr creature) const {
 	// TODO: return false if the creature is an epic/very large
-	return (creature && !IsPlannerOpen());
+	return (creature && !Common::IsPlannerOpen());
 }
 
 void TRG_CreaturePickup::Pickup(cCreatureCitizenPtr creature) {
@@ -166,6 +151,7 @@ void TRG_CreaturePickup::Moved() {
 
 //-----------------------------------------------------------------------------------------------
 // fake a click on the creature's posse icon
+// todo: doesnt work. do we need this..?
 void TRG_CreaturePickup::ClickPosseUI(cCreatureBasePtr creature) {
 	// todo: not working.
 	auto window = WindowManager.GetMainWindow();
@@ -185,18 +171,20 @@ void TRG_CreaturePickup::ClickPosseUI(cCreatureBasePtr creature) {
 	window->SendMsg(message);
 }
 
-void TRG_CreaturePickup::UnclickMB1() {
+void TRG_CreaturePickup::UnclickMB1(const Message& refmessage) {
 	auto window = WindowManager.GetMainWindow();
 
 	Message message;
 	message.source = window;  // Which window generated this event?
-	message.eventType = kMsgMouseDown;  // What type of event is it?
+	message.eventType = kMsgMouseUp;  // What type of event is it?
 	// Now we want to set the specific parameters (i.e. the position that was clicked,...).
-	message.Mouse.mouseState = kMouseLeftButtonDown;
+	message.Mouse.mouseButton = kMouseButtonLeft;
+	message.Mouse.mouseState = refmessage.Mouse.mouseState & ~kMouseLeftButtonDown;
 
 	
 
-	//message.Mouse.mouseX = Cursor
+	message.Mouse.mouseX = refmessage.Mouse.mouseX;
+	message.Mouse.mouseY = refmessage.Mouse.mouseY;
 	//message.Mouse.mouseY = posseItem->GetArea().GetHeight() / 2.0f;
 
 
@@ -231,6 +219,26 @@ int TRG_CreaturePickup::GetEventFlags() const
 	return kEventFlagBasicInput;
 }
 
+vector<cCreatureCitizenPtr> TRG_CreaturePickup::GetSelectableMembers() {
+	vector<cCreatureCitizenPtr> members = {};
+	if (IsTribeGame()) {
+		cTribePtr tribe = GetPlayerTribe();
+		if (tribe) {
+			for (auto item : tribe->GetSelectableMembers()) {
+				members.push_back(item);
+			}
+		}
+	}
+	// If allowing for city creature pickup
+	if (IsCivGame() || IsSpaceGame()) {
+		if (VALID_GAME_MODES & GetGameModeID()) {
+			// TODO: add city creatures to the list. the city creature manager class will probably need to be made into a singleton first.
+		}
+	}
+	return members;
+}
+
+
 // The method that receives the message.
 bool TRG_CreaturePickup::HandleUIMessage(IWindow* window, const Message& message)
 {
@@ -239,7 +247,7 @@ bool TRG_CreaturePickup::HandleUIMessage(IWindow* window, const Message& message
 	if (!IsTribeGame()) { return false; }
 
 	// mouse moved away from a member
-	if (message.IsType(kMsgMouseMove) && !possible_member && !IsPlannerOpen() && CursorManager.GetActiveCursor() == BasicCursorIDs::Cursors::GrabOpen)
+	if (message.IsType(kMsgMouseMove) && !possible_member && !Common::IsPlannerOpen() && CursorManager.GetActiveCursor() == BasicCursorIDs::Cursors::GrabOpen)
 	{
 		CursorManager.SetActiveCursor(0x0);
 	}
@@ -248,15 +256,18 @@ bool TRG_CreaturePickup::HandleUIMessage(IWindow* window, const Message& message
 	if (message.IsType(kMsgMouseUp) && held_member) {
 		Drop();
 		possible_member = nullptr;
+		UnclickMB1(message);
+		return false;
 	}
 
 	// Player has left clicked the mouse
 	else if (message.Mouse.IsLeftButton() && message.IsType(kMsgMouseDown) && !held_member) {
 		// Loop through all tribal citizens in avatar tribe
-		cTribePtr tribe = GetPlayerTribe();
-		if (!tribe || IsPlannerOpen()) { return false; }
-		auto members = tribe->GetSelectableMembers();
+		if (Common::IsPlannerOpen()) { return false; }
+		auto members = GetSelectableMembers();
+		if (members.size() == 0) { return false; }
 
+		// Loop through all tribal citizens in selectable members
 		for (auto member : members) {
 			if (member && member->IsRolledOver()) {
 				// store this creature
@@ -264,8 +275,10 @@ bool TRG_CreaturePickup::HandleUIMessage(IWindow* window, const Message& message
 				possible_member->SetIsSelected(true);
 				possible_member->mSelectionGroup = 1;
 
-				// TODO: Spoof an unclick after this, so that the box select is not activated.
-				ClickPosseUI(nullptr);
+				// Spoof an unclick after this, so that the box select is not activated.
+				// TODO: this doesnt work.
+				UnclickMB1(message);
+				//ClickPosseUI(nullptr);
 
 				return true;
 			}

@@ -22,7 +22,7 @@ void EP1_GameplayObject_HoloProjector::MakeCreatureHologram(cCreatureAnimalPtr c
 			creature->mbStealthed = true;
 			creature->mStealthOpacity = 0.4f;
 			if (projector) {
-				auto color = CapabilityChecker.GetModelColorRGBValue(projector->GetModelKey(), id("modelHologramColor"));
+				auto color = CapabilityChecker::GetModelColorRGBValue(projector->GetModelKey(), id("modelHologramColor"));
 				creature->SetIdentityColor(color);
 			}
 			creature->StopMovement();
@@ -70,7 +70,7 @@ void EP1_GameplayObject_HoloProjector::Update() {
 bool EP1_GameplayObject_HoloProjector::IsHandledObject(cSpatialObjectPtr object) const {
 	auto powerup = object_cast<cScenarioPowerup>(object);
 	// check if this is a projector
-	if (powerup && CapabilityChecker.GetModelColorRGBValue(object->GetModelKey(), id("modelHologramColor")) != ColorRGB(0.0f, 0.0f, 0.0f)) {
+	if (powerup && CapabilityChecker::GetModelColorRGBValue(object->GetModelKey(), id("modelHologramColor")) != ColorRGB(0.0f, 0.0f, 0.0f)) {
 		return true;
 	}
 	return false;

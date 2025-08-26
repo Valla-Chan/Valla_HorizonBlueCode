@@ -13,57 +13,43 @@ Kill::~Kill()
 
 void Kill::ParseLine(const ArgScript::Line& line)
 {
-	
-	cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
-	if (avatar) {
-		auto target = avatar->GetTarget();
-		if (target) {
-			target->SetHealthPoints(0);
-		}
-		else {
-			KillTarget(avatar);
+	auto targets = GetCombatantTargets(true);
+	if (targets.size() > 0) {
+		for (auto target : targets) {
+			KillTarget(target);
 		}
 	}
-
-	else if (Simulator::IsTribeGame()) {
-		auto tribes = Simulator::GetData<Simulator::cTribe>();
-		for (auto tribe : tribes) {
-			eastl::vector<cSpatialObjectPtr>& members = tribe->GetSelectableMembers();
-			for (auto member : members) {
-				auto creature = object_cast<Simulator::cCreatureBase>(member);
-				if (member->IsSelected() && creature) {
-					if (creature->GetAnimalTarget()) {
-						KillTarget(creature->GetAnimalTarget());
-					}
-					else {
-						KillTarget(creature);
-					}
-					
-				}
+	else {
+		cCreatureAnimalPtr avatar = GameNounManager.GetAvatar();
+		if (avatar) {
+			auto target = avatar->GetTarget();
+			if (target) {
+				target->SetHealthPoints(0);
+			}
+			else {
+				KillTarget(avatar);
+			}
+		}
+		else {
+			auto avatarcell = Simulator::Cell::GetPlayerCell();
+			if (avatarcell) {
+				avatarcell->mHealthPoints = 0;
 			}
 		}
 	}
-	else {
-		auto avatarcell = Simulator::Cell::GetPlayerCell();
-		if (avatarcell) {
-			avatarcell->mHealthPoints = 0;
-		}
-	}
-
-
 
 }
 
-void Kill::KillTarget(const cCreatureBasePtr target) {
-	if (Simulator::IsCreatureGame() && target == object_cast<Simulator::cCreatureBase>(GameNounManager.GetAvatar())) {
-		target->mEnergy = -90.0f;
-		target->mHunger = -90.0f;
-		target->SetHealthPoints(0.0001f);
+void Kill::KillTarget(const cCombatantPtr target) {
+	auto crt_target = object_cast<Simulator::cCreatureBase>(target);
+	if (crt_target) {
+		if (Simulator::IsCreatureGame()) {
+			crt_target->mEnergy = -90.0f;
+			crt_target->mHunger = -90.0f;
+			crt_target->SetHealthPoints(0.0001f);
+		}
 	}
-	else {
-		target->SetHealthPoints(0.0f);
-	}
-	
+	target->SetHealthPoints(0.0f);
 }
 
 

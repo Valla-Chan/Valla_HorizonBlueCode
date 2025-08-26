@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "CLG_CellController.h"
-#include "capabilitychecker.h"
+#include "CapabilityChecker.h"
 
 
 
@@ -121,7 +121,7 @@ int CLG_CellController::GetJetLvl() const {
 	auto avatar = Simulator::Cell::GetPlayerCell();
 	if (avatar) {
 		auto model = avatar->mModelKey;
-		return CapabilityChecker.GetCapabilityLevelFromResource(model, 0x11B79A72); //modelCapabilityCellJet
+		return CapabilityChecker::GetCapabilityLevelFromResource(model, 0x11B79A72); //modelCapabilityCellJet
 	}
 	return 0;
 }

@@ -19,11 +19,10 @@ void TRG_UseTribalTool::ParseLine(const ArgScript::Line& line)
 		if (!hoveredTool) { return; }
 
 		auto tribe = GameNounManager.GetPlayerTribe();
-		eastl::vector<cSpatialObjectPtr>& members = tribe->GetSelectableMembers();
+		eastl::vector<cCreatureCitizenPtr>& members = tribe->GetSelectableMembers();
 		for (auto member : members) {
-			auto citizen = object_cast<Simulator::cCreatureCitizen>(member);
-			if (member->IsSelected() && citizen) {
-				citizen->DoAction(Simulator::kCitizenActionGrabTool, hoveredTool);
+			if (member->IsSelected()) {
+				member->DoAction(Simulator::kCitizenActionGrabTool, hoveredTool);
 			}
 		}
 	}

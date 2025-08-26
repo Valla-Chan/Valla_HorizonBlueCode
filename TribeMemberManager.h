@@ -4,7 +4,6 @@
 #include "CreatureSpeedBoost.h"
 #include "TRG_TraitTables.h"
 #include "TRG_ChieftainManager.h"
-#include "TRG_CreaturePickup.h"
 
 #define cTribeMemberManagerPtr intrusive_ptr<cTribeMemberManager>
 #define TribeMemberManager (*cTribeMemberManager::Get())
@@ -33,14 +32,15 @@ public:
 	bool Read(Simulator::ISerializerStream* stream) override;
 	void Update(int deltaTime, int deltaGameTime) override;
 	static cTribeMemberManager* Get();
-	//--------------------------------------------------------------------------
+
+	void Reset();
+	//--------------------------------------------------------------------------------------------------
 	// This file manages all tribe members, and saves the data with the world.
 
 	// SUBMANAGERS
 	//---------------------------------------
 
 	TRG_ChieftainManager* trg_chiefmanager;
-	TRG_CreaturePickup* trg_creaturepickup;
 
 	//---------------------------------------
 
@@ -48,7 +48,9 @@ public:
 
 	vector<ColorRGB> mIDcolors;
 
-	//----------------------------------------------------------------------
+	//--------------------------------------------------------------------------------------------------
+	// PERSONALITY TRAITS
+	//--------------------------------------------------------------------------------------------------
 
 	struct MemberPersonality {
 
@@ -72,10 +74,26 @@ public:
 		static Simulator::Attribute ATTRIBUTES[];
 
 	};
+	
+	struct DesiredToolState {
 
-	//----------------------------------------------------------------------
+		int mToolTypeID = -1;
+		bool mbGrabbing = false;
 
-	eastl::hash_map<uint32_t, MemberPersonality> mCreaturePersonalities; // cCreatureCitizenPtr
+		DesiredToolState(int id = -1) {
+			mToolTypeID = id;
+			mbGrabbing = false;
+		}
+
+		static Simulator::Attribute ATTRIBUTES[];
+
+	};
+
+	//------------------------------------------
+
+	eastl::hash_map<uint32_t, MemberPersonality> mCreaturePersonalities;
+	// when a creature gains the action to grab a tool, store that creature ID and tool ID here. handled mostly externally in a CitizenDoAction detour
+	eastl::hash_map<uint32_t, DesiredToolState> mCreatureDesiredTool;
 	vector<cCreatureCitizenPtr> mCurrentBabies;
 
 	bool mbSuppressBabyGrowFX = false;
@@ -100,6 +118,13 @@ public:
 	void ResetSuppressBabyFX();
 	MemberPersonality GetPersonality(cCreatureCitizenPtr creature) const;
 
+	// Tool Usage
+	void StoreCreatureDesiredTool(cCreatureCitizenPtr creature, int tooltype);
+	void SetCreatureDesiredToolGrabState(cCreatureCitizenPtr creature, bool grabbing);
+	void RemoveCreatureDesiredTool(cCreatureCitizenPtr creature);
+	// gets the creature's desired tool from the list. return -1 if not found
+	int GetCreatureDesiredTool(cCreatureCitizenPtr creature, bool requiregrabbed = false);
+
 	//-------------------------------------------------------------------
 	static Simulator::Attribute ATTRIBUTES[];
 
@@ -108,4 +133,5 @@ protected:
 
 private:
 	intrusive_ptr<App::ScheduledTaskListener> mBabyFXSuppressTask;
+
 };

@@ -2,12 +2,17 @@
 
 #include <Spore\BasicIncludes.h>
 #include <Spore\Simulator.h>
+#include <Spore\CommonIDs.h>
+#include "Common.h"
 
 #define TRG_CreaturePickupPtr intrusive_ptr<TRG_CreaturePickup>
+
+// TODO: this script is in the process of being deprecated. Use cCreaturePickup instead.
 
 // To avoid repeating UTFWin:: all the time.
 using namespace UTFWin;
 using namespace Simulator;
+using namespace Common;
 
 class TRG_CreaturePickup 
 	: public IWinProc
@@ -17,6 +22,9 @@ class TRG_CreaturePickup
 {
 public:
 	static const uint32_t TYPE = id("TRG_CreaturePickup");
+
+
+	const uint32_t VALID_GAME_MODES = GameModeIDs::kGameTribe | GameModeIDs::kGameCiv | GameModeIDs::kGameSpace;
 	
 	TRG_CreaturePickup();
 	~TRG_CreaturePickup();
@@ -27,7 +35,6 @@ public:
 	cCreatureCitizenPtr possible_member = nullptr;
 	cCreatureCitizenPtr held_member = nullptr;
 
-	static bool IsPlannerOpen();
 	static cTribePtr GetPlayerTribe();
 	void DeselectMembers();
 	bool CanPickUp(cCreatureCitizenPtr creature) const;
@@ -36,7 +43,9 @@ public:
 	void Moved();
 
 	void ClickPosseUI(cCreatureBasePtr creature);
-	void UnclickMB1();
+	void UnclickMB1(const Message& refmessage);
+
+	vector<cCreatureCitizenPtr> GetSelectableMembers();
 
 	int AddRef() override;
 	int Release() override;

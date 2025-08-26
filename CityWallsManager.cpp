@@ -1,30 +1,30 @@
 #include "stdafx.h"
-#include "CVG_CityWalls.h"
+#include "CityWallsManager.h"
 
-CVG_CityWalls::CVG_CityWalls()
+CityWallsManager::CityWallsManager()
 {
 	MessageManager.AddListener(this, id("PlayerCitySpawned"));
 	MessageManager.AddListener(this, id("SporepediaClosed"));
 }
 
 
-CVG_CityWalls::~CVG_CityWalls()
+CityWallsManager::~CityWallsManager()
 {
 }
 
 // For internal use, do not modify.
-int CVG_CityWalls::AddRef()
+int CityWallsManager::AddRef()
 {
 	return DefaultRefCounted::AddRef();
 }
 
 // For internal use, do not modify.
-int CVG_CityWalls::Release()
+int CityWallsManager::Release()
 {
 	return DefaultRefCounted::Release();
 }
 
-cCityPtr CVG_CityWalls::GetCurrentCity() {
+cCityPtr CityWallsManager::GetCurrentCity() {
 	auto planetRecord = Simulator::GetActivePlanetRecord();
 	auto planet = PlanetModel.Get();
 	if (!planet) { return nullptr; }
@@ -38,11 +38,13 @@ cCityPtr CVG_CityWalls::GetCurrentCity() {
 	return planet->GetNearestCity(camPos);
 }
 
-float CVG_CityWalls::GetScaledGlow(float value) {
+// scaled color glow amount
+// TODO: fix crash on shutdown here?
+float CityWallsManager::GetScaledGlow(float value) {
 	return (value * bld_glow_scale) + bld_glow_add;
 }
 
-void CVG_CityWalls::UpdateCityBuildingColor(cCityPtr city) {
+void CityWallsManager::UpdateCityBuildingColor(cCityPtr city) {
 	if (!city) {return;}
 	if (city->mpCivilization) {
 		SetCityBuildingColor(city, city->mpCivilization->mCachedColor);
@@ -55,7 +57,7 @@ void CVG_CityWalls::UpdateCityBuildingColor(cCityPtr city) {
 }
 
 // color all the building windows to this color.
-void CVG_CityWalls::SetCityBuildingColor(cCityPtr city, ColorRGB color, bool glow) {
+void CityWallsManager::SetCityBuildingColor(cCityPtr city, ColorRGB color, bool glow) {
 
 	ColorRGBA colorA;
 	if (glow) {
@@ -74,7 +76,7 @@ void CVG_CityWalls::SetCityBuildingColor(cCityPtr city, ColorRGB color, bool glo
 }
 
 // new city wall has been hovered; store the current city item data in preparation to upgrade.
-void CVG_CityWalls::StoreCityData() {
+void CityWallsManager::StoreCityData() {
 	auto city = GetCurrentCity();
 
 	//slotted_buildings.clear();
@@ -103,7 +105,7 @@ void CVG_CityWalls::StoreCityData() {
 }
 
 // city walls have decreased in size, remove all buildings and decor not in a slot.
-void CVG_CityWalls::ProcessCityWallReduction() {
+void CityWallsManager::ProcessCityWallReduction() {
 	auto city = GetCurrentCity();
 
 	// Buildings
@@ -148,7 +150,7 @@ void CVG_CityWalls::ProcessCityWallReduction() {
 }
 
 // The method that receives the message. The first thing you should do is checking what ID sent this message...
-bool CVG_CityWalls::HandleMessage(uint32_t messageID, void* message)
+bool CityWallsManager::HandleMessage(uint32_t messageID, void* message)
 {
 	if (!IsCivGame()) { return false; }
 

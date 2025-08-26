@@ -224,23 +224,23 @@ bool cObjectManager::DoesCreatureSucceedModel(const cCreatureBasePtr& creature, 
 
 // Return if the creature matches or surpassed the object in one property criteria.
 bool cObjectManager::MatchesProperty(const uint32_t property, const cCreatureBasePtr& creature, const ResourceKey& modelKey) {
-	return CapabilityChecker.GetCapabilityLevel(creature, property) >= CapabilityChecker.GetModelIntValue(modelKey, property);
+	return CapabilityChecker::GetCapabilityLevel(creature, property) >= CapabilityChecker::GetModelIntValue(modelKey, property);
 }
 
 
 // Open a model resource and get a float value from a property
 float cObjectManager::GetModelFloatValue(const ResourceKey& modelKey, const uint32_t property) {
-	return CapabilityChecker.GetModelFloatValue(modelKey, property);
+	return CapabilityChecker::GetModelFloatValue(modelKey, property);
 }
 
 // Open a model resource and get a bool value from a property
 bool cObjectManager::GetModelBoolValue(const ResourceKey& modelKey, const uint32_t property) {
-	return CapabilityChecker.GetModelBoolValue(modelKey, property);
+	return CapabilityChecker::GetModelBoolValue(modelKey, property);
 }
 
 // Open a model resource and get an array of vector2 values of a property
 Vector2* cObjectManager::GetModelVector2sValue(const ResourceKey& modelKey, const uint32_t property) {
-	return CapabilityChecker.GetModelVector2sValue(modelKey, property);
+	return CapabilityChecker::GetModelVector2sValue(modelKey, property);
 }
 
 // NONSTATIC. 
@@ -253,36 +253,36 @@ uint32_t cObjectManager::ChooseModelInteractSuccessFailureAnim(const cCreatureBa
 // Open a model resource and find what anim it wants the avatar to use when first interacting
 uint32_t cObjectManager::GetModelInteractAnim(const ResourceKey& modelKey, const uint32_t default_animID, bool success) {
 	// Succeeded, or has no failure anim
-	if (success || !CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
-		if (CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractAnim"))) {
-			return CapabilityChecker.GetModelKeyValue(modelKey, id("modelInteractAnim")).instanceID;
+	if (success || !CapabilityChecker::HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
+		if (CapabilityChecker::HasModelKeyValue(modelKey, id("modelInteractAnim"))) {
+			return CapabilityChecker::GetModelKeyValue(modelKey, id("modelInteractAnim")).instanceID;
 		}
 	}
 	// Failed and has special anim
-	else if (!success && CapabilityChecker.HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
-		return CapabilityChecker.GetModelKeyValue(modelKey, id("modelInteractFailureAnim")).instanceID;
+	else if (!success && CapabilityChecker::HasModelKeyValue(modelKey, id("modelInteractFailureAnim"))) {
+		return CapabilityChecker::GetModelKeyValue(modelKey, id("modelInteractFailureAnim")).instanceID;
 	}
 	return default_animID;
 }
 
 uint32_t cObjectManager::GetModelSuccessAnim(const ResourceKey& modelKey) {
-	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelSuccessAnim")).instanceID;
+	return CapabilityChecker::GetModelKeyValue(modelKey, id("modelSuccessAnim")).instanceID;
 }
 uint32_t cObjectManager::GetModelFailureAnim(const ResourceKey& modelKey) {
-	return CapabilityChecker.GetModelKeyValue(modelKey, id("modelFailureAnim")).instanceID;
+	return CapabilityChecker::GetModelKeyValue(modelKey, id("modelFailureAnim")).instanceID;
 }
 
 uint32_t cObjectManager::GetModelCursorID(const ResourceKey& modelKey, const uint32_t default_ID) {
-	if (CapabilityChecker.HasModelUInt32Value(modelKey, id("modelCursorID"))) {
-		return CapabilityChecker.GetModelUInt32Value(modelKey, id("modelCursorID"));
+	if (CapabilityChecker::HasModelUInt32Value(modelKey, id("modelCursorID"))) {
+		return CapabilityChecker::GetModelUInt32Value(modelKey, id("modelCursorID"));
 	}
 	return default_ID;
 }
 
 ResourceKey cObjectManager::GetHerdNestModel(const uint32_t herdID) {
 	ResourceKey herd_resource = ResourceKey(herdID, TypeIDs::Names::prop, 0x02f98b67);
-	if (CapabilityChecker.HasModelKeyValue(herd_resource, id("NestModelKey"))) {
-		return CapabilityChecker.GetModelKeyValue(herd_resource, id("NestModelKey"));
+	if (CapabilityChecker::HasModelKeyValue(herd_resource, id("NestModelKey"))) {
+		return CapabilityChecker::GetModelKeyValue(herd_resource, id("NestModelKey"));
 	}
 	return ResourceKey{ 0, 0, 0 };
 }

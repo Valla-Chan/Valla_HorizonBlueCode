@@ -2,18 +2,18 @@
 
 #include <Spore\BasicIncludes.h>
 
-#define CVG_CityWallsPtr intrusive_ptr<CVG_CityWalls>
+#define CityWallsManagerPtr intrusive_ptr<CityWallsManager>
 
 using namespace Simulator;
-class CVG_CityWalls 
+class CityWallsManager 
 	: public App::IMessageListener
 	, public DefaultRefCounted
 {
 public:
-	static const uint32_t TYPE = id("CVG_CityWalls");
+	static const uint32_t TYPE = id("CityWallsManager");
 
-	CVG_CityWalls();
-	~CVG_CityWalls();
+	CityWallsManager();
+	~CityWallsManager();
 
 	int AddRef() override;
 	int Release() override;

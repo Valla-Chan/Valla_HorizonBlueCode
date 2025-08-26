@@ -38,6 +38,8 @@ void cTribeToolStrategy::Update()
 {
 }
 
+//------------------------------------------------------------------
+
 void cTribeToolStrategy::AddHandledToolID(int id) {
 	for (int item : mHandledToolIDs) {
 		if (item == id) {
@@ -65,9 +67,15 @@ bool cTribeToolStrategy::HandlesTool(cTribeToolPtr tool) const {
 }
 
 //------------------------------------------------------------------
+//// Auto-Called Actions
+
+//-----
+// UI
 
 bool cTribeToolStrategy::RightClickedTool(cTribeToolPtr tool) {
-	TribeToolManager.SelectedUseTool(tool);
+	if (mbToolStateValid) {
+		TribeToolManager.SelectedUseTool(tool);
+	}
 	return false;
 }
 
@@ -75,25 +83,42 @@ bool cTribeToolStrategy::LeftClickedTool(cTribeToolPtr tool) {
 	return false;
 }
 
-//------------------------------------------------------------------
+//-------------
+// Creature
 
-void cTribeToolStrategy::CreatureHandheldItemChanged(cCreatureCitizenPtr citizen) {
-	if (HandlesToolID(citizen->mSpecializedTool)) {
-		auto tribe = citizen->mpOwnerTribe;
-		if (tribe) {
-			auto tool = citizen->mpOwnerTribe->GetToolByType(citizen->mSpecializedTool);
-			CreatureAcquiredTool(citizen, tool);
-		}
-	}
+void cTribeToolStrategy::CreatureHandheldItemChanged(cCreatureCitizenPtr citizen, cTribeToolPtr tool) {
 }
 
-// TODO: Called when the creature's handheld object changes
 void cTribeToolStrategy::CreatureAcquiredTool(cCreatureCitizenPtr citizen, cTribeToolPtr tool) {
+	SporeDebugPrint("Creature %ls used tool type %i", citizen->mCreatureName.c_str(), tool->mToolType);
 }
 
+//------------------------------------------------------------------
+//// User-Called Actions
+
+/*
+cTribeToolManager::ToolMetadata* cTribeToolStrategy::GetToolMetadata(cTribeToolPtr tool) const {
+	return TribeToolManager.GetTribeToolMetadata(tool);
+}*/
+
+void cTribeToolStrategy::SetToolState(bool state) {
+	mbToolStateValid = state;
+}
+
+bool cTribeToolStrategy::GetToolState() const {
+	return mbToolStateValid;
+}
+
+uint32_t cTribeToolStrategy::GetInteractAnim(cCreatureCitizenPtr citizen, cTribeToolPtr tool) const {
+	auto meta = TribeToolManager.GetTribeToolMetadata(tool);
+	if (meta->mToolInteractAnim != 0x0) {
+		return meta->mToolInteractAnim;
+	}
+	return 0x03CDACC0; // get_tool_shed
+}
 
 //------------------------------------------------------------------
-
+//// Messages
 
 bool cTribeToolStrategy::HandleMessage(uint32_t messageID, void* msg)
 {

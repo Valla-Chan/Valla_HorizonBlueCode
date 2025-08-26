@@ -85,8 +85,8 @@ uint32_t CRG_Inventory::GetFoodStoreAnim(uint32_t animID) {
 	auto avatar = GameNounManager.GetAvatar();
 	if (!avatar) { return animID; }
 
-	int herb = CapabilityChecker.GetCapabilityLevel(avatar, 0x022E785C);
-	int carn = CapabilityChecker.GetCapabilityLevel(avatar, 0x022E7847);
+	int herb = CapabilityChecker::GetCapabilityLevel(avatar, 0x022E785C);
+	int carn = CapabilityChecker::GetCapabilityLevel(avatar, 0x022E7847);
 
 	if (herb) {
 		for (size_t i = 0; i < eatFruitAnims.size(); i++) {
@@ -153,7 +153,7 @@ ResourceKey CRG_Inventory::GetItemResource(uint32_t itemID) const {
 }
 
 ResourceKey CRG_Inventory::GetItemImage(ResourceKey itemKey) const {
-	return CapabilityChecker.GetModelKeyValue(itemKey, id("itemImageID"));
+	return CapabilityChecker::GetModelKeyValue(itemKey, id("itemImageID"));
 }
 
 // get first open slot, or -1 if no open slots

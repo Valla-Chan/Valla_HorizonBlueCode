@@ -3,6 +3,8 @@
 #include <Spore\BasicIncludes.h>
 #include "TRG_ToolIDs.h"
 #include "TribeToolDataKeys.h"
+#include <Spore\Simulator\cTribeInputStrategy.h>
+#include "TribeToolStratManager.h"
 
 #define cTribeToolManagerPtr intrusive_ptr<cTribeToolManager>
 #define TribeToolManager (*cTribeToolManager::Get())
@@ -11,7 +13,7 @@ using namespace UTFWin;
 using namespace Simulator;
 using namespace TypeIDs;
 
-const Vector2 mTribeToolScaleBounds = Vector2(0.75f, 1.25f);
+const Vector2 mTribeToolScaleBounds = Vector2(0.75f, 1.3f);
 const Vector2 mTribeHutScaleBounds = Vector2(2.5f, 3.5f);
 
 class cTribeToolManager 
@@ -21,7 +23,7 @@ class cTribeToolManager
 {
 public:
 	static const uint32_t TYPE = id("TribeToolManager");
-	
+
 	cTribeToolManager();
 	~cTribeToolManager();
 
@@ -31,6 +33,10 @@ public:
 	void Update() override;
 	static cTribeToolManager* Get();
 
+	// Detours
+	//----------------
+	static void AttachDetours();
+
 //------------------------------------------------------------
 // Tool Data Format
 //------------------------------------------------------------
@@ -38,12 +44,21 @@ public:
 
 	// Additional data for new tribe tools
 	struct ToolMetadata {
+
+		// Points to a cTribeToolStrategy
+		uint32_t mToolStrategyID = 0x0;
+
+		// Handheld Items
 		int mHandHeldIndex = 0;
 		uint32_t mHandHeldItemEffect = 0x0;
+
+		// FX and anims
 		uint32_t mToolEnRouteAnim = 0x0;
-		uint32_t mToolGetToolAnim = 0x0; // todo, figure out how i want to use this. maybe if 0x0, do not override.
-		
-		uint32_t mToolStrategyID = 0x0;
+		uint32_t mToolInteractAnim = 0x0; // todo, figure out how i want to use this. maybe if 0x0, do not override.
+
+		uint32_t mToolActiveCursorID = BasicCursorIDs::Cursors::Pickup;
+		uint32_t mToolInactiveCursorID = 0x0;
+		uint32_t mToolInvalidCursorID = 0x0;
 
 		Vector2 mToolScaleBounds = mTribeToolScaleBounds;
 
@@ -56,6 +71,7 @@ public:
 
 		ResourceKey mSpecializedName = {};
 		ResourceKey mAbilityKey = {};
+
 	};
 
 
@@ -73,6 +89,8 @@ public:
 //----------------------------------------------------------------------------------------------------------------------------------
 
 	void PopulateTribeToolData(); // pull the data from the files into memory
+
+	ToolMetadata* GetTribeToolMetadata(cTribeToolPtr tool) const;
 	ToolMetadata* GetTribeToolMetadata(int toolType) const;
 	cTribeToolData* GetTribeToolData(int toolType) const;
 	static cTribeToolData* TribeToolDataFromProp(ResourceKey key, int typeIDoverride = -1);
@@ -103,6 +121,9 @@ public:
 	static bool IsToolHome(cTribeToolPtr tool);
 	static bool IsToolPlayerOwned(cTribeToolPtr tool);
 	static bool IsHutPlayerOwned(cTribeHutPtr hut);
+	/// Returns true if this tool is outside the normal range of vanilla tribe tools
+	static bool IsNewTool(cTribeToolPtr tool, bool includehomes = false, bool includerares = false, bool includedecor = false);
+	/// Checks the tool strategy for a valid/invalid state. Returns true by default or if strategy is unset.
 
 // Tribe Members
 //-----------------
@@ -113,6 +134,7 @@ public:
 	// consider making the actions on L/R click be data driven? so you can right click to send a creature over to use an item, but you can also send them over to destroy it even if they own the tool.
 	// and handle what happens when clicking on it with low health, keeping in mind that the repair action is default.
 
+	static bool HasSelectedMembers(); // faster than below
 	static vector<cCreatureCitizenPtr> GetSelectedMembers();
 	static void UseTool(vector<cCreatureCitizenPtr> citizens, cTribeToolPtr tool);
 	static void UseTool(cCreatureCitizenPtr citizen, cTribeToolPtr tool);
@@ -131,7 +153,8 @@ public:
 	ResourceKey GetPlotModel(cTribeToolPtr tool) const;
 	cTribeToolPtr GetHoveredConstructionPlot() const;
 	bool IsConstructionPlotHovered() const;
-	bool IsToolInProgress(cTribeToolPtr tool) const;
+	bool IsToolInProgress(cTribeToolPtr tool) const; // Health is below max and in progress
+	bool IsToolDamaged(cTribeToolPtr tool) const; // Health is below max and NOT in progress
 
 	void AddedTool(cTribeToolPtr tool, cTribePtr tribe); // new tool has just been added
 	void ToolComplete(cTribeToolPtr tool); // tool has finished construction
@@ -141,7 +164,7 @@ public:
 	
 	vector<Vector2> mToolQueueCitizenData; // ToolID, HandheldID
 
-	// Add a chief creature's diet value to the queue
+	// Add a non-chieftain citizen creature's tool info to the queue
 	void AddCitizenToolTypeToQueue(int toolID, int handheldID);
 	void RemoveCitizenToolTypeQueue();
 	uint32_t ConvertToolEffectID(uint32_t instanceId);
@@ -161,4 +184,60 @@ private:
 	bool mbShiftHeld = false;
 };
 
+
+// DETOURS
+
+
+member_detour(TribeTool_SetHoverObjectCursorAndRollover_detour, Simulator::cTribeInputStrategy, void()) {
+	void detoured() {
+
+		if (this->IsInEditor()) { return; }
+
+		auto hovered = GameViewManager.GetHoveredObject();
+		auto tribetool = object_cast<cTribeTool>(hovered);
+
+		if (tribetool) {
+
+			if (!TribeToolManager.IsNewTool(tribetool, true, true, true) || TribeToolManager.IsPlannerOpen()) {
+				original_function(this);
+			}
+			else {
+
+				// TODO: may need to override original func so these dont conflict.
+
+				auto meta = TribeToolManager.GetTribeToolMetadata(tribetool->GetToolType());
+
+				// Cursors
+				if (meta) {
+					bool hasselected = TribeToolManager.HasSelectedMembers();
+
+					if (TribeToolStratManager.IsToolStateValid(tribetool)) {
+						if (meta->mToolActiveCursorID != 0x0 && hasselected) {
+							CursorManager.SetActiveCursor(meta->mToolActiveCursorID);
+						}
+						else if (meta->mToolInactiveCursorID != 0x0 && !hasselected) {
+							CursorManager.SetActiveCursor(meta->mToolInactiveCursorID);
+						}
+					}
+					else {
+						if (meta->mToolInvalidCursorID != 0x0 && hasselected) {
+							CursorManager.SetActiveCursor(meta->mToolInvalidCursorID);
+						}
+					}
+				}
+				
+				// Rollover
+				if (!meta || meta->mbToolDisableRollover) {
+					UI::SimulatorRollover::ShowRollover(tribetool);
+				}
+			}
+
+		}
+		else {
+			original_function(this);
+		}
+	}
+
+
+};
 

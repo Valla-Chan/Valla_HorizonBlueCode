@@ -10,6 +10,7 @@ cTribeToolManager::cTribeToolManager()
 	WindowManager.GetMainWindow()->AddWinProc(this);
 	CursorManager.Load(0xFA09CD25, u"cursor_construct");
 	CursorManager.Load(0xE84563D4, u"cursor-object-scale");
+	CursorManager.Load(BasicCursorIDs::Cursors::Pickup, u"cursor-crg-pickup");
 
 	PopulateTribeToolData(); // TODO: consider moving this to a post-run detour of the func that pulls the normal tribal tool data, for consistency.
 }
@@ -25,6 +26,10 @@ cTribeToolManager* cTribeToolManager::sInstance;
 cTribeToolManager* cTribeToolManager::Get()
 {
 	return sInstance;
+}
+
+void cTribeToolManager::AttachDetours() {
+	TribeTool_SetHoverObjectCursorAndRollover_detour::attach(GetAddress(cTribeInputStrategy, SetHoverObjectCursorAndRollover));
 }
 
 // For internal use, do not modify.
@@ -102,6 +107,10 @@ void cTribeToolManager::PopulateTribeToolData() {
 	}
 }
 
+cTribeToolManager::ToolMetadata* cTribeToolManager::GetTribeToolMetadata(cTribeToolPtr tool) const {
+	return GetTribeToolMetadata(tool->GetToolType());
+}
+
 cTribeToolManager::ToolMetadata* cTribeToolManager::GetTribeToolMetadata(int toolType) const {
 	auto E = mTribeToolMetadata.find(toolType);
 	if (E != mTribeToolMetadata.end()) {
@@ -163,6 +172,7 @@ cTribeToolData* cTribeToolManager::GetTribeToolData(int toolType) const {
 	return nullptr;
 }
 
+//// Pull TOOL DATA
 // typeIDoverride forces 'mToolType' of the tribal tool shed to store as this value.
 // typeIDoverride = -1 disables the override.
 cTribeToolData* cTribeToolManager::TribeToolDataFromProp(ResourceKey key, int typeIDoverride) {
@@ -252,6 +262,8 @@ cTribeToolData* cTribeToolManager::TribeToolDataFromProp(ResourceKey key, int ty
 	return toolData;
 }
 
+
+// Pull TYPE IDs
 int cTribeToolManager::TribeToolTypeIDFromProp(ResourceKey key) {
 	uint32_t toolTypeID = -1;
 
@@ -263,32 +275,71 @@ int cTribeToolManager::TribeToolTypeIDFromProp(ResourceKey key) {
 	return toolTypeID;
 }
 
+
+// Pull METADATA
 cTribeToolManager::ToolMetadata* cTribeToolManager::TribeToolMetadataFromProp(ResourceKey key) {
 	ToolMetadata* meta = new(ToolMetadata);
 
 	PropertyListPtr mpPropList;
 	if (PropManager.GetPropertyList(key.instanceID, key.groupID, mpPropList))
 	{
-		uint32_t toolHandheldItem = 0;
-		App::Property::GetUInt32(mpPropList.get(), 0x6E22D7BF, toolHandheldItem);
-		meta->mHandHeldIndex = toolHandheldItem;
-
-		App::Property::GetKeyInstanceID(mpPropList.get(), 0x5B65C4B6, meta->mHandHeldItemEffect);
-		App::Property::GetUInt32(mpPropList.get(), 0x062ECADE, meta->mToolEnRouteAnim);
-		App::Property::GetUInt32(mpPropList.get(), 0x062ECADE, meta->mToolGetToolAnim);
+		// Strategy
 		App::Property::GetKeyInstanceID(mpPropList.get(), 0x9BB3CA2B, meta->mToolStrategyID);
 
-		App::Property::GetFloat(mpPropList.get(), 0xF023ED73, meta->mToolScaleBounds.x); // modelMinScale
-		App::Property::GetFloat(mpPropList.get(), 0xF023ED79, meta->mToolScaleBounds.y); // modelMaxScale
-		if (meta->mToolScaleBounds.x == 0) { meta->mToolScaleBounds.x = mTribeToolScaleBounds.x; }
-		if (meta->mToolScaleBounds.y == 0) { meta->mToolScaleBounds.y = mTribeToolScaleBounds.y; }
+		// Handheld Items
+		{
+			uint32_t toolHandheldItem = 0;
+			App::Property::GetUInt32(mpPropList.get(), 0x6E22D7BF, toolHandheldItem);
+			meta->mHandHeldIndex = toolHandheldItem;
+			App::Property::GetKeyInstanceID(mpPropList.get(), 0x5B65C4B6, meta->mHandHeldItemEffect);
+		}
 
+		// FX and anims
+		App::Property::GetUInt32(mpPropList.get(), 0x062ECADE, meta->mToolEnRouteAnim);
+		App::Property::GetUInt32(mpPropList.get(), 0x062ECADE, meta->mToolInteractAnim);
 
+		// UI / Cursor
+		{
+			string16 cursor;
+			// Active Cursor
+			if (App::Property::GetString16(mpPropList.get(), 0xD265DD92, cursor)) {
+				meta->mToolActiveCursorID = id(cursor.c_str());
+				CursorManager.Load(meta->mToolActiveCursorID, cursor.c_str());
+			}
+			// Inactive Cursor
+			if (App::Property::GetString16(mpPropList.get(), 0x0BF57AF7, cursor)) {
+				meta->mToolInactiveCursorID = id(cursor.c_str());
+				CursorManager.Load(meta->mToolInactiveCursorID, cursor.c_str());
+			}
+			// Invalid Cursor
+			if (App::Property::GetString16(mpPropList.get(), 0x9A846D51, cursor)) {
+				meta->mToolInvalidCursorID = id(cursor.c_str());
+				CursorManager.Load(meta->mToolInvalidCursorID, cursor.c_str());
+			}
+		}
+
+		// Scale
+		{
+			// TODO: this is totally broken for some reason. fix this later.
+			/*
+			float scalebound_lower = 0.0f;
+			float scalebound_upper = 0.0f;
+			
+			if (App::Property::GetFloat(mpPropList.get(), 0xF023ED73, scalebound_lower) && scalebound_lower > 0.0f) { // modelMinScale
+				meta->mToolScaleBounds.x = scalebound_lower;
+			}
+			if (App::Property::GetFloat(mpPropList.get(), 0xF023ED79, scalebound_upper) && scalebound_upper > 0.0f) { // modelMaxScale
+				meta->mToolScaleBounds.y = scalebound_upper;
+			}
+			*/
+		}
+		
+		// Bools
 		App::Property::GetBool(mpPropList.get(), 0x68575D46, meta->mbToolPrebuilt);
 		App::Property::GetBool(mpPropList.get(), 0xA664B3BE, meta->mbToolAllowMultiple);
 		App::Property::GetBool(mpPropList.get(), 0xE9B30DC6, meta->mbToolDisableRollover);
 		
-
+		// Ability and specialized name
 		App::Property::GetKey(mpPropList.get(), 0x051CDDBC, meta->mAbilityKey);
 		App::Property::GetKey(mpPropList.get(), 0xCEBF7F24, meta->mSpecializedName);
 	}
@@ -438,17 +489,48 @@ bool cTribeToolManager::IsHutPlayerOwned(cTribeHutPtr hut) {
 	return (hut->mpTribe == GameNounManager.GetPlayerTribe());
 }
 
+bool cTribeToolManager::IsNewTool(cTribeToolPtr tool, bool includehomes, bool includerares, bool includedecor) {
+	auto type = tool->GetToolType();
+	if (type > HomeEnd && type < Decor) {
+		return true;
+	}
+	if (type >= EventRare && type < Decor) {
+		if (includerares && type == EventRare) {
+			return true;
+		}
+		else if (includehomes && type >= HomeStart && type < HomeEnd) {
+			return true;
+		}
+		else if (includedecor && type == Decor) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
 //--------------------------------------------------------------------------------------------
 // Tribe Members
+
+bool cTribeToolManager::HasSelectedMembers() {
+	vector<cCreatureCitizenPtr> selected;
+	auto tribe = GameNounManager.GetPlayerTribe();
+	eastl::vector<cCreatureCitizenPtr>& members = tribe->GetSelectableMembers();
+	for (auto member : members) {
+		if (member->IsSelected()) {
+			return true;
+		}
+	}
+	return false;
+}
 
 vector<cCreatureCitizenPtr> cTribeToolManager::GetSelectedMembers() {
 	vector<cCreatureCitizenPtr> selected;
 	auto tribe = GameNounManager.GetPlayerTribe();
-	eastl::vector<cSpatialObjectPtr>& members = tribe->GetSelectableMembers();
+	eastl::vector<cCreatureCitizenPtr>& members = tribe->GetSelectableMembers();
 	for (auto member : members) {
-		auto citizen = object_cast<Simulator::cCreatureCitizen>(member);
-		if (member->IsSelected() && citizen) {
-			selected.push_back(citizen);
+		if (member->IsSelected()) {
+			selected.push_back(member);
 		}
 	}
 	return selected;
@@ -573,6 +655,11 @@ bool cTribeToolManager::IsToolInProgress(cTribeToolPtr tool) const {
 	return false;
 }
 
+bool cTribeToolManager::IsToolDamaged(cTribeToolPtr tool) const {
+	if (!tool) { return false; }
+	return tool->mHealthPoints < tool->mMaxHealthPoints;
+}
+
 void cTribeToolManager::AddedTool(cTribeToolPtr tool, cTribePtr tribe) {
 	int toolType = tool->GetToolType();
 	// Campfires should not count
@@ -636,7 +723,7 @@ void cTribeToolManager::AddCitizenToolTypeToQueue(int toolID, int handheldID) {
 void cTribeToolManager::RemoveCitizenToolTypeQueue() {
 	vector<Vector2> new_vector;
 	for (size_t i = 1; i < mToolQueueCitizenData.size(); i++) {
-		new_vector.push_back(mToolQueueCitizenData[1]);
+		new_vector.push_back(mToolQueueCitizenData[i]);
 	}
 	mToolQueueCitizenData = new_vector;
 }
@@ -785,6 +872,7 @@ bool cTribeToolManager::HandleUIMessage(IWindow* window, const Message& message)
 			// This will all need to be configured later.
 			else {
 				auto hovered_hut = object_cast<Simulator::cTribeHut>(GameViewManager.GetHoveredObject());
+				
 				if (hovered_hut && IsHutPlayerOwned(hovered_hut) && hovered_hut->mHealthPoints > 0) {
 					float scrollamt = (message.MouseWheel.wheelDelta / 120.0f) * 0.2f;
 					ScaleTribeHut(hovered_hut, scrollamt);
