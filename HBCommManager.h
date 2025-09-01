@@ -53,6 +53,7 @@ public:
 	Anim::AnimatedCreature* mpCommCreature = nullptr;
 	cEmpire* mpCommEmpire = nullptr;
 	ResourceKey mPlayerCommBckg;
+	uint32_t mPlayerID = 0x0;
 
 	cHBCommManager();
 	~cHBCommManager();

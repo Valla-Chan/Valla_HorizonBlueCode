@@ -52,6 +52,7 @@ void cHBCommManager::OnShopperAccept(const ResourceKey& selection)
 {
 	if (selection == ResourceKey()) { return; }
 	mPlayerCommBckg = selection;
+	mPlayerID = GetPlayerEmpireID();
 
 	// Play reaction dialog if in space game
 	if (IsSpaceGame()) {
@@ -67,7 +68,7 @@ void cHBCommManager::ShowCommEventBckgReact() {
 	if (planetRecord) {
 		planetID = planetRecord->GetID();
 	};
-	CommManager.ShowCommEvent(CommManager.CreateSpaceCommEvent(Simulator::GetPlayerEmpire()->mPoliticalID, planetID, id("space_diplomacy_hb"), id("change_background_reaction")));
+	CommManager.ShowCommEvent(CommManager.CreateSpaceCommEvent(Simulator::GetPlayerEmpireID(), planetID, id("space_diplomacy_hb"), id("change_background_reaction")));
 }
 
 void cHBCommManager::ApplyCommCreatureColor() {
@@ -119,6 +120,9 @@ bool cHBCommManager::HandleMessage(uint32_t messageID, void* msg)
 {
 	if (messageID == SimulatorMessages::kMsgSwitchGameMode)
 	{
+		if (mPlayerID != Simulator::GetPlayerEmpireID()) {
+			mPlayerCommBckg = {};
+		}
 		HBCommManager.mpCommCreature = nullptr;
 		HBCommManager.mpCommEmpire = nullptr;
 	}
