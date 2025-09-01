@@ -30,14 +30,20 @@ void Kill::ParseLine(const ArgScript::Line& line)
 				KillTarget(avatar);
 			}
 		}
-		else {
+		else if (Simulator::IsSpaceGame())
+		{
+			auto ship = Simulator::GetPlayerUFO();
+			if (ship) {
+				ship->mHealthPoints = 0;
+			}
+		}
+		else if (Simulator::IsCellGame()) {
 			auto avatarcell = Simulator::Cell::GetPlayerCell();
 			if (avatarcell) {
 				avatarcell->mHealthPoints = 0;
 			}
 		}
 	}
-
 }
 
 void Kill::KillTarget(const cCombatantPtr target) {

@@ -4,6 +4,7 @@
 #include <Spore\Simulator\SubSystem\CommManager.h>
 #include "Common.h"
 // CVG
+#include "HBCommManager.h"
 #include "CityWallsManager.h"
 #include "CityMemberManager.h"
 
@@ -16,7 +17,6 @@ using namespace BasicCursorIDs;
 // CVG
 
 static CityWallsManager* cvg_citywalls;
-cCommEvent* pLastEvent = nullptr;
 
 class HBCiv
 {
@@ -25,58 +25,97 @@ public:
 
 	static void Initialize() {
 		auto cvg_membermanager = new(cCityMemberManager);
+		auto hbcommmanager = new(cHBCommManager);
 		cvg_citywalls = new(CityWallsManager);
 	}
 	static void Dispose() {
 		cvg_citywalls = nullptr;
-		pLastEvent = nullptr;
 	}
 
 	static void AttachDetours();
 };
 
+//----------------
+// Detour Helpers
+
+// Detour the tribe spawning func
+static bool CVG_TribeSpawn_detour(const Math::Vector3& position, int& tribeArchetype, int& numMembers, int& foodAmount, bool& boolvalue, cSpeciesProfile* species) {
+	if (IsCivGame()) {
+		species = CityMemberManager.GetRandomTribeSpecies(species);
+		return true;
+	}
+	return false;
+}
+
+static bool CVG_LocalStringSetText_detour(LocalizedString* obj, uint32_t& tableID, uint32_t& instanceID) {
+	// Hack to fix some civ-type-specific interactions in HB
+	// TODO: make a proper way to interact with or replace CNV actions and fix their flags
+	if (tableID == id("civ_convo_hb")) {
+		VehiclePurpose playertype = CityMemberManager.GetCivMajorityType(GameNounManager.GetPlayerCivilization());
+		switch (instanceID) {
+
+			case 0x0000C0A1: // player deny NPC surrender
+				switch (playertype) {
+				case kVehicleMilitary:
+					instanceID = 0x0000C0B1; break;
+				case kVehicleEconomic:
+					instanceID = 0x0000C0C1; break;
+					return true;
+				}
+			case 0x000FCAA1: // player response to Religious NPC's never surrender
+				if (playertype == kVehicleMilitary) { instanceID = 0x000FCAB1; }
+				else if (playertype != kVehicleCultural) { instanceID = 0x000FCFF1; }
+				return true;
+
+			case 0x000FCBB1: // player response to Military NPC's never surrender
+				if (playertype == kVehicleCultural) { instanceID = 0x000FCAA1; return true; }
+				else if (playertype != kVehicleMilitary) { instanceID = 0x000FCFF1; }
+				return true;
+		}
+	}
+	return false;
+}
+
+static void NewCityAppeared() {
+	CityMemberManager.NewCityAppeared();
+}
+// Detour the UIEventLog ShowEvent func
+static bool CVG_UIShowEvent_detour(cUIEventLog* obj, uint32_t& instanceID, uint32_t& groupID)
+{
+	// New city has appeared in civ
+	if (IsCivGame() && instanceID == id("NewCityAppears")) {
+		Simulator::ScheduleTask(NewCityAppeared, 0.000000001f);
+	}
+}
+
+// Detour the cursor setting func
+static bool CVG_SetCursor_detour(UTFWin::cCursorManager* obj, uint32_t& id) {
+	// fix the deny spice geyser cursor issue
+	if (IsCivGame() && id == Cursors::NoOptions) {
+		auto hovered = GameViewManager.GetHoveredObject();
+		if (hovered) {
+			cCommodityNodePtr geyser = object_cast<cCommodityNode>(hovered);
+			if (geyser && geyser->mPoliticalID != GameNounManager.GetPlayerCivilization()->GetPoliticalID()) {
+				id = Cursors::ClaimSpice;
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+// PaletteUI::SetActiveCategory
+static void CVG_PaletteUISetActiveCategory_detour(int& categoryIndex) {
+	if (IsCivGame()) {
+		// TODO: start tracking if the player mouses over city wall up/downgrades
+		cvg_citywalls->ProcessCityWallReduction();
+		MessageManager.MessageSend(id("ResetTimescale"), nullptr);
+	}
+}
+
 //----------
 // Detours
-
-// Spui loading/spawning detour
-// TODO: NOT CURRENTLY USED
-member_detour(CVG_ReadSPUI_detour, UTFWin::UILayout, bool(const ResourceKey&, bool, uint32_t)) {
-	bool detoured(const ResourceKey & name, bool arg_4, uint32_t arg_8) {
-
-		//if (IsCivGame()) {
-		//	if (name.instanceID == id("Rollover_CivVehicle")) {
-		//
-		//	}
-		//}
-
-		// planner popup
-		//if (name.instanceID == id("plannerPalette")) {
-		//	MessageManager.MessageSend(id("PlannerPopup"), nullptr);
-		//}
-
-		return original_function(this, name, arg_4, arg_8);
-	}
-};
-
-// Open comms
-member_detour(ShowCommEvent_detour, Simulator::cCommManager, void(cCommEvent*)) {
-	void detoured(cCommEvent * pEvent) {
-		if (!IsCommScreenActive()) {
-			// Fix game time scale by sending msg and delaying comms
-			MessageManager.MessageSend(id("CinematicBegin"), nullptr);
-			pLastEvent = pEvent;
-			App::ScheduleTask(this, &ShowCommEvent_detour::ShowLastCommEvent, 0.001f);
-		}
-		else {
-			original_function(this, pEvent);
-		}
-	}
-
-	void ShowCommEvent_detour::ShowLastCommEvent() {
-		original_function(this, pLastEvent);
-		pLastEvent = nullptr;
-	}
-};
 
 // Spawn vehicle
 member_detour(CitySpawnVehicle_detour, Simulator::cCity, cVehicle* (VehiclePurpose speciality, VehicleLocomotion locomotion, struct ResourceKey key, bool isSpaceStage)) {
@@ -106,61 +145,6 @@ static_detour(CityProcessBuildingUpdate_detour, void(cCity*, int, int)) {
 
 };
 
-// Detour the tribe spawning func
-static_detour(CVG_TribeSpawn_detour, cTribe* (const Vector3&, int, int, int, bool, cSpeciesProfile*)) {
-	cTribe* detoured(const Math::Vector3 & position, int tribeArchetype, int numMembers, int foodAmount, bool boolvalue, cSpeciesProfile * species) {
-		SporeDebugPrint("Tribe Spawned");
-		if (IsCivGame()) {
-			species = CityMemberManager.GetRandomTribeSpecies(species);
-		}
-		cTribe* tribe = original_function(position, tribeArchetype, numMembers, foodAmount, boolvalue, species);
-		TribePlanManager.trg_hutmanager->SetupNewTribe(tribe);
-
-		return tribe;
-	}
-};
-
-// Detour the UIEventLog ShowEvent func
-member_detour(CVG_UIShowEvent_detour, Simulator::cUIEventLog, uint32_t(uint32_t, uint32_t, int, Math::Vector3*, bool, int))
-{
-	void NewCityAppeared() {
-		CityMemberManager.NewCityAppeared();
-	}
-
-	uint32_t detoured(uint32_t instanceID, uint32_t groupID, int int1, Math::Vector3 * vector3, bool dontAllowDuplicates, int int2)
-	{
-		// fire OG func
-		auto value = original_function(this, instanceID, groupID, int1, vector3, dontAllowDuplicates, int2);
-
-		// New city has appeared in civ
-		if (IsCivGame() && instanceID == id("NewCityAppears")) {
-			//MessageManager.MessageSend(id("NewCityAppeared"), nullptr);
-			Simulator::ScheduleTask(this, &CVG_UIShowEvent_detour::NewCityAppeared, 0.000000001f);
-		}
-
-		return value;
-	}
-};
-
-// Detour the cursor setting func
-// TODO: Broken? Why is this not getting called?
-member_detour(CVG_SetCursor_detour, UTFWin::cCursorManager, bool(uint32_t)) {
-	bool detoured(uint32_t id) {
-		// fix the deny spice geyser cursor issue
-		if (IsCivGame() && id == Cursors::NoOptions) {
-			auto hovered = GameViewManager.GetHoveredObject();
-			if (hovered) {
-				cCommodityNodePtr geyser = object_cast<cCommodityNode>(hovered);
-				if (geyser && geyser->mPoliticalID != GameNounManager.GetPlayerCivilization()->GetPoliticalID()) {
-					return original_function(this, Cursors::ClaimSpice);
-				}
-			}
-		}
-
-		return original_function(this, id);
-	}
-};
-
 // Detour GetCachedColorFromId
 static_detour(GetCachedColorFromId_detour, const Math::ColorRGB& (uint32_t)) {
 	Math::ColorRGB IDColor;
@@ -174,29 +158,11 @@ static_detour(GetCachedColorFromId_detour, const Math::ColorRGB& (uint32_t)) {
 	}
 };
 
-// PaletteUI::SetActiveCategory
-member_detour(CVG_PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int)) {
-	void detoured(int categoryIndex) {
-
-		// Civ
-		if (IsCivGame()) {
-			// TODO: start tracking if the player mouses over city wall up/downgrades
-			cvg_citywalls->ProcessCityWallReduction();
-		}
-
-	}
-};
-
 //-----------------
 // ATTACH DETOURS
 void HBCiv::AttachDetours() {
-	//CVG_ReadSPUI_detour::attach(GetAddress(UTFWin::UILayout, Load));
-	ShowCommEvent_detour::attach(GetAddress(Simulator::cCommManager, ShowCommEvent));
+	cHBCommManager::AttachDetours();
 	CitySpawnVehicle_detour::attach(GetAddress(Simulator::cCity, SpawnVehicle));
 	CityProcessBuildingUpdate_detour::attach(GetAddress(Simulator::cCity, ProcessBuildingUpdate));
-	CVG_UIShowEvent_detour::attach(GetAddress(Simulator::cUIEventLog, ShowEvent));
-	CVG_TribeSpawn_detour::attach(GetAddress(Simulator, SpawnNpcTribe));
-	CVG_SetCursor_detour::attach(GetAddress(UTFWin::cCursorManager, SetActiveCursor));
 	GetCachedColorFromId_detour::attach(GetAddress(Simulator, GetCachedColorFromId));
-	CVG_PaletteUISetActiveCategory_detour::attach(GetAddress(Palettes::PaletteUI, SetActiveCategory));
 }

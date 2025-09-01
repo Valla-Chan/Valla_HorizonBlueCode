@@ -5,6 +5,7 @@
 #include <Spore\Sporepedia\AssetBrowserQuery.h>
 #include <Spore\Sporepedia\ObjectTemplateDB.h>
 #include "CapabilityChecker.h"
+#include "cCreaturePickup.h"
 
 
 cCityMemberManager::cCityMemberManager()
@@ -100,17 +101,54 @@ void cCityMemberManager::Update(int deltaTime, int deltaGameTime) {
 
 //---------------------------------------------------------------------------
 
-bool cCityMemberManager::IsPlayerCityInRange(float camera_max_dist) const {
+// Get if a nation is a majority Religious, Military, or Economic.
+// Return Colony if they are all even.
+// leniency = allow this many cities in majority without skewing the type away from Colony. default = 0
+VehiclePurpose cCityMemberManager::GetCivMajorityType(cCivilizationPtr civ, int leniency) {
+	if (!civ || civ->mCities.size() == 0) { return kVehicleColony; }
+
+	int m = 0;
+	int r = 0;
+	int e = 0;
+	int c = 0;
+
+	for (auto city : civ->mCities) {
+		switch (city->mVehicleSpecialty) {
+			case kVehicleMilitary: m++; break;
+			case kVehicleCultural: r++; break;
+			case kVehicleEconomic: e++; break;
+			case kVehicleColony: c++; break;
+		}
+	}
+	if (m > r + leniency && m > e + leniency) return kVehicleMilitary;
+	if (r > m + leniency && r > e + leniency) return kVehicleCultural;
+	if (e > m + leniency && e > r + leniency) return kVehicleEconomic;
+	else return kVehicleColony;
+}
+
+vector<cCreatureCitizenPtr> cCityMemberManager::GetCityCitizens(cCityPtr city) {
+	if (!city) { return {}; }
+	vector<cCreatureCitizenPtr> members;
+	for (auto citizen : Simulator::GetData<Simulator::cCreatureCitizen>()) {
+		if (citizen->mpOwnerCity == city) {
+			members.push_back(citizen);
+		}
+	}
+	return members;
+}
+
+bool cCityMemberManager::IsPlayerCityInRange(float camera_max_dist) {
 	auto pViewer = CameraManager.GetViewer();
-	// get camera distance from planet
-	float cameraDist = 0;
+	// get camera pos and distance from planet
+	Vector3 cameraPos;
 	{
-		Vector3 cameraPos;
 		Vector3 cameraDir;
 		pViewer->GetCameraToMouse(cameraPos, cameraDir);
-		cameraDist = cameraPos.Length();
 	}
-	// detect camera dist, below ~700 should suffice for close range.
+	auto city = PlanetModel.GetNearestCity(cameraPos);
+	if (!city || !city->IsPlayerOwned()) { return false; }
+	float cameraDist = Math::distance(cameraPos, city->GetPosition());
+	// detect camera dist, below ~300 should suffice for close range.
 	if (cameraDist < camera_max_dist) {
 		return true;
 	}
@@ -118,7 +156,7 @@ bool cCityMemberManager::IsPlayerCityInRange(float camera_max_dist) const {
 }
 
 // Player-owned city hovered
-bool cCityMemberManager::IsPlayerCityHovered() const {
+bool cCityMemberManager::IsPlayerCityHovered() {
 	if (IsPlayerCityInRange()) {
 		auto window = WindowManager.GetMainWindow();
 		auto cityHover = window->FindWindowByID(0x0199A7DE); // find the city hover UI
@@ -137,7 +175,7 @@ bool cCityMemberManager::IsPlayerCityHovered() const {
 }
 
 // combine traces and hover
-cCreatureCitizenPtr cCityMemberManager::GetHoveredCitizen(bool playerowned) const {
+cCreatureCitizenPtr cCityMemberManager::GetHoveredCitizen(bool playerowned) {
 	cCreatureCitizenPtr citizenHovered = nullptr;
 	if (IsPlayerCityInRange() || !playerowned) {
 
@@ -155,7 +193,7 @@ cCreatureCitizenPtr cCityMemberManager::GetHoveredCitizen(bool playerowned) cons
 	return citizenHovered;
 }
 
-cCreatureCitizenPtr cCityMemberManager::TraceHitCitizen() const {
+cCreatureCitizenPtr cCityMemberManager::TraceHitCitizen() {
 
 	auto pViewer = CameraManager.GetViewer();
 
@@ -171,7 +209,7 @@ cCreatureCitizenPtr cCityMemberManager::TraceHitCitizen() const {
 	if (GameViewManager.RaycastAll(camPos, camPos + (camDir * 900.0f), raycastObjects, true)) {
 		for (auto object : raycastObjects) {
 			auto citizen = object_cast<cCreatureCitizen>(object);
-			if (citizen && citizen->mpOwnerCity->IsPlayerOwned()) {
+			if (citizen && citizen->mpOwnerCity && citizen->mpOwnerCity->IsPlayerOwned()) {
 				return citizen;
 			}
 		}
@@ -312,22 +350,22 @@ int cCityMemberManager::DetermineNeededCityType() const {
 	auto cities = GetData<cCity>();
 	for (auto item : cities) {
 		switch (item->mVehicleSpecialty) {
-		case 1: cityTypes1++; break;
-		case 2: cityTypes2++; break;
-		case 3: cityTypes3++; break;
+		case kVehicleMilitary: cityTypes1++; break;
+		case kVehicleCultural: cityTypes2++; break;
+		case kVehicleEconomic: cityTypes3++; break;
 		}
 	}
 
 	float thresholdScalar = 0.28f;
 	// one of the values is zero, might want to spawn that type next.
 	if (cityTypes1 == 0 || cityTypes1 < ceil((cityTypes2 + cityTypes3) * thresholdScalar)) {
-		return 0;
+		return kVehicleMilitary;
 	}
 	else if (cityTypes2 == 0 || cityTypes2 < ceil((cityTypes1 + cityTypes3) * thresholdScalar)) {
-		return 1;
+		return kVehicleCultural;
 	}
 	else if (cityTypes3 == 0 || cityTypes3 < ceil((cityTypes1 + cityTypes2) * thresholdScalar)) {
-		return 2;
+		return kVehicleEconomic;
 	}
 
 	return -1;
@@ -387,6 +425,8 @@ int cCityMemberManager::GetEventFlags() const
 // The method that receives the message.
 bool cCityMemberManager::HandleUIMessage(IWindow* window, const Message& message)
 {
+	if (!(IsCivGame() || IsSpaceGame())) return false;
+
 	if (message.Mouse.mouseButton == kMouseButtonLeft) {
 		if (message.IsType(kMsgMouseDown)) {
 			mbMouseClicked = true;
@@ -395,7 +435,7 @@ bool cCityMemberManager::HandleUIMessage(IWindow* window, const Message& message
 			mbMouseClicked = false;
 		}
 		else if (message.IsType(kMsgMouseUp)) {
-			if (mbMouseClicked) {
+			if (mbMouseClicked && !CreaturePickupManager.IsCreatureHeld()) {
 				auto citizen = GetHoveredCitizen();
 				if (citizen) {
 					// cancel animation and play new one

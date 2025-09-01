@@ -1,5 +1,8 @@
 #include "stdafx.h"
 #include "CityWallsManager.h"
+#include "Common.h"
+
+using namespace Common;
 
 CityWallsManager::CityWallsManager()
 {
@@ -24,19 +27,6 @@ int CityWallsManager::Release()
 	return DefaultRefCounted::Release();
 }
 
-cCityPtr CityWallsManager::GetCurrentCity() {
-	auto planetRecord = Simulator::GetActivePlanetRecord();
-	auto planet = PlanetModel.Get();
-	if (!planet) { return nullptr; }
-
-	// get camera pos
-	Vector3 camPos;
-	Vector3 camDir;
-	CameraManager.GetViewer()->GetCameraToMouse(camPos, camDir);
-
-
-	return planet->GetNearestCity(camPos);
-}
 
 // scaled color glow amount
 // TODO: fix crash on shutdown here?
@@ -77,7 +67,7 @@ void CityWallsManager::SetCityBuildingColor(cCityPtr city, ColorRGB color, bool 
 
 // new city wall has been hovered; store the current city item data in preparation to upgrade.
 void CityWallsManager::StoreCityData() {
-	auto city = GetCurrentCity();
+	auto city = GetNearestCity();
 
 	//slotted_buildings.clear();
 	//slotted_decor.clear();
@@ -106,7 +96,7 @@ void CityWallsManager::StoreCityData() {
 
 // city walls have decreased in size, remove all buildings and decor not in a slot.
 void CityWallsManager::ProcessCityWallReduction() {
-	auto city = GetCurrentCity();
+	auto city = GetNearestCity();
 
 	// Buildings
 	for (auto building : GetDataByCast<cBuilding>()) {

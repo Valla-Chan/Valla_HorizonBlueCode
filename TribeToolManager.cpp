@@ -516,8 +516,10 @@ bool cTribeToolManager::HasSelectedMembers() {
 	vector<cCreatureCitizenPtr> selected;
 	auto tribe = GameNounManager.GetPlayerTribe();
 	eastl::vector<cCreatureCitizenPtr>& members = tribe->GetSelectableMembers();
-	for (auto member : members) {
-		if (member->IsSelected()) {
+	for (size_t i = 0; i < members.size(); i++) {
+		// Try to prevent some odd crashes here...
+		// TODO: still crashing!!
+		if (members[i] && members[i]->mpOwnerTribe && members[i]->IsSelected()) {
 			return true;
 		}
 	}
@@ -528,9 +530,9 @@ vector<cCreatureCitizenPtr> cTribeToolManager::GetSelectedMembers() {
 	vector<cCreatureCitizenPtr> selected;
 	auto tribe = GameNounManager.GetPlayerTribe();
 	eastl::vector<cCreatureCitizenPtr>& members = tribe->GetSelectableMembers();
-	for (auto member : members) {
-		if (member->IsSelected()) {
-			selected.push_back(member);
+	for (size_t i = 0; i < members.size(); i++) {
+		if (members[i]->IsSelected()) {
+			selected.push_back(members[i]);
 		}
 	}
 	return selected;
@@ -628,17 +630,17 @@ ResourceKey cTribeToolManager::GetPlotModel(cTribeToolPtr tool) const {
 }
 
 cTribeToolPtr cTribeToolManager::GetHoveredConstructionPlot() const {
-	for (auto tool : mpInProgressTools) {
-		if (tool && tool->IsRolledOver() && tool->mTribe) {
-			return tool;
+	for (size_t i = 0; i < mpInProgressTools.size(); i++) {
+		if (mpInProgressTools[i] && mpInProgressTools[i]->IsRolledOver() && mpInProgressTools[i]->mTribe) {
+			return mpInProgressTools[i];
 		}
 	}
 	return nullptr;
 }
 
 bool cTribeToolManager::IsConstructionPlotHovered() const {
-	for (auto tool : mpInProgressTools) {
-		if (tool && tool->IsRolledOver() && tool->mTribe) {
+	for (size_t i = 0; i < mpInProgressTools.size(); i++) {
+		if (mpInProgressTools[i] && mpInProgressTools[i]->IsRolledOver() && mpInProgressTools[i]->mTribe) {
 			return true;
 		}
 	}
@@ -647,8 +649,8 @@ bool cTribeToolManager::IsConstructionPlotHovered() const {
 
 bool cTribeToolManager::IsToolInProgress(cTribeToolPtr tool) const {
 	if (!tool) { return false; }
-	for (auto item : mpInProgressTools) {
-		if (tool == item && tool->mTribe) {
+	for (size_t i = 0; i < mpInProgressTools.size(); i++) {
+		if (tool == mpInProgressTools[i] && tool->mTribe) {
 			return true;
 		}
 	}
@@ -706,6 +708,7 @@ void cTribeToolManager::ToolComplete(cTribeToolPtr tool) {
 	}
 	else {
 		// debug
+
 		for (auto member : GameNounManager.GetPlayerTribe()->GetTribeMembers()) {
 			member->DoAction(kCitizenActionGrabTool, tool.get());
 		}

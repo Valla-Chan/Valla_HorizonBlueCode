@@ -3,13 +3,13 @@
 #include <Spore\BasicIncludes.h>
 
 // animations i do NOT want to play
-const eastl::vector<uint32_t> replaced_animations = {
+const vector<uint32_t> replaced_animations = {
 	0x042DD0EE, //"csa_actn_epicroar"
 	0x04330328, //"csa_actn_battleroar"
 };
 
 // animations to still allow, but shuffle in the new ones as well
-const eastl::vector<uint32_t> default_animations = {
+const vector<uint32_t> default_animations = {
 	0x05DF99C1, //"spd_idle_cr_shake"
 	0x068D8993, //"idle_gen_lookup"
 	0x0519CBC2, //"idle_gen_lookrtlt"
@@ -24,7 +24,7 @@ const eastl::vector<uint32_t> default_animations = {
 };
 
 // new animations
-const eastl::vector<uint32_t> desired_animations = {
+const vector<uint32_t> desired_animations = {
 	0x731EA496, //"idle_herbi_scratch"
 	0x731EA498, //"idle_herbi_snapflies"
 	0x731EA499, //"idle_herbi_sniffair"

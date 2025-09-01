@@ -142,6 +142,14 @@
     <ClInclude Include="Cheats\CRG_SpawnPlant.h" />
     <ClInclude Include="Cheats\CRG_Starve.h" />
     <ClInclude Include="Cheats\CRG_SwapCreature.h" />
+    <ClInclude Include="Cheats\CVG_SetCityType.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="Cheats\devPlayComm.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Cheats\GetTribeColors.h">
       <SubType>
       </SubType>
@@ -234,11 +242,13 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="HBCommManager.h" />
     <ClInclude Include="CLG_CellController.h">
       <SubType>
       </SubType>
     </ClInclude>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="CommsAnims.h" />
     <ClInclude Include="CreatureSpeedBoost.h">
       <SubType>
       </SubType>
@@ -334,6 +344,7 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="HBDebugFuncs.h" />
     <ClInclude Include="HBEp1.h" />
     <ClInclude Include="HBSpace.h" />
     <ClInclude Include="HBTribe.h">
@@ -355,6 +366,10 @@
     </ClInclude>
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ToolFrenzyBomb.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="ToolSignalInterceptor.h">
       <SubType>
       </SubType>
     </ClInclude>
@@ -466,6 +481,14 @@
     <ClCompile Include="Cheats\CRG_SpawnPlant.cpp" />
     <ClCompile Include="Cheats\CRG_Starve.cpp" />
     <ClCompile Include="Cheats\CRG_SwapCreature.cpp" />
+    <ClCompile Include="Cheats\CVG_SetCityType.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="Cheats\devPlayComm.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="Cheats\GetTribeColors.cpp">
       <SubType>
       </SubType>
@@ -554,6 +577,7 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="HBCommManager.cpp" />
     <ClCompile Include="CLG_CellController.cpp">
       <SubType>
       </SubType>
@@ -657,6 +681,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ToolFrenzyBomb.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="ToolSignalInterceptor.cpp">
       <SubType>
       </SubType>
     </ClCompile>

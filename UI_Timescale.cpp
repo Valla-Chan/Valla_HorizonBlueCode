@@ -5,7 +5,7 @@ UI_Timescale::UI_Timescale()
 {
 	WindowManager.GetMainWindow()->AddWinProc(this);
 	MessageManager.AddListener(this, SimulatorMessages::kMsgSwitchGameMode);
-	MessageManager.AddListener(this, id("CinematicBegin"));
+	MessageManager.AddListener(this, id("ResetTimescale"));
 }
 
 
@@ -107,7 +107,7 @@ bool UI_Timescale::HandleMessage(uint32_t messageID, void* msg)
 {
 	if (!(IsTribeGame() || IsCivGame())) { return false; }
 
-	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("CinematicBegin"))
+	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("ResetTimescale"))
 	{
 		SetTimeScaleIndex(0,true);
 	}

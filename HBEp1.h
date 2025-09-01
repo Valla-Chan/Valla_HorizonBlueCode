@@ -115,51 +115,47 @@ member_detour(ScenarioPlayModeUpdateGoals_detour, Simulator::cScenarioPlayMode, 
 };
 
 // Detour the playanimation ID-picking func
-member_detour(EP1_AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*)) {
-	bool detoured(uint32_t animID, int* pChoice) {
+static bool EP1_AnimOverride_detour(Anim::AnimatedCreature* obj, uint32_t& animID, int* pChoice) {
 
-		if (IsCreatureGame() || IsScenarioMode()) {
+	if (IsCreatureGame() || IsScenarioMode()) {
 
-			// replace the jump jet animations when in mid-flight
-			uint32_t jetanim = JetHover_GetAnim(animID);
-			if (jetanim != animID && ep1_captainabilities->can_jumpburst) {
-				return original_function(this, jetanim, pChoice);
-			}
-
-
-			// Scenario Social behaviors
-			// detect when creature waves after being allied
-			if (animID == 0xb225328f) { // "soc_hurrayclap"
-				auto creature = Common::GetAnimCreatureOwner(this);
-				// if it is a sentient creature, replace the clapping with a salute
-				if (creature && creature->GetCurrentBrainLevel() >= 5 && creature->mAge >= 1) {
-					return original_function(this, 0x00BF10B3, pChoice); //"soc_posse_salute_01a"
-				}
-
-			}
-
-			// make holograms not play the hover animation
-			if (animID == 0x0692E6A9) { // "gen_jump_loop"
-				auto creature = Common::GetAnimCreatureOwner(this);
-				if (creature && ep1_gameplayobject_projector->IsCreatureHologram(creature)) {
-					return original_function(this, 0x04330667, pChoice); //"csa_idle_gen_editor"
-				}
-
-			}
-
-			// Swap the wave for a flex intimidate.
-			if (animID == 0x5403B863) { // "gen_posse_call"
-				// Make this only play if avatar in combat stance mode when interacting
-				if ( CreatureGameData.GetAbilityMode() == cCreatureGameData::AbilityMode::Attack) {
-					return original_function(this, 0x0418B841, pChoice); //"csa_phpto_flex"
-				}
-			}
+		// replace the jump jet animations when in mid-flight
+		uint32_t jetanim = JetHover_GetAnim(animID);
+		if (jetanim != animID && ep1_captainabilities->can_jumpburst) {
+			animID = jetanim; return true;
 		}
 
-		return original_function(this, animID, pChoice);
+		// Scenario Social behaviors
+		// detect when creature waves after being allied
+		if (animID == 0xb225328f) { // "soc_hurrayclap"
+			auto creature = Common::GetAnimCreatureOwner(obj);
+			// if it is a sentient creature, replace the clapping with a salute
+			if (creature && creature->GetCurrentBrainLevel() >= 5 && creature->mAge >= 1) {
+				animID = 0x00BF10B3; return true; //"soc_posse_salute_01a"
+			}
 
+		}
+
+		// make holograms not play the hover animation
+		if (animID == 0x0692E6A9) { // "gen_jump_loop"
+			auto creature = Common::GetAnimCreatureOwner(obj);
+			if (creature && ep1_gameplayobject_projector->IsCreatureHologram(creature)) {
+				animID = 0x04330667; return true; //"csa_idle_gen_editor"
+			}
+
+		}
+
+		// Swap the wave for a flex intimidate.
+		if (animID == 0x5403B863) { // "gen_posse_call"
+			// Make this only play if avatar in combat stance mode when interacting
+			if (CreatureGameData.GetAbilityMode() == cCreatureGameData::AbilityMode::Attack) {
+				animID = 0x0418B841; return true; //"csa_phpto_flex" (sic) 
+			}
+		}
 	}
-};
+
+	return false;
+}
 
 // Detour Creature WalkTo
 virtual_detour(EP1_WalkTo_detour, Simulator::cCreatureAnimal, Simulator::cCreatureBase, void(int, const Vector3&, const Vector3&, float, float)) //cCreatureAnimal
@@ -210,7 +206,6 @@ virtual_detour(EP1_CombatTakeDamage_detour, Simulator::cCombatant, Simulator::cC
 void HBEp1::AttachDetours() {
 	EP1_ReadSPUI_detour::attach(GetAddress(UTFWin::UILayout, Load));
 	ScenarioPlayModeUpdateGoals_detour::attach(GetAddress(Simulator::cScenarioPlayMode, UpdateGoals));
-	EP1_AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
 	EP1_WalkTo_detour::attach(GetAddress(Simulator::cCreatureBase, WalkTo));
 	EP1_OnJumpLand_detour::attach(GetAddress(Simulator::cCreatureAnimal, OnJumpLand));
 	EP1_CombatTakeDamage_detour::attach(GetAddress(Simulator::cCombatant, TakeDamage));

@@ -18,6 +18,14 @@ void HurtMe::ParseLine(const ArgScript::Line& line)
 		mParameter = line.GetArguments(1)[0];
 		avatar->mHealthPoints -= mpFormatParser->ParseFloat(mParameter);
 	}
+	else if (Simulator::IsSpaceGame())
+	{
+		auto ship = Simulator::GetPlayerUFO();
+		if (ship) {
+			ship->mHealthPoints -= mpFormatParser->ParseFloat(mParameter);
+		}
+	}
+	
 }
 
 const char* HurtMe::GetDescription(ArgScript::DescriptionMode mode) const

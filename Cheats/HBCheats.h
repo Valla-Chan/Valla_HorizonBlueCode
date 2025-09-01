@@ -43,6 +43,7 @@
 #include "Cheats/RepairAll.h"
 #include "Cheats/SetEmpireColor.h"
 #include "Cheats/HurtTarget.h"
+#include "Cheats/CVG_SetCityType.h"
 //#include "ListenAllMessages.h"#pragma once
 
 
@@ -90,6 +91,7 @@ public:
 		CheatManager.AddCheat("RepairAll", new(RepairAll));
 		CheatManager.AddCheat("SetEmpireColor", new(SetEmpireColor));
 		CheatManager.AddCheat("HurtTarget", new(HurtTarget));
+		CheatManager.AddCheat("SetCityType", new(CVG_SetCityType));
 		//CheatManager.AddCheat("ListenAllMessages", new(ListenAllMessages));
 
 #ifdef _DEBUG

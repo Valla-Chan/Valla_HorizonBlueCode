@@ -209,6 +209,7 @@ member_detour(TribeTool_SetHoverObjectCursorAndRollover_detour, Simulator::cTrib
 
 				// Cursors
 				if (meta) {
+					// This may be crashing
 					bool hasselected = TribeToolManager.HasSelectedMembers();
 
 					if (TribeToolStratManager.IsToolStateValid(tribetool)) {

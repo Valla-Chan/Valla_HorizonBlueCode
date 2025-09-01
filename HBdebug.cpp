@@ -2,6 +2,9 @@
 #include "HBdebug.h"
 #include <Spore\Editors\Editor.h>
 #include <Spore\Simulator\cCreatureGameData.h>
+#include <Spore\Simulator\SubSystem\CommManager.h>
+#include "CityMemberManager.h"
+#include "Common.h"
 
 using namespace Simulator;
 using namespace Cell;
@@ -113,9 +116,7 @@ void HBdebug::StoreData() {
 // Planet
 	planetRecord = Simulator::GetActivePlanetRecord();
 	empire = Simulator::GetPlayerEmpire();
-	if (IsCivGame()) {
-		civilization = GameNounManager.GetPlayerCivilization();
-	}
+	civilization = GameNounManager.GetPlayerCivilization(); //exists when on planet surface
 	cities = GetData<cCity>();
 /* firstCity */ if (!cities.empty()) { firstCity = cities[0]; }
 	if (IsSpaceGame()) { ship = Simulator::GetPlayerUFO(); }
@@ -124,17 +125,52 @@ void HBdebug::StoreData() {
 
 //-----------------------------------------------------------------------------------
 
+UILayout commUIlayout;
+UILayout spaceUIlayout;
+
 void HBdebug::ParseLine(const ArgScript::Line& line)
 {
-	//StoreData();
-	window = WindowManager.GetMainWindow();
-	// Editor
-	editor = GetEditor();
+	StoreData();
 
 	// Your code here:
 	//------------------------------------------
-	
-	editor->field_472 = true;
+	//CiviliansAttackHovered();
+	//if (firstCity) {
+	//	auto pop = firstCity->GetPopulation();
+	//}
+	//auto culture = civilization->mCultureSet;
+	cPlanetRecord* planetRecord = Simulator::GetActivePlanetRecord();
+	cStarRecord* starRecord = planetRecord->GetStarRecord();
+	PlanetID planetID = 0;
+	if (planetRecord) {
+		planetID = planetRecord->GetID();
+	};
+	//TODO: missing lots of data
+	if (IsCivGame()) {
+		cCivilization* pCiv = GameNounManager.GetPlayerCivilization();
+		cCity* city = nullptr;
+		if (pCiv && pCiv->mCities.size() > 0) {
+			city = pCiv->mCities[0].get();
+		}
+		CommManager.ShowCommEvent(CommManager.CreateCivCommEvent(pCiv, city, planetID, id("civ_main_menu"), id("player_contact_npc")));
+	}
+	else if (IsSpaceGame()) {
+		CommManager.ShowCommEvent(CommManager.CreateSpaceCommEvent(0x0, planetID, id("civ_main_menu"), id("player_contact_npc")));
+	}
+	else {
+		/*
+		SporeDebugPrint("cCommManager is nullptr: %b", cCommManager::Get() == nullptr);
+		auto empire = StarManager.GetEmpireForStar(starRecord);
+		//auto event = CommManager.CreateSpaceCommEvent(0x0, planetID, id("civ_main_menu"), id("player_contact_npc"));
+		auto event = CommManager.CreateCivCommEvent(0x0, 0x0, planetID, id("civ_main_menu"), id("player_contact_npc"));
+
+		commUIlayout.LoadByID(id("CommScreen-3"));
+		spaceUIlayout.LoadByID(0x1E453B88);
+
+
+		CommManager.ShowCommEvent(event); */
+	}
+		
 
 	//------------------------------------------
 	SporeDebugPrint("HBdebug done executing.");
@@ -156,88 +192,74 @@ const char* HBdebug::GetDescription(ArgScript::DescriptionMode mode) const
 //-------------------------------------------------------------------------------------------------------------
 // Premade Funcs
 
+void CitizensUseMissileOnTarget(vector<cCreatureCitizenPtr> members, cCombatant* target) {
+	for (cCreatureCitizenPtr member : members) {
+		member->field_1001 = false;
+		member->field_1002 = false;
+		member->mbInvincible = true;
 
-void HBdebug::TribesAttackShip() {
-	for (auto tribeitem : Simulator::GetData<Simulator::cTribe>()) {
+		member->DoAction(kCitizenActionAttack, target->ToGameData());
+		member->SetTarget(target);
+		member->mpTarget = target;
+		member->mpCombatantTarget = target;
 
-		for (auto member : tribeitem->GetTribeMembers()) {
-			member->field_1001 = false;
-			member->field_1002 = false;
+		ResourceKey abilitykey = ResourceKey(id("Adventurer_Missile1"), TypeIDs::Names::prop, id("CreatureAbilities"));
 
-			//member->mSpecializedTool = 3;
-			//member->mCurrentHandheldItem = kHandheldItemTrgHuntingTool3;
-			/*
-			if ( false && member->mSpecializedTool != 11 && member->mSpecializedTool != 3) {
-
-				cTribeToolPtr tool = tribeitem->GetToolByType(3);
-				if (tool == nullptr) {
-					tool = tribeitem->GetToolByType(2);
-				}
-				if (tool == nullptr) {
-					tool = tribeitem->GetToolByType(1);
-				}
-				if (tool != nullptr) {
-					member->DoAction(kCitizenActionGrabTool, tool.get());
-				}
-
-
-			}
-			else {*/
-			member->DoAction(kCitizenActionAttack, ship.get());
-			member->SetTarget(ship.get());
-			member->mpTarget = ship;
-			member->mpCombatantTarget = ship.get();
-
-			ResourceKey abilitykey = ResourceKey(id("Adventurer_Missile1"), TypeIDs::Names::prop, id("CreatureAbilities"));
-
-			int abilityindex = -1;
-			bool abilityowned = false;
-			for (int i = member->mpSpeciesProfile->mAbilities.size() - 1; i >= 0; i--)
+		int abilityindex = -1;
+		bool abilityowned = false;
+		for (int i = member->mpSpeciesProfile->mAbilities.size() - 1; i >= 0; i--)
+		{
+			if (member->mpSpeciesProfile->mAbilities[i]->mpPropList->GetResourceKey().instanceID == abilitykey.instanceID)
 			{
-				if (member->mpSpeciesProfile->mAbilities[i]->mpPropList->GetResourceKey().instanceID == abilitykey.instanceID)
-				{
-					abilityindex = i;
-					abilityowned = true;
-					break;
-				}
+				abilityindex = i;
+				abilityowned = true;
+				break;
 			}
-			if (!abilityowned)
+		}
+		if (!abilityowned)
+		{
+			cCreatureAbility* ability = new(cCreatureAbility);
+			PropertyListPtr mpPropList;
+			if (PropManager.GetPropertyList(abilitykey.instanceID, abilitykey.groupID, mpPropList))
 			{
-				cCreatureAbility* ability = new(cCreatureAbility);
-				PropertyListPtr mpPropList;
-				if (PropManager.GetPropertyList(abilitykey.instanceID, abilitykey.groupID, mpPropList))
-				{
-					cCreatureAbility::Parse(ability, mpPropList.get());
+				cCreatureAbility::Parse(ability, mpPropList.get());
 
-					// add the new ability to the species profile
-					member->mpSpeciesProfile->mAbilities.push_back(ability);
-					abilityindex = member->mpSpeciesProfile->mAbilities.size() - 1;
-					member->mRechargingAbilityBits[abilityindex] = 0;
-					member->mInUseAbilityBits[abilityindex] = 0;
+				// add the new ability to the species profile
+				member->mpSpeciesProfile->mAbilities.push_back(ability);
+				abilityindex = member->mpSpeciesProfile->mAbilities.size() - 1;
+				member->mRechargingAbilityBits[abilityindex] = 0;
+				member->mInUseAbilityBits[abilityindex] = 0;
 
-					// AbilityState
-					auto a = Simulator::cAbilityState(member->mAbilityStates[abilityindex - 1]);
-					a.field_08 = ResourceID(member->mAbilityStates[abilityindex - 1].field_08);
-					a.field_08.instanceID = abilitykey.instanceID;
-					a.field_08.groupID = abilitykey.groupID;
-					member->mAbilityStates.push_back(a);
-
-				}
+				// AbilityState
+				auto a = Simulator::cAbilityState(member->mAbilityStates[abilityindex - 1]);
+				a.field_08 = ResourceID(member->mAbilityStates[abilityindex - 1].field_08);
+				a.field_08.instanceID = abilitykey.instanceID;
+				a.field_08.groupID = abilitykey.groupID;
+				member->mAbilityStates.push_back(a);
 
 			}
-			if (abilityindex > 0) {
-				member->PlayAbility(abilityindex);
-			}
-
-
-
-
-			//}
-
-
-
 
 		}
-
+		if (abilityindex > 0) {
+			member->PlayAbility(abilityindex);
+		}
 	}
+}
+
+void HBdebug::CiviliansAttackHovered() {
+	auto city = Common::GetNearestCity();
+	if (city && hoveredCombatant) {
+		CitizensUseMissileOnTarget(CityMemberManager.GetCityCitizens(city), hoveredCombatant.get());
+	}
+}
+
+
+void HBdebug::TribesAttackShip() {
+	vector<cCreatureCitizenPtr> members;
+	for (auto tribeitem : Simulator::GetData<Simulator::cTribe>()) {
+		for (auto member : tribeitem->GetTribeMembers()) {
+			members.push_back(member);
+		}
+	}
+	CitizensUseMissileOnTarget(members, ship.get());
 }

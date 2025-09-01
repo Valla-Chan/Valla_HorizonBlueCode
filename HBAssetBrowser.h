@@ -44,21 +44,21 @@ static_detour(AssetBrowser_PlayAudio_detour, void(uint32_t, Audio::AudioTrack)) 
 };
 
 // Detour the playanimation ID-picking func
-member_detour(AssetBrowser_AnimOverride_detour, Anim::AnimatedCreature, bool(uint32_t, int*)) {
-	bool detoured(uint32_t animID, int* pChoice) {
+static bool AssetBrowser_AnimOverride_detour(Anim::AnimatedCreature* obj, uint32_t& animID, int* pChoice) {
 
-		// Sporepedia viewer
-		// TODO: make this work by detecting the sporepedia large card UI instead of game mode.
-		// The sporepedia can be opened in any game mode.
-		if (GetGameModeID() == kGGEMode) {
-			if (ShouldReplaceAnim(animID)) {
-				animID = GetRandViewerAnim();
-			}
+	// Sporepedia viewer
+	// TODO: make this work by detecting the sporepedia large card UI instead of game mode.
+	// The sporepedia can be opened in any game mode.
+	if (GetGameModeID() == kGGEMode) {
+		if (ShouldReplaceAnim(animID)) {
+			animID = GetRandViewerAnim();
+			return true;
 		}
-
-		return original_function(this, animID, pChoice);
 	}
-};
+
+	return false;
+}
+
 
 static_detour(AssetBrowserShow_Detour, void(ShopperRequest&)) {
 	void detoured(ShopperRequest & request) {
@@ -76,6 +76,5 @@ static_detour(AssetBrowserShow_Detour, void(ShopperRequest&)) {
 // ATTACH DETOURS
 void HBAssetBrowser::AttachDetours() {
 	AssetBrowser_PlayAudio_detour::attach(GetAddress(Audio, PlayAudio));
-	AssetBrowser_AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
 	AssetBrowserShow_Detour::attach(GetAddress(ShopperRequest, Show));
 }

@@ -9,9 +9,47 @@ using namespace Simulator;
 
 namespace Common 
 {
+	// Grox key
+	const ResourceKey kGrox = ResourceKey(0x06577404, TypeIDs::Names::crt, 0x40626200);
+
 
 	static float GetDistance(Vector3 point1, Vector3 point2) {
 		return abs((point1 - point2).Length());
+	}
+
+	// Get camera pos
+	static Vector3 GetCameraPos() {
+		auto pViewer = CameraManager.GetViewer();
+		Vector3 cameraPos;
+		{
+			Vector3 cameraDir;
+			pViewer->GetCameraToMouse(cameraPos, cameraDir);
+			return cameraPos;
+		}
+		return Vector3();
+	}
+
+	// Is the camera within this range of the planet
+	static bool IsCameraInPlanetRange(float camera_max_dist = 700) {
+		auto pViewer = CameraManager.GetViewer();
+		// get camera distance from planet
+		float cameraDist = 0;
+		{
+			Vector3 cameraPos;
+			Vector3 cameraDir;
+			pViewer->GetCameraToMouse(cameraPos, cameraDir);
+			cameraDist = cameraPos.Length();
+		}
+		// detect camera dist, below ~700 should suffice for close range.
+		if (cameraDist < camera_max_dist) {
+			return true;
+		}
+		return false;
+	}
+
+	// Get city nearest to camera
+	static cCityPtr GetNearestCity() {
+		return PlanetModel.GetNearestCity(GetCameraPos());
 	}
 
 	//--------------------------------------------------

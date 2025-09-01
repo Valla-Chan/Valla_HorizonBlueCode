@@ -43,10 +43,12 @@ public:
 	// Saved vars
 	//float mTimeOfDay;
 
-	bool IsPlayerCityInRange(float camera_max_dist = 700) const;
-	bool IsPlayerCityHovered() const;
-	cCreatureCitizenPtr GetHoveredCitizen(bool playerowned = true) const;
-	cCreatureCitizenPtr TraceHitCitizen() const;
+	static VehiclePurpose GetCivMajorityType(cCivilizationPtr civ, int leniency = 0);
+	static vector<cCreatureCitizenPtr> GetCityCitizens(cCityPtr city);
+	static bool IsPlayerCityInRange(float camera_max_dist = 300);
+	static bool IsPlayerCityHovered();
+	static cCreatureCitizenPtr GetHoveredCitizen(bool playerowned = true);
+	static cCreatureCitizenPtr TraceHitCitizen();
 	
 	bool IsCreatureIndexUsed(int index) const;
 	cSpeciesProfile* GetRandomTribeSpecies(cSpeciesProfile* species);

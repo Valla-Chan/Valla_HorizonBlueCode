@@ -105,6 +105,7 @@ void TRG_TribeHutManager::UpdateNPCTribeNames() {
 	}
 }
 
+// Make NPC tribes have a new name and hut style when they are created
 void TRG_TribeHutManager::SetupNewTribe(cTribePtr tribe) {
 	SetTribeName(tribe);
 	//SetTribeColor(tribe);

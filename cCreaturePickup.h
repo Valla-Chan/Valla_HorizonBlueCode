@@ -21,7 +21,7 @@ class cCreaturePickup
 {
 public:
 	static const uint32_t TYPE = id("cCreaturePickup");
-
+	static const uint32_t cur_grab_closed = 0x03C32077;
 
 	cCreaturePickup();
 	~cCreaturePickup();
@@ -73,16 +73,15 @@ private:
 		ALLOW_ALL = 128,
 	};
 
-	uint32_t cur_grab_closed = 0x03C32077;
-
 	//-----------------------------
 
 	// TODO: in space stage, creatures should be dropped at a certain height, between mode switches (in/out of ship), and when exiting atmosphere.
 	// Also consider making the grab function be a "stasis beam", where you use a tool to grab and release objects.
-	uint32_t VALID_GAME_MODES =
-		GameModeIDs::kGameTribe |
-		GameModeIDs::kGameCiv |
-		GameModeIDs::kGameSpace;
+	vector<uint32_t> VALID_GAME_MODES = {
+		GameModeIDs::kGameTribe,
+		GameModeIDs::kGameCiv,
+		GameModeIDs::kGameSpace,
+	};
 
 	uint32_t VALID_PICKUP_FLAGS =
 		ALLOW_TRIBE |
@@ -100,3 +99,24 @@ private:
 	cSpatialObjectPtr mpHeldMember = nullptr;
 };
 
+
+// Detour the cursor setting func
+static bool CreaturePickup_SetCursor_detour(UTFWin::cCursorManager* obj, uint32_t& id) {
+	if (cCreaturePickup::Get() && CreaturePickupManager.IsValidGameMode()) {
+
+		//// Only run these if not in the planner
+		// ---------------------------------------
+		if (!Common::IsPlannerOpen()) {
+			// held tribe member
+			if (CreaturePickupManager.IsCreatureHeld()) {
+				id = CreaturePickupManager.cur_grab_closed;
+				return true;
+			}
+			else if (CreaturePickupManager.GetPickupObject()) {
+				id = BasicCursorIDs::Cursors::GrabOpen;
+				return true;
+			}
+		}
+	}
+	return false;
+}

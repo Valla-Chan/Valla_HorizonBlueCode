@@ -11,7 +11,7 @@ cCreaturePickup::cCreaturePickup()
 
 	WindowManager.GetMainWindow()->AddWinProc(this);
 	MessageManager.AddListener(this, SimulatorMessages::kMsgSwitchGameMode);
-	MessageManager.AddListener(this, id("CinematicBegin"));
+	MessageManager.AddListener(this, id("ResetTimescale"));
 }
 
 
@@ -39,7 +39,10 @@ void* cCreaturePickup::Cast(uint32_t type) const
 //-----------------------------------------------------------------------------------------------
 
 bool cCreaturePickup::IsValidGameMode() const {
-	return (VALID_GAME_MODES & GetGameModeID());
+	for (auto item : VALID_GAME_MODES) {
+		if (item == GetGameModeID()) { return true; }
+	}
+	return false;
 }
 
 bool cCreaturePickup::CanPickUp(cSpatialObjectPtr target) const {
@@ -207,7 +210,7 @@ bool cCreaturePickup::HandleMessage(uint32_t messageID, void* msg)
 		return nullptr;
 	}
 
-	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("CinematicBegin") || messageID == id("DropCreature"))
+	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("ResetTimescale") || messageID == id("DropCreature"))
 	{
 		Drop();
 	}
@@ -227,9 +230,14 @@ bool cCreaturePickup::HandleUIMessage(IWindow* window, const Message& message)
 	if (!IsValidGameMode()) { return false; }
 
 	// mouse moved away from a member
-	if (message.IsType(kMsgMouseMove) && !mpPossibleMember && !IsPlannerOpen() && CursorManager.GetActiveCursor() == BasicCursorIDs::Cursors::GrabOpen)
-	{
-		CursorManager.SetActiveCursor(0x0);
+	if (message.IsType(kMsgMouseMove) && !IsPlannerOpen()) {
+
+		if (!mpPossibleMember && CursorManager.GetActiveCursor() == BasicCursorIDs::Cursors::GrabOpen) {
+			CursorManager.SetActiveCursor(0x0);
+		}
+		else if (!IsCreatureHeld() && GetPickupObject()) {
+			CursorManager.SetActiveCursor(BasicCursorIDs::Cursors::GrabOpen);
+		}
 	}
 
 	// Drop creature

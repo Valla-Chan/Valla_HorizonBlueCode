@@ -10,7 +10,7 @@ TRG_CreaturePickup::TRG_CreaturePickup()
 
 	WindowManager.GetMainWindow()->AddWinProc(this);
 	MessageManager.AddListener(this, SimulatorMessages::kMsgSwitchGameMode);
-	MessageManager.AddListener(this, id("CinematicBegin"));
+	MessageManager.AddListener(this, id("ResetTimescale"));
 }
 
 
@@ -207,7 +207,7 @@ bool TRG_CreaturePickup::HandleMessage(uint32_t messageID, void* msg)
 		return nullptr;
 	}
 
-	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("CinematicBegin") || messageID == id("DropCreature"))
+	if (messageID == SimulatorMessages::kMsgSwitchGameMode || messageID == id("ResetTimescale") || messageID == id("DropCreature"))
 	{
 		Drop();
 	}

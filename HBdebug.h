@@ -47,6 +47,7 @@ public:
 	const char* GetDescription(ArgScript::DescriptionMode mode) const override;
 	
 private:
+	void CiviliansAttackHovered();
 	void TribesAttackShip();
 };
 

@@ -26,7 +26,6 @@ public:
 	//vector<cOrnamentPtr> slotted_decor = {};
 	//vector<cTurretPtr> slotted_turrets = {};
 
-	cCityPtr GetCurrentCity();
 	float GetScaledGlow(float value);
 	void UpdateCityBuildingColor(cCityPtr city);
 	void SetCityBuildingColor(cCityPtr city, ColorRGB color, bool glow = true);

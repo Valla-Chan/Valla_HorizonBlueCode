@@ -80,6 +80,9 @@
     <Filter Include="Valla_HorizonBlue\Sporepedia">
       <UniqueIdentifier>{eab990ac-ae49-4dc4-a75c-d1c7e3a5fb7e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Valla_HorizonBlue\Debug">
+      <UniqueIdentifier>{cf47cf71-1c40-45d8-a1f6-6ec2590d34b0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -398,6 +401,24 @@
     <ClInclude Include="CRE_ViewerAnims.h">
       <Filter>Valla_HorizonBlue\Sporepedia</Filter>
     </ClInclude>
+    <ClInclude Include="HBDebugFuncs.h">
+      <Filter>Valla_HorizonBlue\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\CVG_SetCityType.h">
+      <Filter>Valla_HorizonBlue\Cheats\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats\devPlayComm.h">
+      <Filter>Valla_HorizonBlue\Cheats\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CommsAnims.h">
+      <Filter>Valla_HorizonBlue\CVG</Filter>
+    </ClInclude>
+    <ClInclude Include="ToolSignalInterceptor.h">
+      <Filter>Valla_HorizonBlue\SPG\ToolStrats</Filter>
+    </ClInclude>
+    <ClInclude Include="HBCommManager.h">
+      <Filter>Valla_HorizonBlue\CVG\Managers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -667,6 +688,18 @@
     </ClCompile>
     <ClCompile Include="CreatureSpeedBoost.cpp">
       <Filter>Valla_HorizonBlue\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\CVG_SetCityType.cpp">
+      <Filter>Valla_HorizonBlue\Cheats\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats\devPlayComm.cpp">
+      <Filter>Valla_HorizonBlue\Cheats\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="ToolSignalInterceptor.cpp">
+      <Filter>Valla_HorizonBlue\SPG\ToolStrats</Filter>
+    </ClCompile>
+    <ClCompile Include="HBCommManager.cpp">
+      <Filter>Valla_HorizonBlue\CVG\Managers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
