@@ -30,6 +30,9 @@ public:
 	static void AttachDetours();
 };
 
+//----------------
+// Detour Helpers
+
 //----------
 // Detours
 

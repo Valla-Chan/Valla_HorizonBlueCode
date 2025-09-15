@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include "HBdebug.h"
 #include <Spore\Editors\Editor.h>
+#include <Spore\Editors\BakeManager.h>
 #include <Spore\Simulator\cCreatureGameData.h>
 #include <Spore\Simulator\SubSystem\CommManager.h>
+#include "HBCommManager.h"
 #include "CityMemberManager.h"
 #include "Common.h"
 
@@ -115,11 +117,12 @@ void HBdebug::StoreData() {
 
 // Planet
 	planetRecord = Simulator::GetActivePlanetRecord();
+	nests = GetData<cNest>();
 	empire = Simulator::GetPlayerEmpire();
-	civilization = GameNounManager.GetPlayerCivilization(); //exists when on planet surface
+	if (planetRecord) civilization = GameNounManager.GetPlayerCivilization(); //exists when on planet surface
 	cities = GetData<cCity>();
 /* firstCity */ if (!cities.empty()) { firstCity = cities[0]; }
-	if (IsSpaceGame()) { ship = Simulator::GetPlayerUFO(); }
+	if (IsSpaceGame()) ship = Simulator::GetPlayerUFO();
 
 }
 
@@ -134,43 +137,9 @@ void HBdebug::ParseLine(const ArgScript::Line& line)
 
 	// Your code here:
 	//------------------------------------------
-	//CiviliansAttackHovered();
-	//if (firstCity) {
-	//	auto pop = firstCity->GetPopulation();
-	//}
-	//auto culture = civilization->mCultureSet;
-	cPlanetRecord* planetRecord = Simulator::GetActivePlanetRecord();
-	cStarRecord* starRecord = planetRecord->GetStarRecord();
-	PlanetID planetID = 0;
-	if (planetRecord) {
-		planetID = planetRecord->GetID();
-	};
-	//TODO: missing lots of data
-	if (IsCivGame()) {
-		cCivilization* pCiv = GameNounManager.GetPlayerCivilization();
-		cCity* city = nullptr;
-		if (pCiv && pCiv->mCities.size() > 0) {
-			city = pCiv->mCities[0].get();
-		}
-		CommManager.ShowCommEvent(CommManager.CreateCivCommEvent(pCiv, city, planetID, id("civ_main_menu"), id("player_contact_npc")));
-	}
-	else if (IsSpaceGame()) {
-		CommManager.ShowCommEvent(CommManager.CreateSpaceCommEvent(0x0, planetID, id("civ_main_menu"), id("player_contact_npc")));
-	}
-	else {
-		/*
-		SporeDebugPrint("cCommManager is nullptr: %b", cCommManager::Get() == nullptr);
-		auto empire = StarManager.GetEmpireForStar(starRecord);
-		//auto event = CommManager.CreateSpaceCommEvent(0x0, planetID, id("civ_main_menu"), id("player_contact_npc"));
-		auto event = CommManager.CreateCivCommEvent(0x0, 0x0, planetID, id("civ_main_menu"), id("player_contact_npc"));
-
-		commUIlayout.LoadByID(id("CommScreen-3"));
-		spaceUIlayout.LoadByID(0x1E453B88);
-
-
-		CommManager.ShowCommEvent(event); */
-	}
-		
+	//OpenShopper();
+	MessageManager.MessageSend(id("UnlockPart"), nullptr);
+	//SporeDebugPrint("0x%x", CityMemberManager.GetCurrentGameMode());
 
 	//------------------------------------------
 	SporeDebugPrint("HBdebug done executing.");
@@ -188,6 +157,38 @@ const char* HBdebug::GetDescription(ArgScript::DescriptionMode mode) const
 	}
 }
 
+
+//-------------------------------------------------------------------------------------------------------------
+// Sporepedia
+
+void HBdebug::OpenShopper() {
+	auto request = Sporepedia::ShopperRequest(this);
+	request.shopperID = id("noadv");
+	request.Show(request);
+}
+
+void HBdebug::OnShopperAccept(const ResourceKey& selection)
+{
+	if (selection == ResourceKey()) { return; }
+
+	PropertyListPtr propList;
+	if (!PropManager.GetPropertyList(selection.instanceID, selection.groupID, propList))
+	{
+		BakeManager.Bake(selection, NULL);
+	}
+
+	// Comm
+	auto commworld = HBCommManager.mpCommCreature->GetModelWorld();
+	auto animworld = HBCommManager.mpCommCreature->GetAnimWorld();
+
+	auto model = commworld->CreateModel(selection.instanceID, selection.groupID);
+	Vector3 offset = Vector3(0.07f, 5.0f, -0.76f);
+	model->mTransform.SetOffset(offset);
+	model->mTransform.SetScale(0.3f);
+	model->mTransform.SetRotation(Quaternion::FromEuler(Vector3(0, 0, ToRadians(180))));
+	commworld->StallUntilLoaded(model);
+	commworld->SetInWorld(model, true);
+}
 
 //-------------------------------------------------------------------------------------------------------------
 // Premade Funcs

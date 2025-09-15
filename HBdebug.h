@@ -7,6 +7,7 @@ using namespace Simulator;
 using namespace UI;
 class HBdebug 
 	: public ArgScript::ICommand
+	, public Sporepedia::IShopperListener
 {
 public:
 	HBdebug();
@@ -32,6 +33,7 @@ public:
 	cCollectableItemsPtr crgparts;
 	// planet
 	cPlanetRecord* planetRecord;
+	tGameDataVectorT<cNest> nests;
 	cEmpirePtr empire;
 	cGameDataUFOPtr ship;
 	cCivilizationPtr civilization;
@@ -46,6 +48,9 @@ public:
 	// Returns a string containing the description. If mode != DescriptionMode::Basic, return a more elaborated description
 	const char* GetDescription(ArgScript::DescriptionMode mode) const override;
 	
+	void OpenShopper();
+	void OnShopperAccept(const ResourceKey& selection) override;
+
 private:
 	void CiviliansAttackHovered();
 	void TribesAttackShip();

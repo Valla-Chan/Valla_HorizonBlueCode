@@ -5,8 +5,9 @@
 
 EP1_GameplayObject_DriveMarker::EP1_GameplayObject_DriveMarker()
 {
-	App::AddUpdateFunction(this);
-	WindowManager.GetMainWindow()->AddWinProc(this);
+	// This class is getting annoying to have active. uncomment to re-add this.
+	//App::AddUpdateFunction(this);
+	//WindowManager.GetMainWindow()->AddWinProc(this);
 }
 
 

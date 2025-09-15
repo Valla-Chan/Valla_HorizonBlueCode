@@ -11,6 +11,7 @@
 // Misc
 #include "Cheats/HBCheats.h"
 #include "HBAssetBrowser.h"
+#include "HBEditors.h"
 #include "HBDebugFuncs.h"
 
 // Stages
@@ -47,6 +48,7 @@ void Initialize()
 	// Misc
 	HBCheats::Initialize();
 	HBAssetBrowser::Initialize();
+	HBEditors::Initialize();
 
 	// Stages
 	HBCell::Initialize();
@@ -63,6 +65,7 @@ void Dispose()
 	// Misc
 	HBCheats::Dispose();
 	HBAssetBrowser::Dispose();
+	HBEditors::Dispose();
 
 	// Stages
 	HBCell::Dispose();
@@ -243,6 +246,15 @@ member_detour(PaletteUILoad_detour, Palettes::PaletteUI, void(Palettes::PaletteM
 	void detoured(Palettes::PaletteMain * pPalette, UTFWin::IWindow * pWindow, bool bool1, Palettes::PaletteInfo * pInfo) {
 		original_function(this, pPalette, pWindow, bool1, pInfo);
 		TRG_PaletteUILoad_detour(this);
+		ED_PaletteUILoad_detour(this);
+	}
+};
+
+// PaletteUI::Unload
+member_detour(PaletteUIUnload_detour, Palettes::PaletteUI, void()) {
+	void detoured() {
+		original_function(this);
+		ED_PaletteUIUnLoad_detour(this);
 	}
 };
 
@@ -260,7 +272,6 @@ member_detour(PaletteUISetActiveCategory_detour, Palettes::PaletteUI, void(int))
 		original_function(this, categoryIndex);
 	}
 };
-
 
 //-----------------------------------
 
@@ -292,7 +303,7 @@ void AttachDetours()
 	// Misc
 	HBCheats::AttachDetours();
 	HBAssetBrowser::AttachDetours();
-
+	HBEditors::AttachDetours();
 
 	// Stages
 	HBCell::AttachDetours();
@@ -317,6 +328,7 @@ void AttachDetours()
 	TribeSpawn_detour::attach(GetAddress(Simulator, SpawnNpcTribe));
 
 	PaletteUILoad_detour::attach(GetAddress(Palettes::PaletteUI, Load));
+	PaletteUIUnload_detour::attach(GetAddress(Palettes::PaletteUI, Unload));
 	PaletteUISetActiveCategory_detour::attach(GetAddress(Palettes::PaletteUI, SetActiveCategory));
 
 	//HerdSpawn_detour::attach(GetAddress(Simulator::cGameNounManager, CreateHerd));

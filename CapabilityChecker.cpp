@@ -87,6 +87,22 @@ namespace CapabilityChecker
 		return caplvl;
 	}
 
+	vector<ResourceKey> GetCreationRigblocks(const ResourceKey speciesKey)
+	{
+		vector<ResourceKey> mRigblocks;
+
+		ResourceObjectPtr res;
+		if (ResourceManager.GetResource(speciesKey, &res)) {
+			auto resource = object_cast<Editors::cEditorResource>(res);
+			// Loop through the creature parts
+			for (size_t i = 0; i < resource->mBlocks.size(); i++) {
+				Editors::cEditorResourceBlock block = resource->mBlocks[i];
+				mRigblocks.push_back(ResourceKey(block.instanceID, TypeIDs::Names::prop, block.groupID));
+			}
+		}
+		return mRigblocks;
+	}
+
 	// Returns local pos to part. will need to be added to creature pos to make global.
 	// return (0,0,0) if not found
 	Vector3 GetPosFromPartCapability(const cCreatureBasePtr& creature, const uint32_t propertyID)
@@ -152,8 +168,41 @@ namespace CapabilityChecker
 		else { return {}; }
 	}
 
+	// Open a model resource and find a key list from a property
+	vector<ResourceKey> GetModelKeyValues(const ResourceKey& modelKey, const uint32_t property)
+	{
+		PropertyListPtr mpPropList;
+		ResourceKey* key;
+		size_t numKeys;
+		if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+		{
+			bool test = App::Property::GetArrayKey(mpPropList.get(), property, numKeys, key);
+			if (test) {
+				vector<ResourceKey> keys;
+				for (size_t i = 0; i < numKeys; i++) {
+					keys.push_back(key[i]);
+				}
+				return keys;
+			}
+		}
+		return {};
+	}
+
 	ResourceKey GetModelParentKey(const ResourceKey& modelKey) {
 		return GetModelKeyValue(modelKey, 0x00B2CCCB);
+	}
+
+	// Check if model is a right/center variant by reading its parent key
+	bool IsModelSymmetricVariant(const ResourceKey& modelKey)
+	{
+		auto parent = GetModelParentKey(modelKey);
+		auto rightfile = GetModelKeyValue(parent, 0x18C1DBE0);
+		auto centerfile = GetModelKeyValue(parent, 0x3A3B9D21);
+
+		if (modelKey.instanceID && (rightfile.instanceID == modelKey.instanceID || centerfile.instanceID == modelKey.instanceID)) {
+			return true;
+		}
+		return false;
 	}
 
 	// Open a model resource and find text entry

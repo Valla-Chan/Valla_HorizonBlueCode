@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "HBCommManager.h"
 #include "CapabilityChecker.h"
+#include <Spore\Editors\BakeManager.h>
 
 
 cHBCommManager::cHBCommManager() {
@@ -81,21 +82,69 @@ void cHBCommManager::ApplyCommCreatureColor() {
 
 void cHBCommManager::ApplyCommBackground() {
 	if (mPlayerCommBckg != ResourceKey() && CommManager.IsCommScreenActive() && CommManager.mCurrentCommEvent) {
+		
+		if (mPlayerID != Simulator::GetPlayerEmpireID()) {
+			mPlayerCommBckg = {};
+			return;
+		}
 
-		ResourceKey bckgimage = CapabilityChecker::GetModelKeyValue(mPlayerCommBckg, 0xAEB7704E); // sporepediaBackdropImage
-		uint32_t bckglight = CapabilityChecker::GetModelKeyValue(mPlayerCommBckg, id("lightingConfig")).instanceID;
-
-		if (bckgimage != ResourceKey()) {
-			auto window = CommManager.GetCommBackgroundWindow();
-			if (window) {
-				object_cast<IImageDrawable>(window->GetDrawable())->SetImageForWindow(window, bckgimage);
+		// Check if the background resource is actually a creation
+		if (mPlayerCommBckg.typeID != TypeIDs::Names::prop) {
+			PropertyListPtr propList;
+			if (!PropManager.GetPropertyList(mPlayerCommBckg.instanceID, mPlayerCommBckg.groupID, propList))
+			{
+				BakeManager.Bake(mPlayerCommBckg, NULL);
+				CommBackgroundBakeCallback();
 			}
-			if (bckglight != 0x0 && mpCommCreature) {
-				mpCommCreature->GetModelWorld()->GetLightingWorld(0)->SetLightingState(bckglight);
+		}
+		else {
+			ResourceKey bckgimage = CapabilityChecker::GetModelKeyValue(mPlayerCommBckg, 0xAEB7704E); // sporepediaBackdropImage
+			uint32_t bckglight = CapabilityChecker::GetModelKeyValue(mPlayerCommBckg, id("lightingConfig")).instanceID;
+
+			if (bckgimage != ResourceKey()) {
+				auto window = CommManager.GetCommBackgroundWindow();
+				if (window) {
+					object_cast<IImageDrawable>(window->GetDrawable())->SetImageForWindow(window, bckgimage);
+				}
+				if (bckglight != 0x0 && mpCommCreature) {
+					mpCommCreature->GetModelWorld()->GetLightingWorld(0)->SetLightingState(bckglight);
+				}
 			}
 		}
 	}
 }
+
+// run in a loop until the model is baked.
+void cHBCommManager::CommBackgroundBakeCallback() {
+	PropertyListPtr propList;
+	// Not baked, repeat until done
+	if (!PropManager.GetPropertyList(mPlayerCommBckg.instanceID, mPlayerCommBckg.groupID, propList))
+	{
+		App::ScheduleTask(this, &cHBCommManager::CommBackgroundBakeCallback, 0.1f);
+	}
+	// Baked successfully, add to comm window
+	else {
+		ApplyCommBackgroundCreation();
+	}
+}
+
+void cHBCommManager::ApplyCommBackgroundCreation() {
+	if (mPlayerID != Simulator::GetPlayerEmpireID()) {
+		mPlayerCommBckg = {};
+		return;
+	}
+	// Comm
+	auto commworld = HBCommManager.mpCommCreature->GetModelWorld();
+	auto animworld = HBCommManager.mpCommCreature->GetAnimWorld();
+
+	auto model = commworld->CreateModel(mPlayerCommBckg.instanceID, mPlayerCommBckg.groupID);
+	Vector3 offset = Vector3(0, 5.0f, 0);
+	model->mTransform.SetOffset(offset);
+	model->mTransform.SetScale(0.25);
+	commworld->StallUntilLoaded(model);
+	commworld->SetInWorld(model, true);
+}
+
 
 void cHBCommManager::AddCreatureToCommWindow(const ResourceKey& key, Vector3 position, Quaternion orientation) {
 	if (HBCommManager.mpCommCreature) {
@@ -108,8 +157,9 @@ void cHBCommManager::AddCreatureToCommWindow(const ResourceKey& key, Vector3 pos
 			creature->mPosition = position;
 			creature->mOrientation = orientation;
 
-			HBCommManager.mpCommCreature->GetModel()->GetModelWorld()->StallUntilLoaded(creature->GetModel());
-			HBCommManager.mpCommCreature->GetModel()->GetModelWorld()->SetInWorld(creature->GetModel(), true);
+			auto commworld = HBCommManager.mpCommCreature->GetModelWorld();
+			commworld->StallUntilLoaded(creature->GetModel());
+			commworld->SetInWorld(creature->GetModel(), true);
 		}
 	}
 }
@@ -120,9 +170,6 @@ bool cHBCommManager::HandleMessage(uint32_t messageID, void* msg)
 {
 	if (messageID == SimulatorMessages::kMsgSwitchGameMode)
 	{
-		if (mPlayerID != Simulator::GetPlayerEmpireID()) {
-			mPlayerCommBckg = {};
-		}
 		HBCommManager.mpCommCreature = nullptr;
 		HBCommManager.mpCommEmpire = nullptr;
 	}
@@ -161,6 +208,7 @@ void cHBCommManager::AttachDetours() {
 Simulator::Attribute cHBCommManager::ATTRIBUTES[] = {
 	// Add more attributes here
 	SimAttribute(cHBCommManager,mPlayerCommBckg,1),
+	SimAttribute(cHBCommManager,mPlayerID,2),
 	// This one must always be at the end
 	Simulator::Attribute()
 };
@@ -197,11 +245,15 @@ const char* cHBCommManager::GetName() const {
 
 bool cHBCommManager::Write(Simulator::ISerializerStream* stream)
 {
+	if (mPlayerID != Simulator::GetPlayerEmpireID()) {
+		mPlayerCommBckg = {};
+	}
 	return Simulator::ClassSerializer(this, ATTRIBUTES).Write(stream);
 }
 bool cHBCommManager::Read(Simulator::ISerializerStream* stream)
 {
 	mPlayerCommBckg = ResourceKey();
+	mPlayerID = 0x0;
 	return Simulator::ClassSerializer(this, ATTRIBUTES).Read(stream);
 }
 

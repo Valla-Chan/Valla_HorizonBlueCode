@@ -52,8 +52,9 @@ public:
 	cCommEvent* mpLastEvent = nullptr;
 	Anim::AnimatedCreature* mpCommCreature = nullptr;
 	cEmpire* mpCommEmpire = nullptr;
-	ResourceKey mPlayerCommBckg;
 	uint32_t mPlayerID = 0x0;
+
+	ResourceKey mPlayerCommBckg; // Can be a background image resource or a background creation resource (building)
 
 	cHBCommManager();
 	~cHBCommManager();
@@ -68,6 +69,8 @@ public:
 
 	void ApplyCommCreatureColor();
 	void ApplyCommBackground();
+	void CommBackgroundBakeCallback();
+	void ApplyCommBackgroundCreation();
 	void AddCreatureToCommWindow(const ResourceKey& key, Vector3 position = Vector3(), Quaternion orientation = Quaternion());
 
 	//---------------------------
@@ -104,6 +107,12 @@ protected:
 static bool CVG_Convo_AnimOverride_detour(Anim::AnimatedCreature* obj, uint32_t& animID, int* pChoice) {
 
 	if (!(IsCivGame() || IsSpaceGame())) { return false; }
+
+	// todo: not working
+	if (animID == 0x0564FB23) {
+		animID = 0x0761e188;
+		return true;
+	}
 
 	bool is_comms_creature = false;
 	if (CommManager.IsCommScreenActive()) {

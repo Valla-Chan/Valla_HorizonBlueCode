@@ -83,6 +83,9 @@
     <Filter Include="Valla_HorizonBlue\Debug">
       <UniqueIdentifier>{cf47cf71-1c40-45d8-a1f6-6ec2590d34b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Valla_HorizonBlue\Editor">
+      <UniqueIdentifier>{39686b65-2bbe-4013-bbde-f150c4f75780}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -419,6 +422,15 @@
     <ClInclude Include="HBCommManager.h">
       <Filter>Valla_HorizonBlue\CVG\Managers</Filter>
     </ClInclude>
+    <ClInclude Include="cPaletteUnlock.h">
+      <Filter>Valla_HorizonBlue\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="cPaletteItemColor.h">
+      <Filter>Valla_HorizonBlue\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="HBEditors.h">
+      <Filter>Valla_HorizonBlue\Editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -700,6 +712,12 @@
     </ClCompile>
     <ClCompile Include="HBCommManager.cpp">
       <Filter>Valla_HorizonBlue\CVG\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="cPaletteUnlock.cpp">
+      <Filter>Valla_HorizonBlue\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="cPaletteItemColor.cpp">
+      <Filter>Valla_HorizonBlue\Editor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

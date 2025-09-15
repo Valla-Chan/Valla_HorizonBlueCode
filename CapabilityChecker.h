@@ -14,11 +14,14 @@ namespace CapabilityChecker
 	bool IsPartOnCreature(const cCreatureBasePtr& creature, const ResourceKey part);
 	int GetPartUnlockLevel(const ResourceKey part);
 	int GetCapabilityLevelFromResource(const ResourceKey speciesKey, const uint32_t propertyID);
+	vector<ResourceKey> GetCreationRigblocks(const ResourceKey speciesKey);
 	Vector3 GetPosFromPartCapability(const cCreatureBasePtr& creature, const uint32_t propertyID);
 	//
 	bool HasModelKeyValue(const ResourceKey& modelKey, const uint32_t property);
 	ResourceKey GetModelKeyValue(const ResourceKey& modelKey, const uint32_t property);
+	vector<ResourceKey> GetModelKeyValues(const ResourceKey& modelKey, const uint32_t property);
 	ResourceKey GetModelParentKey(const ResourceKey& modelKey);
+	bool IsModelSymmetricVariant(const ResourceKey& modelKey);
 	//
 	LocalizedString GetModelText(const ResourceKey& modelKey, const uint32_t property);
 	const char16_t* GetModelString16(const ResourceKey& modelKey, const uint32_t property);

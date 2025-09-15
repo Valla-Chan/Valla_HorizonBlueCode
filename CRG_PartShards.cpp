@@ -903,7 +903,7 @@ void CRG_PartShards::SuppressDestroyedParts() {
 	PaletteUIPtr palette = GetEditor()->mpPartsPaletteUI;
 	if (!palette) { return; }
 
-	int itemcount = 0;
+	//int itemcount = 0;
 	for (PaletteCategoryUIPtr catUI : palette->mCategories) {
 		PaletteSubcategoriesUIPtr subCatUIs = catUI->mpSubcategoriesUI;
 
@@ -915,7 +915,7 @@ void CRG_PartShards::SuppressDestroyedParts() {
 					if (pageUI.page->mStandardItems.size() > 0) {
 						for (StandardItemUIPtr itemUI : pageUI.page->mStandardItems) {
 							ProcessPaletteItem(itemUI);
-							itemcount++;
+							//itemcount++;
 						}
 					}
 
@@ -927,13 +927,13 @@ void CRG_PartShards::SuppressDestroyedParts() {
 			for (auto pageUI : catUI->mPageUIs) {
 				for (StandardItemUIPtr itemUI : pageUI.page->mStandardItems) {
 					ProcessPaletteItem(itemUI);
-					itemcount++;
+					//itemcount++;
 				}
 			}
 		}
 		
 	}
-	itemcount = itemcount;
+	//itemcount = itemcount;
 }
 
 //-----------------------------------------------------------------------------------------

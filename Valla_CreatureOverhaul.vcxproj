@@ -242,6 +242,14 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="cPaletteItemColor.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="cPaletteUnlock.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="HBCommManager.h" />
     <ClInclude Include="CLG_CellController.h">
       <SubType>
@@ -345,6 +353,7 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="HBDebugFuncs.h" />
+    <ClInclude Include="HBEditors.h" />
     <ClInclude Include="HBEp1.h" />
     <ClInclude Include="HBSpace.h" />
     <ClInclude Include="HBTribe.h">
@@ -574,6 +583,14 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="Cheats\TRG_SelectMembers.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="cPaletteItemColor.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="cPaletteUnlock.cpp">
       <SubType>
       </SubType>
     </ClCompile>

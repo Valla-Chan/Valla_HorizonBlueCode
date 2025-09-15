@@ -140,7 +140,9 @@ member_detour(CitySpawnVehicle_detour, Simulator::cCity, cVehicle* (VehiclePurpo
 static_detour(CityProcessBuildingUpdate_detour, void(cCity*, int, int)) {
 	void detoured(cCity * city, int int1, int int2) {
 		original_function(city, int1, int2);
-		cvg_citywalls->UpdateCityBuildingColor(city);
+		if (cvg_citywalls) {
+			cvg_citywalls->UpdateCityBuildingColor(city);
+		}
 	}
 
 };

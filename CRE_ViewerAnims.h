@@ -31,6 +31,17 @@ const vector<uint32_t> desired_animations = {
 	0x731EA49A, //"idle_herbi_snort"
 };
 
+// Ingame movement anims
+hash_map<uint32_t, uint32_t> mMovementAnims = {
+	// CSA
+	{ 0x0452B634, 0x7C286F51 },
+	{ 0x0452B64A, 0x7C286F52 },
+	{ 0x0452B651, 0x7C286F53 },
+	// INGAME
+	{ 0x04866D8E, 0xCB38A591 },
+	{ 0x04866DAB, 0xCB38A592 },
+	{ 0x04866DB9, 0xCB38A593 },
+};
 
 int last_idx = 0;
 
