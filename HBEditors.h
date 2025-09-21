@@ -44,13 +44,6 @@ static void ED_PaletteUIUnLoad_detour(Palettes::PaletteUI* obj) {
 	paletteitemcolor->RemoveListeners();
 }
 
-// Editor::SetActiveMode
-static void ED_EditorSetActiveMode_detour(Editors::cEditor* obj, Mode mode) {
-	if (mode == Mode::BuildMode) {
-		paletteitemcolor->ApplyPartColorAllViewers();
-	}
-}
-
 //----------
 // Detours
 
@@ -64,9 +57,9 @@ member_detour(InitializeViewerCamera_detour, ItemViewer, void()) {
 // Editor::SetActiveMode
 member_detour(EditorSetActiveMode_detour, Editors::cEditor, void(Mode, bool)) {
 	void detoured(Mode mode, bool unk1) {
-		if (mode == Mode::BuildMode) {
-			paletteitemcolor->ApplyPartColorAllViewers();
-		}
+		//if (mode == Mode::BuildMode) {
+			//paletteitemcolor->ApplyPartColorAllViewers();
+		//}
 		original_function(this, mode, unk1);
 	}
 };
@@ -74,7 +67,7 @@ member_detour(EditorSetActiveMode_detour, Editors::cEditor, void(Mode, bool)) {
 // Editor::SetEditorModel
 member_detour(EditorSetEditorModel_detour, Editors::cEditor, void(EditorModel*)) {
 	void detoured(EditorModel* pEditorModel) {
-		paletteitemcolor->ApplyPartColorAllViewers();
+		//paletteitemcolor->ApplyPartColorAllViewers();
 		if (!this->GetEditorModel() || this->GetEditorModel()->mKey.instanceID == 0x0) {
 			PaletteUnlockManager.EditorPaletteUILoadDone(this->mpPartsPaletteUI.get());
 		}
@@ -82,6 +75,8 @@ member_detour(EditorSetEditorModel_detour, Editors::cEditor, void(EditorModel*))
 	}
 };
 
+// CollectableItems::LoadConfig
+// TODO: make this load properly for the collections we do want to preserve, and only 0x0 out the ones for CRG, CLG, etc
 member_detour(CollectableItemsLoadConfig_detour, cCollectableItems, void(uint32_t, uint32_t, uint32_t)) {
 	void detoured(uint32_t configGroupID, uint32_t configInstanceID, uint32_t itemsGroupID) {
 		configGroupID = 0x0;
@@ -90,32 +85,17 @@ member_detour(CollectableItemsLoadConfig_detour, cCollectableItems, void(uint32_
 	}
 };
 
+// PalettePage::ReadItemsModule
+member_detour(PalettePageReadItemsModule_detour, Palettes::PaletteItem, void(const ResourceKey&, const ResourceKey&, uint32_t)) {
+	void detoured(const ResourceKey& pageName, const ResourceKey& moduleName, uint32_t thumbnailGroupID) {
+		PaletteUnlockManager.ED_ReadItemsModule_detour(moduleName);
+		original_function(this, pageName, moduleName, thumbnailGroupID);
+	}
+};
+
+// temp?
 static_detour(EditorRequestSubmit_detour, void(EditorRequest*)) {
-	void detoured(EditorRequest* request) {
-		//GetPlayer()->mpCRGItems->LoadConfig(0x0, 0x0, 0x0);
-		//GetPlayer()->mpCRGItems->mItemStatusInfos.clear();
-		//GetPlayer()->mpCRGItems->mUnlockableRows.clear();
-		//GetPlayer()->mpCRGItems->mUnlockableItems.clear();
-
-		/*
-		auto crgitems = GetPlayer()->mpCRGItems;
-
-		eastl::sp_fixed_hash_map<cCollectableItemID, uint8_t, 256> mitemStatusInfosNew;
-
-		auto iterator = GetPlayer()->mpCRGItems->mItemStatusInfos.begin();
-		while (iterator != GetPlayer()->mpCRGItems->mItemStatusInfos.end()) {
-			//mitemStatusInfosNew.emplace(iterator->first, 1);
-			iterator.increment();
-		}
-		GetPlayer()->mpCRGItems->mItemStatusInfos.reset_lose_memory();
-
-		auto iterator2 = mitemStatusInfosNew.begin();
-		while (iterator2 != mitemStatusInfosNew.end()) {
-			//GetPlayer()->mpCRGItems->mItemStatusInfos.emplace(iterator2->first, 1);
-			GetPlayer()->mpCRGItems->mItemStatusInfos.insert(make_pair(iterator2->first, 1));
-			iterator2.increment();
-		}*/
-		
+	void detoured(EditorRequest* request) {	
 		original_function(request);
 	}
 };
@@ -128,4 +108,5 @@ void HBEditors::AttachDetours() {
 	EditorSetEditorModel_detour::attach(GetAddress(cEditor, SetEditorModel));
 	CollectableItemsLoadConfig_detour::attach(GetAddress(cCollectableItems, LoadConfig));
 	EditorRequestSubmit_detour::attach(GetAddress(EditorRequest, Submit));
+	PalettePageReadItemsModule_detour::attach(GetAddress(PalettePage, ReadItemsModule));
 }

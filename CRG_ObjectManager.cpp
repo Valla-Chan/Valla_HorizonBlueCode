@@ -281,10 +281,7 @@ uint32_t cObjectManager::GetModelCursorID(const ResourceKey& modelKey, const uin
 
 ResourceKey cObjectManager::GetHerdNestModel(const uint32_t herdID) {
 	ResourceKey herd_resource = ResourceKey(herdID, TypeIDs::Names::prop, 0x02f98b67);
-	if (CapabilityChecker::HasModelKeyValue(herd_resource, id("NestModelKey"))) {
-		return CapabilityChecker::GetModelKeyValue(herd_resource, id("NestModelKey"));
-	}
-	return ResourceKey{ 0, 0, 0 };
+	return CapabilityChecker::GetModelKeyValue(herd_resource, id("NestModelKey"));
 }
 
 //------------------------------

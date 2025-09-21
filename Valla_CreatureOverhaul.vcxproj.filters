@@ -431,6 +431,9 @@
     <ClInclude Include="HBEditors.h">
       <Filter>Valla_HorizonBlue\Editor</Filter>
     </ClInclude>
+    <ClInclude Include="cPaletteUnlockStructs.h">
+      <Filter>Valla_HorizonBlue\Editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -717,6 +720,9 @@
       <Filter>Valla_HorizonBlue\Editor</Filter>
     </ClCompile>
     <ClCompile Include="cPaletteItemColor.cpp">
+      <Filter>Valla_HorizonBlue\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="cPaletteUnlockStructs.cpp">
       <Filter>Valla_HorizonBlue\Editor</Filter>
     </ClCompile>
   </ItemGroup>

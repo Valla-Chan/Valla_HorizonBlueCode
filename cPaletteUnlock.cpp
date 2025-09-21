@@ -1,6 +1,82 @@
 #include "stdafx.h"
 #include "cPaletteUnlock.h"
-#include <Spore\UTFWin\InflateEffect.h>
+
+// 2-func Hack to get this func working
+
+void cPaletteUnlockStructs::PaletteUnlockData::PopulatePaletteParts()
+{
+	GetUnlockCategories();
+
+	// The item loading detour for palette will load the items into this hash map
+	PaletteUnlockManager.bLoadPartCoords = true;
+	PaletteUnlockManager.pLoadedPartCoords.clear();
+
+	// Load full parts palettes from mEditorPaletteIDs
+	PaletteMainPtr palette = new(PaletteMain);
+	for (const auto item : mEditorPaletteIDs) {
+		bool read = palette->ReadProp({ item, prop, 0x406b6a00 }); // palette_definition~
+	}
+
+	// Loop through all categories, subcategories, and pages to find palette items.
+	for (const PaletteCategoryPtr cat : palette->mCategories) {
+		eastl::vector<PaletteCategoryPtr> subCats = cat->mChildren;
+		if (subCats.size() == 0) {
+			subCats.push_back(cat);
+		}
+
+		for (const PaletteCategoryPtr subCat : subCats) {
+			for (size_t p = 0; p < subCat->mPages.size(); p++) {
+				// standard editor/planner
+				if (subCat->mPages[p]->mItems.size() > 0) {
+					for (const PaletteItemPtr item : subCat->mPages[p]->mItems) {
+						if (item) {
+							// add Unlockable item if in a valid category (or no categories set)
+							if (mPartUnlockCategories.size() == 0) {
+								AddUnlockableItem(item, cat->mCategoryID, p, PaletteUnlockManager.pLoadedPartCoords[item->mName]);
+								break;
+							}
+							else {
+								for (size_t i = 0; i < mPartUnlockCategories.size(); i++) {
+									if (cat->mCategoryID == mPartUnlockCategories[i]) {
+										AddUnlockableItem(item, cat->mCategoryID, p, PaletteUnlockManager.pLoadedPartCoords[item->mName]);
+										break;
+									}
+								}
+							}
+							
+							// Unlock item if itemUnlockFindPercentage >= 1.0
+							// NOTE: this ignores mPartUnlockCategories.
+							float itemUnlockFindPercentage = CapabilityChecker::GetModelFloatValue(item->mName, 0x03A289C3);
+							if (itemUnlockFindPercentage >= 1) {
+								Unlock(item->mName, false, false);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	PaletteUnlockManager.pLoadedPartCoords.clear();
+	PaletteUnlockManager.bLoadPartCoords = false;
+}
+
+// Log parts to pLoadedPartCoords
+void cPaletteUnlock::ED_ReadItemsModule_detour(const ResourceKey& moduleName) {
+	if (!bLoadPartCoords) return;
+	// load in what parts correspond to what rows/columns
+	vector<int> palettePagePartItemColumns = CapabilityChecker::GetModelIntValues(moduleName, 0x22C47931);
+	vector<int> palettePagePartItemRows = CapabilityChecker::GetModelIntValues(moduleName, 0xF8E99C4F);
+	vector<ResourceKey> palettePagePartItems = CapabilityChecker::GetModelKeyValues(moduleName, 0xEEEAD734);
+	// aggregate matching data and add to pLoadedPartCoords
+	size_t size = min(min(palettePagePartItems.size(), palettePagePartItemColumns.size()), palettePagePartItemRows.size());
+	for (size_t i = 0; i < size; i++) {
+		Vector2 coords = { (float)palettePagePartItemColumns[i], (float)palettePagePartItemRows[i] };
+		pLoadedPartCoords[palettePagePartItems[i]] = coords;
+	}
+}
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------
 
 
 cPaletteUnlock::cPaletteUnlock()
@@ -59,22 +135,29 @@ void cPaletteUnlock::ClearSaveData() {
 void cPaletteUnlock::InitializeSaveData() {
 	if (!IsStageGameMode()) { return; }
 	if (mPaletteUnlocks.empty() || !IsValidPlayer()) {
+		mPaletteUnlocks.clear();
 		mPaletteUnlocks = {
-		{ kGameCell, PaletteUnlockData({0x00000001, 0x00000005})},
-		{ kGameCreature, PaletteUnlockData(0x0000000C) },
-		{ kGameTribe, PaletteUnlockData({0x000000CA, 0x000000C9}) }, // tribe and civ acc palettes
-		{ kGameSpace, PaletteUnlockData(0x000000CB)},
+			{ kGameCell, PaletteUnlockData({0x00000001, 0x00000005}, id("CellGame"))},
+			{ kGameCreature, PaletteUnlockData(0x0000000C, id("CreatureGame")) },
+			{ kGameTribe, PaletteUnlockData({0x000000CA, 0x000000C9}, id("TribeGame")) }, // tribe and civ acc palettes
+			{ kGameSpace, PaletteUnlockData(0x000000CB, 0x0)}, // 0x31DA3CEA for 2nd value?
 		};
 
+
 		// Fill out the data
-		for (auto item : mPaletteUnlocks) {
-			item.second.mCollectionID = item.first;
+		auto it = mPaletteUnlocks.begin();
+		while (it != mPaletteUnlocks.end()) {
+			(it->second).mCollectionID = it->first;
 			ResourceKey species = {};
-			switch (item.first) {
-				case kGameCreature: species = GameNounManager.GetAvatar()->mSpeciesKey;
-				case kGameCell: species = Simulator::Cell::GetPlayerCell()->mModelKey;
+			if (GetGameModeID() == it->first) {
+				switch (it->first) {
+					case kGameCreature: species = GameNounManager.GetAvatar()->mSpeciesKey; break;
+					case kGameCell: species = Simulator::Cell::GetPlayerCell()->mModelKey; break;
+				}
 			}
-			item.second.Populate(species);
+
+			(it->second).Populate(species);
+			it.increment();
 		}
 	}
 	mSaveGameID = GetPlayer()->mUniqueGameID;
@@ -98,42 +181,19 @@ void cPaletteUnlock::EditorPaletteUILoad(PaletteUI* palette) {
 	// NOTE: This assumes that mLastGameMode and mCurrentGameMode are swapped.
 	// If this is changed, this code will need to be swapped.
 	if (mLastGameMode == kEditorMode && mPaletteUnlocks.find(mCurrentGameMode) != mPaletteUnlocks.end()) {
-		EditorApplyPaletteUnlockData(&mPaletteUnlocks[mCurrentGameMode]);
+		auto data = &mPaletteUnlocks[mCurrentGameMode];
+		EditorApplyPaletteUnlockData(data);
 	}
 }
 
 // Finished loading into the editor.
-void cPaletteUnlock::EditorPaletteUILoadDone(PaletteUI* palette) {
+void cPaletteUnlock::EditorPaletteUILoadDone(const PaletteUI* palette) {
 	if (mLastGameMode == kEditorMode && mPaletteUnlocks.find(mCurrentGameMode) != mPaletteUnlocks.end()) {
 		mPaletteUnlocks[mCurrentGameMode].MarkItemsRead();
 	}
 }
 
 //-------------------------------------------------------------------------
-
-// Adds items from a collection into the unlock data
-void cPaletteUnlock::PopulateUnlockDataFromCollection(PaletteUnlockData* data, cCollectableItemsPtr collection)
-{
-	for (auto item : collection->mUnlockedItems) {
-		data->Unlock(ResourceKey(item.instanceID, prop, item.groupID));
-	}
-}
-
-void cPaletteUnlock::UpdateCollectionFromUnlockData(cCollectableItemsPtr collection, PaletteUnlockData* data)
-{
-	collection->mUnlockedItems.clear();
-	for (size_t i = 0; i < data->mUnlockedItems.size(); i++) {
-		collection->mUnlockedItems.push_back({ data->mUnlockedItems[i].mKey.instanceID, data->mUnlockedItems[i].mKey.groupID});
-	}
-}
-
-void cPaletteUnlock::PopulateUnlockDataFromCreation(PaletteUnlockData* data, ResourceKey& creation, bool associated_parts)
-{
-	auto unlocks = AssociatedPartUnlocks(creation, associated_parts);
-	for (size_t i = 0; i < unlocks.mUnlockedParts.size(); i++) {
-		data->Unlock(unlocks.mUnlockedParts[i]);
-	}
-}
 
 // Get the editor or planner's palette UI
 PaletteUIPtr cPaletteUnlock::GetCurrentPaletteUI() const
@@ -147,51 +207,13 @@ PaletteUIPtr cPaletteUnlock::GetCurrentPaletteUI() const
 	return nullptr;
 }
 
-// Get all palette items from the current editor
-vector<StandardItemUIPtr> cPaletteUnlock::GetPaletteItemUIs(vector<uint32_t> categories) const {
-
-	vector<StandardItemUIPtr> items = {};
-
-	PaletteUIPtr palette = GetCurrentPaletteUI();
-	if (!palette) { return items; }
-
-	// Loop through all categories, subcategories, and pages to find palette items.
-	for (PaletteCategoryUIPtr catUI : palette->mCategories) {
-		PaletteSubcategoriesUIPtr subCatUIs = catUI->mpSubcategoriesUI;
-
-		// subcategories present
-		if (subCatUIs) {
-			for (PaletteCategoryUIPtr subCatUI : subCatUIs->mCategoryUIs) {
-				for (auto pageUI : subCatUI->mPageUIs) {
-					// standard editor/planner
-					if (pageUI.page->mStandardItems.size() > 0) {
-						for (StandardItemUIPtr itemUI : pageUI.page->mStandardItems) {
-							items.push_back(itemUI);
-						}
-					}
-				}
-			}
-		}
-		// simple category
-		else {
-			for (auto pageUI : catUI->mPageUIs) {
-				for (StandardItemUIPtr itemUI : pageUI.page->mStandardItems) {
-					items.push_back(itemUI);
-				}
-			}
-		}
-
-	}
-	return items;
-}
-
 // Apply unlock data to current editor/planner palette. If no palette is open, do nothing.
 void cPaletteUnlock::EditorApplyPaletteUnlockData(PaletteUnlockData* data) {
 	if (!data) { return; }
 	PaletteUIPtr palette = GetCurrentPaletteUI();
 	if (!palette) { return; }
 
-	auto items = GetPaletteItemUIs(data->mLimitToCategoryIDs);
+	auto items = GetPaletteItemUIs(GetCurrentPaletteUI()); // data->mLimitToCategoryIDs
 	for (size_t i = 0; i < items.size(); i++) {
 		auto unlockable = data->GetUnlockedItem(items[i]->mpItem->mName);
 		if (!unlockable) {
@@ -203,141 +225,13 @@ void cPaletteUnlock::EditorApplyPaletteUnlockData(PaletteUnlockData* data) {
 			} else if (unlockable->mbNewItem) {
 				ItemSetNewHighlight(items[i]);
 			}
-			// Mark new items as no longer new
-			//unlockable->mbNewItem = false;
+			// Mark new items as no longer new, if already in editor
+			if (Editor.GetEditorModel() && Editor.GetEditorModel()->mKey.instanceID) {
+				unlockable->mbNewItem = false;
+			}
 		}
 	}
 }
-
-//-------------------------------------------------------------------------
-
-bool cPaletteUnlock::IsItemHidden(StandardItemUIPtr item) const {
-	return !item->mpWindow->IsEnabled();
-}
-
-void cPaletteUnlock::ItemHide(StandardItemUIPtr item)
-{
-	item->mpWindow->SetEnabled(false);
-	item->mpWindow->SetIgnoreMouse(true);
-	item->mpWindow->SetCursorID(0x0);
-	auto drawable = object_cast<UTFWin::IImageDrawable>(item->mpWindow->GetDrawable());
-	if (drawable) {
-		drawable->SetImage(nullptr);
-	}
-}
-
-// Unhide the palette item
-void cPaletteUnlock::ItemShow(StandardItemUIPtr item)
-{
-	item->mpWindow->SetEnabled(true);
-	item->mpWindow->SetIgnoreMouse(false);
-	item->mpWindow->SetCursorID(0x648fbf1);
-	auto drawable = object_cast<UTFWin::IImageDrawable>(item->mpWindow->GetDrawable());
-	if (drawable) {
-		ImagePtr image;
-		Image::GetImage(item->mpItem->mThumbnailName, image);
-		drawable->SetImage(image.get());
-	}
-}
-
-// Create an image panel for the palette item. If a panel already exists, use that.
-IWindow* cPaletteUnlock::ItemCreateImgPanel(StandardItemUIPtr item, ResourceKey& icon, IWindow* parent)
-{
-	if (!parent) {
-		parent = item->mpWindow.get();
-	}
-	IWindow* panel = IImageDrawable::AddImageWindow(icon, 0, 0, parent);
-	panel->SetControlID(kImgPanelID);
-	return panel;
-}
-
-// Find if there is an existing image panel with controlID kImgPanelID and remove it.
-// Also remove this item's parent's image panels that match the item's instance ID (new part highlight)
-void cPaletteUnlock::ItemRemoveImgPanel(StandardItemUIPtr item)
-{
-	auto panel = item->mpWindow->FindWindowByID(kImgPanelID, false);
-	while (panel) {
-		item->mpWindow->RemoveWindow(panel);
-		panel = item->mpWindow->FindWindowByID(kImgPanelID, false);
-	}
-	panel = item->mpWindow->GetParent()->FindWindowByID(item->mpItem->mName.instanceID, false);
-	while (panel) {
-		item->mpWindow->GetParent()->RemoveWindow(panel);
-		panel = item->mpWindow->GetParent()->FindWindowByID(item->mpItem->mName.instanceID, false);
-	}
-}
-
-
-void cPaletteUnlock::ItemSetDisabled(StandardItemUIPtr item)
-{
-	if (IsItemHidden(item)) return;
-	ItemHide(item);
-	ItemRemoveImgPanel(item);
-
-	// Create icon window of blacked out part icon
-	ResourceKey icon = { item->mpItem->mName.instanceID, png, 0x02231C8B };
-	auto panel = ItemCreateImgPanel(item, icon);
-	panel->SetSize(item->mpWindow->GetArea().GetWidth(), item->mpWindow->GetArea().GetHeight());
-	panel->SetShadeColor(mColorPaletteItemDisabled.ToIntColor());
-}
-
-void cPaletteUnlock::ItemSetLocked(StandardItemUIPtr item)
-{
-	if (IsItemHidden(item)) return;
-	ItemHide(item);
-	ItemRemoveImgPanel(item);
-
-	// Create icon window of unlockable shield
-	ResourceKey icon = { 0xC385fb5d, png, kGraphicsAtlas };
-	auto panel = ItemCreateImgPanel(item, icon);
-	object_cast<IImageDrawable>(panel->GetDrawable())->GetImage()->SetTexCoords(Math::Rectangle(0, 0, 0.84375, 0.546875));
-	panel->AddWinProc(new ProportionalLayout(0.5, 0.5, 0.5, 0.5));
-	panel->SetSize(27, 35);
-	panel->SetLocation(-14, -15);
-}
-
-// TODO: make this highlight animate when opening this page for the first time.
-void cPaletteUnlock::ItemSetNewHighlight(StandardItemUIPtr item)
-{
-	if (IsItemHidden(item)) {
-		ItemReset(item);
-	}
-	else {
-		ItemRemoveImgPanel(item);
-	}
-
-	// Create backing window of star highlight
-	ResourceKey icon = { 0x90b45fcc, png, kGraphicsAtlas };
-	auto panel = ItemCreateImgPanel(item, icon, item->mpWindow->GetParent());
-	item->mpWindow->GetParent()->SendToBack(panel);
-	object_cast<IImageDrawable>(panel->GetDrawable())->GetImage()->SetTexCoords(Math::Rectangle(0, 0, 0.65625, 0.328125));
-	panel->SetSize(item->mpWindow->GetArea().GetWidth(), item->mpWindow->GetArea().GetHeight());
-	panel->SetLocation(item->mpWindow->GetArea().x1, item->mpWindow->GetArea().y1);
-	panel->SetControlID(item->mpItem->mName.instanceID);
-
-	// Set up animation for this highlight to play when enabled
-	// (Make this panel visible to play the animation)
-	panel->SetVisible(false);
-	InflateEffect* inflate = new InflateEffect();
-	inflate->SetScale(0.2f);
-	inflate->SetInterpolationType(InterpolationType::DampedSpring);
-	inflate->SetDamping(4);
-	inflate->SetEase(2, 2);
-	inflate->SetTriggerType(TriggerType::Invisible);
-	inflate->SetTime(8);
-
-	panel->AddWinProc(inflate->ToWinProc());
-	// TODO: move this to when the player first opens this page
-	panel->SetVisible(true);
-}
-
-// Reset the item to its normal, unlocked state
-void cPaletteUnlock::ItemReset(StandardItemUIPtr item)
-{
-	ItemShow(item);
-	ItemRemoveImgPanel(item);
-}
-
 
 //---------------------------------------------------------------------------------
 
@@ -346,16 +240,21 @@ bool cPaletteUnlock::HandleMessage(uint32_t messageID, void* msg)
 
 	if (messageID == id("UnlockPart")) {
 		// DEBUG
-		PaletteUnlockData* data = &PaletteUnlockData();
-		data->Unlock(ResourceKey(id("ce_mouth_jaw_carnivore_01"), prop, 0x40626000));
-		data->Unlock(ResourceKey(id("ce_mouth_jaw_carnivore_02"), prop, 0x40626000));
-		data->Unlock(ResourceKey(id("ce_mouth_jaw_carnivore_03"), prop, 0x40626000));
-		data->Unlock(ResourceKey(id("ce_mouth_jaw_carnivore_04"), prop, 0x40626000));
-		data->Unlock(ResourceKey(id("ce_mouth_radial_omnivore_01"), prop, 0x40626000));
-		data->Unlock(ResourceKey(id("ce_mouth_radial_omnivore_02"), prop, 0x40626000));
+		auto data = &(mPaletteUnlocks[kGameCreature]);
+		auto datacell = &(mPaletteUnlocks[kGameCell]);
+		//data->Unlock(ResourceKey(id("ce_mouth_jaw_carnivore_01"), prop, 0x40626000));
+		//data->Unlock(ResourceKey(id("ce_mouth_jaw_carnivore_02"), prop, 0x40626000));
+		//data->Unlock(ResourceKey(id("ce_mouth_jaw_carnivore_03"), prop, 0x40626000));
+		//data->Unlock(ResourceKey(id("ce_mouth_jaw_carnivore_04"), prop, 0x40626000));
+		//data->Unlock(ResourceKey(id("ce_mouth_radial_omnivore_01"), prop, 0x40626000));
+		//data->Unlock(ResourceKey(id("ce_mouth_radial_omnivore_02"), prop, 0x40626000));
+		//data->Unlock(ResourceKey(id("ce_cell_sense_eye_black_01"), prop, 0x40626000));
+		data->Unlock(ResourceKey(id("ce_sense_eye_valla_cute_01"), prop, 0x40626000));
+		datacell->Unlock(ResourceKey(id("cl_mouth_filter_01"), prop, 0x40616000));
 		EditorApplyPaletteUnlockData(data);
+		EditorApplyPaletteUnlockData(datacell);
 	}
-	// Loading new games or savegames
+	// Un/Loading new games or savegames
 	else if (messageID == kMessageLoadGame || messageID == kMsgSwitchGameMode) {
 		Simulator::ScheduleTask(this, &cPaletteUnlock::InitializeSaveData, 0.001f);
 	}
@@ -375,20 +274,20 @@ namespace Simulator
 {
 	// UnlockableItem
 	template <>
-	struct SerializationTypes::SerializedType<cPaletteUnlock::UnlockableItem>
+	struct SerializationTypes::SerializedType<cPaletteUnlock::UnlockedItem>
 	{
-		static bool Read(ISerializerReadStream* stream, cPaletteUnlock::UnlockableItem* dst) {
-			return Simulator::ClassSerializer(dst, cPaletteUnlock::UnlockableItem::ATTRIBUTES).Read(stream);
+		static bool Read(ISerializerReadStream* stream, cPaletteUnlock::UnlockedItem* dst) {
+			return Simulator::ClassSerializer(dst, cPaletteUnlock::UnlockedItem::ATTRIBUTES).Read(stream);
 		}
 
-		static bool Write(ISerializerWriteStream* stream, cPaletteUnlock::UnlockableItem* src) {
+		static bool Write(ISerializerWriteStream* stream, cPaletteUnlock::UnlockedItem* src) {
 
-			return Simulator::ClassSerializer(src, cPaletteUnlock::UnlockableItem::ATTRIBUTES).Write(stream);
+			return Simulator::ClassSerializer(src, cPaletteUnlock::UnlockedItem::ATTRIBUTES).Write(stream);
 		}
 
-		static void ReadText(const eastl::string& str, cPaletteUnlock::UnlockableItem* dst) {}
+		static void ReadText(const eastl::string& str, cPaletteUnlock::UnlockedItem* dst) {}
 
-		static void WriteText(char* buf, cPaletteUnlock::UnlockableItem* src) {}
+		static void WriteText(char* buf, cPaletteUnlock::UnlockedItem* src) {}
 	};
 
 	// PaletteUnlockData
@@ -411,10 +310,10 @@ namespace Simulator
 
 };
 
-Simulator::Attribute cPaletteUnlock::UnlockableItem::ATTRIBUTES[] = {
-	SimAttribute(UnlockableItem, mKey, 1),
-	SimAttribute(UnlockableItem, mbNewItem, 2),
-	SimAttribute(UnlockableItem, mbHidden, 3),
+Simulator::Attribute cPaletteUnlock::UnlockedItem::ATTRIBUTES[] = {
+	SimAttribute(UnlockedItem, mKey, 1),
+	SimAttribute(UnlockedItem, mbNewItem, 2),
+	SimAttribute(UnlockedItem, mbHidden, 3),
 	Simulator::Attribute(),
 };
 
@@ -427,10 +326,8 @@ Simulator::Attribute cPaletteUnlock::PaletteUnlockData::ATTRIBUTES[] = {
 };
 
 Simulator::Attribute cPaletteUnlock::ATTRIBUTES[] = {
-	// User Attributes
 	SimAttribute(cPaletteUnlock, mPaletteUnlocks, 1),
 	SimAttribute(cPaletteUnlock, mSaveGameID, 2),
-	// This one must always be at the end
 	Simulator::Attribute()
 };
 

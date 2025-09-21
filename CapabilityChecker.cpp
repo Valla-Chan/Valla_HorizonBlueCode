@@ -87,7 +87,22 @@ namespace CapabilityChecker
 		return caplvl;
 	}
 
-	vector<ResourceKey> GetCreationRigblocks(const ResourceKey speciesKey)
+	vector<Editors::cEditorResourceBlock> GetCreationRigblocks(const ResourceKey speciesKey)
+	{
+		vector<Editors::cEditorResourceBlock> mRigblocks;
+
+		ResourceObjectPtr res;
+		if (ResourceManager.GetResource(speciesKey, &res)) {
+			auto resource = object_cast<Editors::cEditorResource>(res);
+			// Loop through the creature parts
+			for (size_t i = 0; i < resource->mBlocks.size(); i++) {
+				mRigblocks.push_back(resource->mBlocks[i]);
+			}
+		}
+		return mRigblocks;
+	}
+
+	vector<ResourceKey> GetCreationRigblockKeys(const ResourceKey speciesKey)
 	{
 		vector<ResourceKey> mRigblocks;
 
@@ -192,6 +207,7 @@ namespace CapabilityChecker
 		return GetModelKeyValue(modelKey, 0x00B2CCCB);
 	}
 
+	/*
 	// Check if model is a right/center variant by reading its parent key
 	bool IsModelSymmetricVariant(const ResourceKey& modelKey)
 	{
@@ -203,6 +219,20 @@ namespace CapabilityChecker
 			return true;
 		}
 		return false;
+	}*/
+	
+	// Get the left/right/center variant of a rigblock
+	// fallback = true will return this key if no variant is found. otherwise will return {}
+	ResourceKey GetSymmetricVariant(const ResourceKey& modelKey, const Symmetry symmetry, bool fallback) {
+		// check for this file's symmetric variant
+		auto symfile = GetModelKeyValue(modelKey, symmetry);
+		symfile.typeID = TypeIDs::prop;
+		if (symfile.instanceID) { return symfile; }
+		// if that doesnt exist and fallback is set, use this key.
+		else if (fallback) {
+			return modelKey;
+		}
+		else return {};
 	}
 
 	// Open a model resource and find text entry
@@ -337,6 +367,25 @@ namespace CapabilityChecker
 			}
 		}
 		return 0;
+	}
+
+	// Open a model resource and get ints value of a property
+	vector<int> GetModelIntValues(const ResourceKey& modelKey, const uint32_t property)
+	{
+		PropertyListPtr mpPropList;
+		int* value;
+		size_t size;
+		if (PropManager.GetPropertyList(modelKey.instanceID, modelKey.groupID, mpPropList))
+		{
+			if (App::Property::GetArrayInt32(mpPropList.get(), property, size, value)) {
+				vector<int> values;
+				for (size_t i = 0; i < size; i++) {
+					values.push_back(value[i]);
+				}
+				return values;
+			}
+		}
+		return {};
 	}
 
 	// Open a model resource and get a bool value of a property

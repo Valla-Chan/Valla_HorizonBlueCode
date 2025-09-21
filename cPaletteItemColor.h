@@ -11,6 +11,7 @@ using namespace Palettes;
 class cPaletteItemColor 
 	: public IWinProc
 	, public DefaultRefCounted
+	, public App::IUpdatable
 {
 public:
 	static const uint32_t TYPE = id("cPaletteItemColor");
@@ -21,6 +22,7 @@ public:
 	int AddRef() override { return DefaultRefCounted::AddRef(); }
 	int Release() override { return DefaultRefCounted::Release(); }
 	void* Cast(uint32_t type) const override;
+	void Update() override;
 	
 	void InjectListeners();
 	void RemoveListeners();

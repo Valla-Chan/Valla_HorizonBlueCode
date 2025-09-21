@@ -4,6 +4,7 @@
 cPaletteItemColor::cPaletteItemColor()
 {
 	WindowManager.GetMainWindow()->AddWinProc(this);
+	App::AddUpdateFunction(this);
 }
 
 
@@ -19,14 +20,56 @@ void* cPaletteItemColor::Cast(uint32_t type) const
 	return nullptr;
 }
 
+// Blend between default color and creature color according to the current model zoom
+void cPaletteItemColor::Update()
+{
+	/*
+	if (mbUseCrtColor && Simulator::IsEditorMode() && Editor.GetEditorModel() && Editor.GetSkin() &&
+	mpItemViewer && mpItemViewer->mpModel && mpItemViewer->mpModel->mpWorld) {
+		float zoomscale = abs(mpItemViewer->mZoom / 2.0f);
+		if (mpItemViewer->mFinalZoom == 1 && mpItemViewer->mZoom == 1) {
+			zoomscale = 0;
+		}
+		SporeDebugPrint("values: initial %f  final %f  current %f", mpItemViewer->mInitialZoom, mpItemViewer->mFinalZoom, mpItemViewer->mZoom);
+		SporeDebugPrint("prescaled: %f", zoomscale);
+		zoomscale = zoomscale * zoomscale * zoomscale;
+		SporeDebugPrint("scaled: %f", zoomscale);
+		ColorRGB finalcolor = Editor.GetEditorModel()->GetColor(0);
+		ColorRGB color = {
+			lerp(kDefIDColor.r, finalcolor.r, zoomscale),
+			lerp(kDefIDColor.g, finalcolor.g, zoomscale),
+			lerp(kDefIDColor.b, finalcolor.b, zoomscale),
+		};
+		mpItemViewer->mpModel->SetColor(ColorRGBA(color, 1.0f));
+	}*/
+}
+
 int cPaletteItemColor::GetEventFlags() const {
-	return UTFWin::kEventRefresh;
+	return UTFWin::kEventRefresh | kEventFlagUpdate;
 }
 
 bool cPaletteItemColor::HandleUIMessage(IWindow* pWindow, const Message& message) {
 	if (message.IsType(kMsgMouseEnter)) {
 		if (mItemViewers[pWindow]) {
 			mpItemViewer = mItemViewers[pWindow];
+		}
+	}
+	else if (message.IsType(kMsgUpdate)) {
+		auto viewer = mItemViewers[pWindow];
+		if (mbUseCrtColor && Simulator::IsEditorMode() && Editor.GetEditorModel() && Editor.GetSkin() &&
+			viewer && viewer->mpModel && viewer->mpModel->mpWorld) {
+			float zoomscale = abs(viewer->mZoom / 2.0f);
+			if (viewer->mFinalZoom == 1 && viewer->mZoom == 1) {
+				zoomscale = 0;
+			}
+			zoomscale = pow(zoomscale, 3.0f) / 1.2f;
+			ColorRGB finalcolor = Editor.GetEditorModel()->GetColor(0);
+			ColorRGB color = {
+				lerp(kDefIDColor.r, finalcolor.r, zoomscale),
+				lerp(kDefIDColor.g, finalcolor.g, zoomscale),
+				lerp(kDefIDColor.b, finalcolor.b, zoomscale),
+			};
+			viewer->mpModel->SetColor(ColorRGBA(color, 1.0f));
 		}
 	}
 	return false;
@@ -44,18 +87,18 @@ void cPaletteItemColor::UpdateIDColor() {
 
 // Apply color to the currently hovered part.
 // NOTE: this only applies once!
-// For mbUseCrtColor, we may want to blend between ID color and the default color according to the current model zoom
-// TODO: for some reason the mpItemViewer->mpModels are being preserved after editor shutdown. try to fix this. 
+// For mbUseCrtColor, disable this because we need to blend the colors
 void cPaletteItemColor::ApplyPartColor() {
-	if (mpItemViewer && mpItemViewer->mpModel && mpItemViewer->mpModel->mpWorld) {
+	if (!mbUseCrtColor && mpItemViewer && mpItemViewer->mpModel && mpItemViewer->mpModel->mpWorld) {
 		UpdateIDColor();
 		mpItemViewer->mpModel->SetColor(ColorRGBA(mIdentityColor, 1.0f));
 	}
 }
-
+/*
 // Apply color to all pre-existing part viewer models
 // Only useful when mbUseCrtColor is true. Called when switching editor modes.
 void cPaletteItemColor::ApplyPartColorAllViewers() {
+	return; // DISABLE THIS CODE CURRENTLY
 	if (!mbUseCrtColor) return;
 	UpdateIDColor();
 	for (auto item : mItemViewers) {
@@ -64,6 +107,7 @@ void cPaletteItemColor::ApplyPartColorAllViewers() {
 		}
 	}
 }
+*/
 
 
 void cPaletteItemColor::InjectListeners() {

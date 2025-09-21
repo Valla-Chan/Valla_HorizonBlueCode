@@ -250,6 +250,7 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="cPaletteUnlockStructs.h" />
     <ClInclude Include="HBCommManager.h" />
     <ClInclude Include="CLG_CellController.h">
       <SubType>
@@ -594,6 +595,7 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="cPaletteUnlockStructs.cpp" />
     <ClCompile Include="HBCommManager.cpp" />
     <ClCompile Include="CLG_CellController.cpp">
       <SubType>

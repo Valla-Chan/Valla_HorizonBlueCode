@@ -585,8 +585,8 @@ void cTribeToolManager::UpdateToolsProgress() {
 					Transform().SetRotation(tool->GetOrientation());
 					Transform().SetScale(1.0f);
 					effectPoof->SetSourceTransform(trans);
-					effectPoof->Start();
-					// todo: effect not working
+					effectPoof->Start(0);
+					// todo: effect not workin? may be fixed
 				}
 
 				// check if the tool's health is the same as the one in the ui, and if so, close the UI.

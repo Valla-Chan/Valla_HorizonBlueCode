@@ -133,7 +133,7 @@ virtual_detour(SetModel_detour, cSpatialObject, cSpatialObject, void(const Resou
 			if (TRG_SetModel_detour(this, res)) break;
 			break;
 		}
-		original_function(this, modelKey);
+		original_function(this, res);
 	}
 };
 
@@ -164,21 +164,6 @@ virtual_detour(CombatTakeDamage_detour, Simulator::cCombatant, Simulator::cComba
 		return original_function(this, damage, attackerPoliticalID, integer, vector, pAttacker);
 	}
 };
-
-// Detour GetRolloverIdForObject in SimulatorRollover
-static_detour(GetRolloverIdForObject_detour, UI::SimulatorRolloverID(cGameData*)) {
-	UI::SimulatorRolloverID detoured(cGameData* object) {
-
-		UI::SimulatorRolloverID value = original_function(object);
-		while (true) {
-			if (CRG_GetRolloverIdForObject_detour(object, value)) break;
-			if (TRG_GetRolloverIdForObject_detour(object, value)) break;
-			break;
-		}
-		return value;
-	}
-};
-
 
 // Detour the effect playing func
 member_detour(EffectOverride_detour, Swarm::cEffectsManager, int(uint32_t, uint32_t))
@@ -218,6 +203,21 @@ member_detour(UIShowEvent_detour, cUIEventLog, uint32_t(uint32_t, uint32_t, int,
 	}
 };
 
+// Detour GetRolloverIdForObject in SimulatorRollover
+static_detour(GetRolloverIdForObject_detour, UI::SimulatorRolloverID(cGameData*)) {
+	UI::SimulatorRolloverID detoured(cGameData * object) {
+
+		UI::SimulatorRolloverID value = original_function(object);
+		while (true) {
+			if (CRG_GetRolloverIdForObject_detour(object, value)) break;
+			if (TRG_GetRolloverIdForObject_detour(object, value)) break;
+			break;
+		}
+		return value;
+	}
+};
+
+
 static_detour(ImageSetBackgroundByKey_detour, bool(IWindow*, const ResourceKey&, int imageIndex)) {
 	bool detoured(IWindow * pWindow, const ResourceKey & imageName, int imageIndex) {
 		auto value = original_function(pWindow, imageName, imageIndex);
@@ -227,7 +227,7 @@ static_detour(ImageSetBackgroundByKey_detour, bool(IWindow*, const ResourceKey&,
 };
 
 
-// Detour the tribe spawning func
+// Detour the tribe spawning func (tribe stage onwards)
 static_detour(TribeSpawn_detour, cTribe* (const Vector3&, int, int, int, bool, cSpeciesProfile*)) {
 	cTribe* detoured(const Math::Vector3 & position, int tribeArchetype, int numMembers, int foodAmount, bool boolvalue, cSpeciesProfile * species) {
 		while (true) {
@@ -240,6 +240,64 @@ static_detour(TribeSpawn_detour, cTribe* (const Vector3&, int, int, int, bool, c
 	}
 };
 
+member_detour(CRGExecuteAction_detour, cCreatureModeStrategy, void(uint32_t, void*)) {
+	// Dev
+	struct UnkActionDevTest {
+		static const uint32_t ID = 0x0;
+
+		Simulator::cCreatureBase* creature;
+		uint32_t field_4;
+		uint32_t field_8;
+		uint32_t field_12;
+		uint32_t field_16;
+		uint32_t field_20;
+		uint32_t field_24;
+		uint32_t field_28;
+		uint32_t field_32;
+		uint32_t field_36;
+		uint32_t field_40;
+		uint32_t field_44;
+		uint32_t field_48;
+		uint32_t field_52;
+		uint32_t field_56;
+		uint32_t field_60;
+		uint32_t field_64;
+	};
+
+	void detoured(uint32_t actionID, void* actionData) {
+
+		using namespace CreatureModeStrategies;
+
+		auto dev = (UnkActionDevTest*)actionData;
+		auto interact = (Interact*)actionData;
+		auto unlock = (UnlockPart*)actionData;
+		auto eat = (CreatureModeStrategies::EatFruit*)actionData;
+		auto eatmeat = (EatMeat*)actionData;
+		auto relation1 = (UnkActionRelation1*)actionData;
+		auto social1 = (UnkActionSocial1*)actionData;
+		auto kill1 = (UnkActionKill1*)actionData;
+		auto kill2 = (UnkActionKill2*)actionData;
+
+		//cSpeciesProfile* species = (cSpeciesProfile*)(relation1->unk1);
+		//ResourceKey key = (ResourceKey)(relation1->unk1);
+		cInteractiveOrnament* orn = (cInteractiveOrnament*)(eat->food);
+		cInteractableObject* obj = (cInteractableObject*)(eat->food);
+
+		cGameData* data = (cGameData*)(eatmeat->unk1);
+		cSpatialObject* spat = (cSpatialObject*)(eatmeat->unk1);
+		cSpeciesProfile* spec = (cSpeciesProfile*)(eatmeat->unk1);
+
+		// TODO: unlock part the new way.
+		if (actionID == UnlockPart::ID) {
+
+		}
+
+		original_function(this, actionID, actionData);
+	}
+};
+
+//--------
+// Editor
 
 // Editor parts palette loading func, PaletteUI::Load
 member_detour(PaletteUILoad_detour, Palettes::PaletteUI, void(Palettes::PaletteMain*, UTFWin::IWindow*, bool, Palettes::PaletteInfo*)) {
@@ -326,6 +384,7 @@ void AttachDetours()
 	CombatTakeDamage_detour::attach(GetAddress(Simulator::cCombatant, TakeDamage));
 	GetRolloverIdForObject_detour::attach(GetAddress(UI::SimulatorRollover, GetRolloverIdForObject));
 	TribeSpawn_detour::attach(GetAddress(Simulator, SpawnNpcTribe));
+	CRGExecuteAction_detour::attach(GetAddress(cCreatureModeStrategy, ExecuteAction));
 
 	PaletteUILoad_detour::attach(GetAddress(Palettes::PaletteUI, Load));
 	PaletteUIUnload_detour::attach(GetAddress(Palettes::PaletteUI, Unload));

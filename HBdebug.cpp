@@ -138,6 +138,7 @@ void HBdebug::ParseLine(const ArgScript::Line& line)
 	// Your code here:
 	//------------------------------------------
 	//OpenShopper();
+	//player->mpCRGItems = nullptr; // NOTE: when this is made nullptr, the new API works in existing saves?
 	MessageManager.MessageSend(id("UnlockPart"), nullptr);
 	//SporeDebugPrint("0x%x", CityMemberManager.GetCurrentGameMode());
 
