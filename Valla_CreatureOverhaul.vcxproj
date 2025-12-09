@@ -242,10 +242,6 @@
       <SubType>
       </SubType>
     </ClInclude>
-    <ClInclude Include="cPaletteItemColor.h">
-      <SubType>
-      </SubType>
-    </ClInclude>
     <ClInclude Include="cPaletteUnlock.h">
       <SubType>
       </SubType>
@@ -584,10 +580,6 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="Cheats\TRG_SelectMembers.cpp">
-      <SubType>
-      </SubType>
-    </ClCompile>
-    <ClCompile Include="cPaletteItemColor.cpp">
       <SubType>
       </SubType>
     </ClCompile>

@@ -425,9 +425,6 @@
     <ClInclude Include="cPaletteUnlock.h">
       <Filter>Valla_HorizonBlue\Editor</Filter>
     </ClInclude>
-    <ClInclude Include="cPaletteItemColor.h">
-      <Filter>Valla_HorizonBlue\Editor</Filter>
-    </ClInclude>
     <ClInclude Include="HBEditors.h">
       <Filter>Valla_HorizonBlue\Editor</Filter>
     </ClInclude>
@@ -717,9 +714,6 @@
       <Filter>Valla_HorizonBlue\CVG\Managers</Filter>
     </ClCompile>
     <ClCompile Include="cPaletteUnlock.cpp">
-      <Filter>Valla_HorizonBlue\Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="cPaletteItemColor.cpp">
       <Filter>Valla_HorizonBlue\Editor</Filter>
     </ClCompile>
     <ClCompile Include="cPaletteUnlockStructs.cpp">

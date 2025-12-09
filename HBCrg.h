@@ -250,16 +250,40 @@ static_detour(CRG_AvatarScaling_detour, void())
 	}
 };
 
-// Detour a player part unlocking function
-member_detour(CRGunlock_detour, Simulator::CreatureGamePartUnlocking, struct cCollectableItemID(UnkHashMap&, bool, int, int))
+// Detour a player part unlocking function (sub_D3B460)
+member_detour(CRGunlock_detour, Simulator::CreatureGamePartUnlocking, struct cCollectableRowID(UnkCategoryHashMap&, bool, int, int))
 {
-	struct cCollectableItemID detoured(UnkHashMap & unk1, bool firstCall, int unk3, int unlockLevel)
+
+	struct cCollectableRowID detoured(UnkCategoryHashMap& unk1, bool firstCall, int unk3, int unlockLevel)
 	{
+		
+		for (auto category_to_pagetable : unk1) {
+			SporeDebugPrint("-------------------------");
+			SporeDebugPrint("0x%x", category_to_pagetable.first); // category ID
+			SporeDebugPrint("0x%x", category_to_pagetable.second); // useless sum
+			for (auto collectable_to_hashitem : category_to_pagetable.second) {
+				SporeDebugPrint("--- 1st: 0x%x , 0x%x",
+					collectable_to_hashitem.first.groupID, collectable_to_hashitem.first.instanceID);
+				SporeDebugPrint("------- 2nd:  0x%x , 0x%x  |  0x%x , 0x%x",
+					collectable_to_hashitem.second.field_0, collectable_to_hashitem.second.field_2, collectable_to_hashitem.second.field_4, collectable_to_hashitem.second.field_6 );
+			}
+		}
+
 		//SporeDebugPrint("unlocking part! hashmap size: %x, bool: %b, ints: %i %i", unk1.size(), firstCall, unk3, unlockLevel);
-		cCollectableItemID unlockID = original_function(this, unk1, firstCall, unk3, unlockLevel);
+		cCollectableRowID unlockID = original_function(this, unk1, firstCall, unk3, unlockLevel);
 		//SporeDebugPrint("part ID: 0x%x ! 0x%x ", unlockID.groupID, unlockID.instanceID );
+		//cCollectableRowID unlockID = { 1, 0, id("ce_category_mouths") };
 
 		return unlockID;
+	}
+};
+
+// Detour a player part unlocking function 2 (sub_597390)
+member_detour(CRGunlock_sub_597390_detour, Simulator::cCollectableItems, void(eastl::vector<int>&, struct cCollectableItemID, int))
+{
+	void detoured(eastl::vector<int>& dst, struct cCollectableItemID itemID, int unk)
+	{
+		original_function(this, dst, itemID, unk);
 	}
 };
 
@@ -279,5 +303,6 @@ void HBCrg::AttachDetours() {
 	cCriticalHit::AttachDetours();
 	CRG_AvatarScaling_detour::attach(GetAddress(Simulator::cCreatureGameData, CalculateAvatarNormalizingScale));
 	CRGunlock_detour::attach(GetAddress(Simulator::CreatureGamePartUnlocking, sub_D3B460));
+	//CRGunlock_sub_597390_detour::attach(GetAddress(Simulator::cCollectableItems, sub_597390));
 	CRG_EditorOnEnter_detour::attach(GetAddress(cEditor, OnEnter));
 }

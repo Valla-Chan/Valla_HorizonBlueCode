@@ -139,8 +139,29 @@ void HBdebug::ParseLine(const ArgScript::Line& line)
 	//------------------------------------------
 	//OpenShopper();
 	//player->mpCRGItems = nullptr; // NOTE: when this is made nullptr, the new API works in existing saves?
-	MessageManager.MessageSend(id("UnlockPart"), nullptr);
+	//MessageManager.MessageSend(id("UnlockPart"), nullptr);
 	//SporeDebugPrint("0x%x", CityMemberManager.GetCurrentGameMode());
+	//crgparts->field_C = false;
+	//crgparts->UnlockPart(id("ce_mouth_amphibian_omnivore_04"), 0x40626000);
+	//crgparts->UnlockPart(id("ce_mouth_mandible_carnivore_04"), 0x40626000);
+	//crgparts->AddUnlockableItemFromProp(ResourceKey(id("ce_mouth_mandible_carnivore_01"), prop, 0x40626000), 0x887c91bb, 1, 0, 0);
+	//crgparts->AddUnlockableItemFromProp(ResourceKey(id("ce_mouth_mandible_carnivore_02"), prop, 0x40626000), 0x887c91bb, 1, 1, 0);
+	//crgparts->AddUnlockableItemFromProp(ResourceKey(id("ce_mouth_mandible_carnivore_03"), prop, 0x40626000), 0x887c91bb, 1, 2, 0);
+	//crgparts->AddUnlockableItemFromProp(ResourceKey(id("ce_mouth_mandible_carnivore_04"), prop, 0x40626000), 0x887c91bb, 1, 3 ,0);
+	//crgparts->sub_594010();
+	//auto thing = crgparts->field_6D8C;
+	/*
+	for (auto item : crgparts->mUnlockedItems) {
+		SporeDebugPrint("--------------");
+		vector<int> dst;
+		crgparts->sub_597390(dst, item, 1);
+		for (auto idx : dst) {
+			SporeDebugPrint("0x%x", idx);
+		}
+	}*/
+
+	// TODO: try unlocking all mouths up to one i want, then re-locking the ones i dont want.
+	App::CreatureModeStrategies::UnlockPart action = { GameNounManager.GetAvatar(), 0, 0 };
 
 	//------------------------------------------
 	SporeDebugPrint("HBdebug done executing.");

@@ -372,7 +372,7 @@ void AttachDetours()
 	HBEp1::AttachDetours();
 	
 	// Standalone
-	AnimOverride_detour::attach(Address(ModAPI::ChooseAddress(0xA0C5D0, 0xA0C5D0)));
+	AnimOverride_detour::attach(GetAddress(Anim::AnimatedCreature, PlayAnimation));
 	EffectOverride_detour::attach(GetAddress(Swarm::cEffectsManager, GetDirectoryAndEffectIndex));
 
 	ReadSPUI_detour::attach(GetAddress(UTFWin::UILayout, Load));
